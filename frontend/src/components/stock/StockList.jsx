@@ -37,7 +37,7 @@ export default function StockList() {
     <div className="d-flex flex-column min-vh-100">
       <Navbar bg="light" variant="light" className="border-bottom" fixed="top">
         <Container fluid>
-          <Navbar.Brand>Seany</Navbar.Brand>
+          <Navbar.Brand>Seany v0.2</Navbar.Brand>
           <div className="d-flex align-items-center">
             <span className="text-dark me-3">
               {user?.username}님 (
