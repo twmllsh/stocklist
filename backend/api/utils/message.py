@@ -25,7 +25,7 @@ class My_discord:
     def __init__(self, webhook_url=None):
        
         if webhook_url is None:
-            webhook_url = os.getenv('DISCORD_WEBHOOK_URL_MINI', default="https://discord.com/api/webhooks/1206416453302091847/SxN5qqf7PfWcnde2yD2eNZ-HJ4YJfVrtMYBhit_ikqb8gX4AHyLYOUinso6ab_u55KxS")
+            webhook_url = os.getenv('DISCORD_WEBHOOK_URL', default="https://discord.com/api/webhooks/1206416453302091847/SxN5qqf7PfWcnde2yD2eNZ-HJ4YJfVrtMYBhit_ikqb8gX4AHyLYOUinso6ab_u55KxS")
             if webhook_url is None:
                 print('DISCORD_WEBHOOK_URL is None')
                 return
@@ -37,7 +37,11 @@ class My_discord:
     
     
     async def send_message(self, text):
-        self.wh.send(text)
+        try:
+            self.wh.send(text)
+        except Exception as e:
+            print('send_message err:', e)
+            
     
     async def send_photo(self, file_path=None, fig=None):
         
