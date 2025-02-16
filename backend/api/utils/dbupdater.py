@@ -424,8 +424,9 @@ class DBUpdater:
                     print(f"created 완료 {len(to_create)} ")
                     print(to_create)
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
-            msg_text = f"{start_time} ~ {end_time} : update_ticker finished!!"
+            msg_text = f"{start_time} ~ {end_time} : update_ticker finished!!"  
             asyncio.run(mydiscord.send_message(msg_text))
+            
         except Exception as e:
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} {e}: update_ticker xxxxxx !!"
