@@ -10,6 +10,7 @@ OPEN_DART_TOKEN = os.getenv('OPEN_DART_TOKEN', default="32bd9dd01c08811f4d14a149
 class DartData():
     def __init__(self):
         self.dart = OpenDartReader(OPEN_DART_TOKEN) 
+        self.dart.sub_docs('202020202020')
         self.last_report_no = "" # db에서 마지막값 가져오기.
         
     
@@ -19,7 +20,7 @@ class DartData():
         df = df.loc[df['corp_cls'].str.contains("유|코")]
         new_df = df[df['rcept_no'] > self.last_report_no]
         self.new_df = new_df
-    
+        self.dart.sub_doc('39399')
     def get_contract(self):
         '''
         공급계약 정보 가져와 저장하기. 
@@ -27,6 +28,8 @@ class DartData():
         '''
         if self.new_df > 0: 
             print('공급계약 데이턱 있는지 혹인.')
+            for i, row in self.new_df.iterrows():
+                url = f"https://dart.fss.or.kr/report/viewer.do?rcpNo={row['rcept_no']}&dcmNo=10306911&eleId=0&offset=0&length=0&dtd=HTML"
             print('새로운데이터 작업 시작')
         else:
             print('새로운데이터가 없습니다. ')
