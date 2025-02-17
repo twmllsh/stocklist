@@ -48,9 +48,10 @@ def scheduler_ohlcv(self):
 def scheduler_basic_info2():
     """기본 정보 업데이트 및 주식 분석 (평일 16:05)"""
     try:
+        DBUpdater.update_ohlcv()
         DBUpdater.update_basic_info()
         DBUpdater.anal_all_stock()
-        return "Basic info and analysis completed successfully"
+        return "Ohlcv update and Basic info and analysis completed successfully"
     except Exception as e:
         return f"Basic info update failed: {str(e)}"
 

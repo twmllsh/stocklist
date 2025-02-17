@@ -35,7 +35,7 @@ app.conf.beat_schedule = {
     # OHLCV 데이터 업데이트 (월-토 15:55)
     'update-ohlcv': {
         'task': 'api.tasks.scheduler_ohlcv',
-        'schedule': crontab(hour=15, minute=55, day_of_week='mon-sat'),
+        'schedule': crontab(hour=15, minute=55, day_of_week='sat'),
     },
     
     # 기본 정보 업데이트 2 (평일 16:05)
@@ -47,7 +47,7 @@ app.conf.beat_schedule = {
     # 투자자 정보 업데이트 (평일 18:05)
     'update-investor': {
         'task': 'api.tasks.scheduler_update_investor',
-        'schedule': crontab(hour=18, minute=5, day_of_week='mon-fri'),
+        'schedule': crontab(hour=18, minute=3, day_of_week='mon-fri'),
     },
     
     # 이슈 업데이트 (월-토 8시-18시 사이 45분마다)
