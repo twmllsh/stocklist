@@ -1,5 +1,5 @@
-# 최상단에 기본 환경변수 앵커 추가 (추가)
-x-default-env: &default_env
+# 최상단에 기본 환경변수 앵커 추가
+x-default-env: &default_env # 앵커 정의
   TZ: ${TIMEZONE}
 
 services:
@@ -10,9 +10,11 @@ services:
       - ./frontend:/app # Dockerfile에서 /app 경로를 사용하는지 확인하세요.
     ports:
       - '5173:5173'
+    env_file:
+      - .env
     environment:
-      <<: *default_env
-      NODE_ENV: development
+      <<: *default_env # 앵커 참조 추가
+      NODE_ENV: ${NODE_ENV}
     command: npm run dev -- --host # 수정: 올바른 배열 형식 사용
     healthcheck: # 추가: frontend healthcheck
       test: ['CMD', 'curl', '-f', 'http://localhost:5173']
@@ -27,10 +29,12 @@ services:
       context: ./backend
     ports:
       - '8000:8000'
+    env_file:
+      - .env
     environment:
-      <<: *default_env
-      DJANGO_DEBUG: 'True'
-      PYTHONUNBUFFERED: '1' # Python 로그 버퍼링 비활성화
+      <<: *default_env # 앵커 참조 추가
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
+      PYTHONUNBUFFERED: ${PYTHONUNBUFFERED} # Python 로그 버퍼링 비활성화
       ALLOWED_HOSTS: 'localhost,127.0.0.1,backend,*' # 모든 호스트 허용
     volumes:
       - ./backend:/app
@@ -69,17 +73,19 @@ services:
     networks:
       - app_network
     command: ['nginx-debug', '-g', 'daemon off;'] # 디버그 모드로 실행
+    env_file:
+      - .env
     environment:
-      <<: *default_env
-      FRONTEND_HOST: frontend # 추가: nginx가 사용할 frontend 호스트
+      <<: *default_env # 앵커 참조 추가
+      FRONTEND_HOST: ${FRONTEND_HOST} # 추가: nginx가 사용할 frontend 호스트
 
   db:
     build: ./db
     user: '999:999'
     volumes:
       - db_data_volume:/var/lib/postgresql/data/
+
     environment:
-      <<: *default_env
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -96,7 +102,7 @@ services:
       start_period: 10s
     env_file:
       - .env
-    command: ['postgres', '-c', 'timezone=Asia/Seoul']
+    command: ['postgres', '-c', 'timezone=${TIMEZONE}']
 
     networks:
       - app_network
@@ -105,8 +111,11 @@ services:
     image: redis:alpine
     expose:
       - '6379' # 내부 통신용이므로 expose만 필요
+    # environment:
+    env_file:
+      - .env
     environment:
-      <<: *default_env
+      <<: *default_env # 앵커 참조 추가
 
   celery_worker:
     build:
@@ -115,8 +124,8 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      <<: *default_env
-      DJANGO_DEBUG: 'False'
+      <<: *default_env # 앵커 참조 추가
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
       CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
     env_file:
       - .env
@@ -134,8 +143,8 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      <<: *default_env
-      DJANGO_DEBUG: 'False'
+      <<: *default_env # 앵커 참조 추가
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
       CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
     env_file:
       - .env
@@ -155,7 +164,9 @@ services:
     networks:
       - app_network
     environment:
-      <<: *default_env
+      <<: *default_env # 앵커 참조 추가=value
+    env_file:
+      - .env
 
 volumes:
   static_volume:
