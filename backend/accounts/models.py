@@ -21,5 +21,5 @@ class User(AbstractUser):
         verbose_name_plural = '사용자 목록'
 
     def __str__(self):
-        return f"{self.username} ({self.get_membership_display()})"
+        return f"{self.username})"
 

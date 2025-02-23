@@ -22,7 +22,10 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - app_network
+      - app-network
+    depends_on:
+      backend:
+        condition: service_healthy
 
   backend:
     build:
@@ -50,7 +53,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - app_network
+      - app-network
     labels:
       - 'custom.name=backend'
     command: python manage.py runserver 0.0.0.0:8000 # gunicorn 대신 개발 서버 사용
@@ -71,7 +74,7 @@ services:
         condition: service_started # (또는 필요 시 service_healthy)
     restart: unless-stopped
     networks:
-      - app_network
+      - app-network
     command: ['nginx-debug', '-g', 'daemon off;'] # 디버그 모드로 실행
     env_file:
       - .env
@@ -105,7 +108,7 @@ services:
     command: ['postgres', '-c', 'timezone=${TIMEZONE}']
 
     networks:
-      - app_network
+      - app-network
 
   redis:
     image: redis:alpine
@@ -134,7 +137,7 @@ services:
       - redis
     restart: always
     networks:
-      - app_network
+      - app-network
 
   celery_beat:
     build:
@@ -154,7 +157,7 @@ services:
       - rabbitmq # 추가된 항목
     restart: always
     networks:
-      - app_network
+      - app-network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -162,7 +165,7 @@ services:
       - '5672:5672' # AMQP 포트
       - '15672:15672' # 관리 콘솔 포트
     networks:
-      - app_network
+      - app-network
     environment:
       <<: *default_env # 앵커 참조 추가=value
     env_file:
@@ -173,5 +176,5 @@ volumes:
   db_data_volume:
 
 networks:
-  app_network:
+  app-network:
     driver: bridge

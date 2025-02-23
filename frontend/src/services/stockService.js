@@ -152,27 +152,30 @@ export const stockService = {
   },
   // 즐겨찾기 조회 추가 삭제.
   // 즐겨찾기 추가/제거
-  // toggleFavorite: async (code) => {
-  //   console.log('즐겨찾기 요청 시작:', code);
-  //   try {
-  //     const response = await stockAxios.post('/favorites/toggle/', {
-  //       param: { ticker: code },
-  //     });
-  //     return Array.isArray(response.data) ? response.data : response;
-  //   } catch (error) {
-  //     console.error('Favorite toggle failed:', error);
-  //   }
-  // },
+  toggleFavorite: async (code) => {
+    console.log('즐겨찾기 요청 시작:', code);
+    try {
+      const response = await stockAxios.post('/favorites/toggle/', {
+        ticker_code: code, // param -> ticker_code로 수정
+      });
+      console.log('즐겨찾기 응답:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Favorite toggle failed:', error);
+      throw error; // 에러를 던져서 컴포넌트에서 처리할 수 있게 함
+    }
+  },
 
-  // // 즐겨찾기 목록 조회
-  // getFavorites: async () => {
-  //   try {
-  //     const response = await stockAxios.get('/api/favorites/');
-  //     return Array.isArray(response.data) ? response.data : response;
-  //   } catch (error) {
-  //     console.error('Failed to get favorites:', error);
-  //   }
-  // },
+  // 즐겨찾기 목록 조회
+  getFavorites: async () => {
+    try {
+      const response = await stockAxios.get('/favorites/'); // 경로 수정
+      return Array.isArray(response.data) ? response.data : response;
+    } catch (error) {
+      console.error('Failed to get favorites:', error);
+      throw error;
+    }
+  },
 
   // 종목 Ohlcv 조회
   getStockOhlcv: async (code, interval = 'day') => {

@@ -17,13 +17,14 @@ from django.shortcuts import get_object_or_404
 import plotly.offline as opy
 ######################  restapi#######################################
 import FinanceDataReader as fdr
-from rest_framework import viewsets
+from rest_framework import viewsets, status  # status 추가
 from .models import Ticker
 from .serializers import *
 from rest_framework.response import Response
 from django.db.models import F, ExpressionWrapper, IntegerField
-from django.http import JsonResponse
-from rest_framework.permissions import AllowAny  # 추가된 줄
+from django.http import JsonResponse, HttpResponse  # 추가된 줄
+from rest_framework.permissions import AllowAny, IsAuthenticated  # 추가된 줄
+from rest_framework.decorators import action  # 추가된 줄
 
 class TickerViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 추가된 줄
@@ -287,29 +288,44 @@ from .serializers import FavoriteSerializer
 from rest_framework.decorators import action
 
 class FavoriteViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]  # 추가된 줄
+    permission_classes = [IsAuthenticated]
     serializer_class = FavoriteSerializer
 
     def get_queryset(self):
-        queryset = Favorite.objects.filter(user=self.request.user)
-        return queryset
+        return Favorite.objects.filter(user=self.request.user)
     
     @action(detail=False, methods=['post'])
     def toggle(self, request):
         ticker_code = request.data.get('ticker_code')
-        favorite = Favorite.objects.filter(
-            user=request.user,
-            ticker__code=ticker_code
-        ).first()
-
-        if favorite:
-            favorite.delete()
-            return Response({'status': 'removed'})
-        else:
-            Favorite.objects.create(
+        if not ticker_code:
+            return Response(
+                {'error': 'ticker_code is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            favorite = Favorite.objects.filter(
                 user=request.user,
                 ticker_id=ticker_code
+            ).first()
+
+            if favorite:
+                favorite.delete()
+                return Response({'status': 'removed'})
+            else:
+                Favorite.objects.create(
+                    user=request.user,
+                    ticker_id=ticker_code
+                )
+                return Response({'status': 'added'})
+                
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            return Response({'status': 'added'})
 
 ######################  rest api  #########################
+
+def health_check(request):
+    return HttpResponse("OK")

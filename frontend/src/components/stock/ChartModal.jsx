@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Modal, ButtonGroup, Button, Nav, Tab } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { selectStocks } from '../../store/slices/stockSlice';
+import { stockService } from '../../services/stockService'; // 추가: stockService import
 import CandlestickChart from './CandlestickChart';
 import { getPriceColor, formatNumber } from '../../utils/formatters';
 import { BiRefresh } from 'react-icons/bi'; // IoRefresh 대신 BiRefresh 사용
@@ -10,6 +11,7 @@ import StockIssue from './tabs/StockIssue';
 import StockNews from './tabs/StockNews';
 import StockInvestor from './tabs/StockInvestor';
 import StockBroker from './tabs/StockBroker'; // 새로운 import 추가
+import { AiFillStar, AiOutlineStar } from 'react-icons/ai'; // 별 아이콘 추가
 
 const ChartModal = ({
   show,
@@ -26,6 +28,7 @@ const ChartModal = ({
   const [cachedData, setCachedData] = useState({});
   const [currentData, setCurrentData] = useState(null);
   const [activeTab, setActiveTab] = useState('consensus');
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // 지표 상태는 유지
   const [visibleIndicators, setVisibleIndicators] = useState({
@@ -150,11 +153,56 @@ const ChartModal = ({
     setActiveTab(key);
   };
 
+  // 즐겨찾기 상태 초기화
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      try {
+        const favorites = await stockService.getFavorites();
+        setIsFavorite(
+          favorites?.some((fav) => fav.ticker === stockCode) || false
+        );
+      } catch (error) {
+        console.error('즐겨찾기 상태 확인 실패:', error);
+      }
+    };
+
+    if (show && stockCode) {
+      checkFavoriteStatus();
+    }
+  }, [show, stockCode]);
+
+  // 즐겨찾기 토글 핸들러
+  const handleFavoriteToggle = async () => {
+    try {
+      const response = await stockService.toggleFavorite(stockCode);
+      if (response?.status === 'added') {
+        setIsFavorite(true);
+      } else if (response?.status === 'removed') {
+        setIsFavorite(false);
+      }
+    } catch (error) {
+      console.error('즐겨찾기 처리 실패:', error);
+    }
+  };
+
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title className="d-flex align-items-center gap-2">
-          <span>{selectedStock?.종목명}</span>
+          <div className="d-flex align-items-center">
+            <span>{selectedStock?.종목명}</span>
+            <Button
+              variant="link"
+              className="p-0 ms-2"
+              onClick={handleFavoriteToggle}
+            >
+              {isFavorite ? (
+                <AiFillStar size={20} color="#ffd700" />
+              ) : (
+                <AiOutlineStar size={20} />
+              )}
+            </Button>
+          </div>
           {selectedStock && (
             <div
               className="d-flex align-items-center gap-3"

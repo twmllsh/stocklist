@@ -9,15 +9,21 @@ export const authService = {
   // 로그인
   login: async (credentials) => {
     try {
-      console.log('Login attempt with:', credentials);
-      const response = await authAxios.post('/login/', credentials); // '/accounts' 제거
-      // console.log('Login response:', response);
+      // 디버깅용 로그 추가
+      console.log('Login request URL:', authAxios.defaults.baseURL + '/login/');
+      console.log('Login request headers:', authAxios.defaults.headers);
+      console.log('Login request data:', credentials);
+
+      const response = await authAxios.post('/login/', credentials);
+      console.log('Login response:', response);
       return response;
     } catch (error) {
+      // 에러 상세 정보 출력
       console.error('Login error details:', {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
+        headers: error.response?.headers,
       });
       throw error;
     }
