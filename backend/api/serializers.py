@@ -78,3 +78,8 @@ class ChartValueSerializer(serializers.ModelSerializer):
         
         return representation
 
+
+class FavoriteSerializer(serializers.Serializer):
+      class Meta:
+        model = Favorite
+        fields = ('id', 'ticker', 'created_at')

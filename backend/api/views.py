@@ -281,7 +281,35 @@ class InvestorTradingViewSet(viewsets.ReadOnlyModelViewSet):
     def list(self, request, *args, **kwargs):
         # get_queryset에서 반환된 데이터를 Response로 감싸서 반환
         return Response(self.get_queryset())
-    
 
+from rest_framework.permissions import IsAuthenticated
+from .serializers import FavoriteSerializer
+from rest_framework.decorators import action
+
+class FavoriteViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]  # 추가된 줄
+    serializer_class = FavoriteSerializer
+
+    def get_queryset(self):
+        queryset = Favorite.objects.filter(user=self.request.user)
+        return queryset
+    
+    @action(detail=False, methods=['post'])
+    def toggle(self, request):
+        ticker_code = request.data.get('ticker_code')
+        favorite = Favorite.objects.filter(
+            user=request.user,
+            ticker__code=ticker_code
+        ).first()
+
+        if favorite:
+            favorite.delete()
+            return Response({'status': 'removed'})
+        else:
+            Favorite.objects.create(
+                user=request.user,
+                ticker_id=ticker_code
+            )
+            return Response({'status': 'added'})
 
 ######################  rest api  #########################

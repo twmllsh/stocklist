@@ -4,6 +4,9 @@ from model_utils import FieldTracker
 from django.db.models import F, Subquery, OuterRef, Q, Sum, Count
 from django.db import transaction
 from api.utils.mystock import ElseInfo
+from accounts.models import User
+
+
 
 class Ticker(models.Model):
     code = models.CharField(max_length=10, primary_key=True)
@@ -347,22 +350,75 @@ class BrokerTrading(models.Model):
         return result         
     
     @classmethod
-    def get_foreign_buy(cls, ticker):
-        qs = cls.objects.filter(Q(ticker='005930') & Q(broker_name='외국계추정합'))
-        df = pd.DataFrame(qs.values('date','buy','sell'))
+    def get_major_brokers(cls, ticker):
+        '''
+        외국계 창구와 외국계추정합. 그리고 특이한 창구 분석. 
+        외국계창구 = 
+        ['외국계추정합','메릴린치','제이피모간','에스지','홍콩상하이','맥쿼리',
+        '다이와','골드만삭스','모간스탠리','다올투자증권','노무라','비엔피','CLSA',
+        '씨티그룹','UBS',]
+        '''
+        # 종목 데이터 가져오기.
+        qs = cls.objects.filter(Q(ticker=ticker)).order_by('date')
         
-        # 구조 변화
-        buy_data = df.loc[df['buy'] > 0]
-        buy_data = buy_data[['date','buy']]
-        buy_data.rename(columns={'buy':'amount'},inplace=True)
-
-        sell_data = df.loc[df['sell'] > 0]
-        sell_data = sell_data[['date','sell']]
-        sell_data.rename(columns={'sell':'amount'},inplace=True)
-        sell_data['amount'] = sell_data['amount'] * -1
-        all_data = pd.concat([buy_data,sell_data])
-        all_data.sort_values(by=['date',],inplace=True)
-        return all_data
+        # 최근날짜데이터만 가져오기. 
+        start_date = pd.Timestamp.today() - pd.Timedelta(days=30)
+        qs = qs.filter(Q(date__gte=start_date))
+        
+        # 외국계만 가져오기. 
+        외국계창구 = ['외국계추정합','메릴린치','제이피모간','에스지','홍콩상하이','맥쿼리',
+        '다이와','골드만삭스','모간스탠리','다올투자증권','노무라','비엔피','CLSA',
+        '씨티그룹','UBS',]
+        # qs = qs.filter(Q(broker_name__in=외국계창구))   
+        
+        
+        df = pd.DataFrame(qs.values('date','broker_name','buy','sell'))
+        df.fillna(0,inplace=True)
+        df['net_buying'] = df['buy'] - df['sell']
+        
+        ## 특이 창구 분석. 
+        brokers = []
+        # 당일 순매수 창구. 
+        temp_df = df.loc[( df['buy'] > 0)  & (df['sell']== 0) ]
+        if len(temp_df) > 0:
+            for i, row in temp_df.iterrows():
+                broker_name = row['broker_name']
+                date = row['date']
+                print(f'당일 순매수만 {date} {broker_name}')
+                brokers.append(broker_name)
+        
+        
+        # 전일대비 순매수 2배 
+        for broker_name, group in df.groupby('broker_name'):
+            if len(group) > 1:
+                # cond0 = (group['net_buying'].shift(1) >= 0 ) & (group['net_buying'] <= 0)
+                cond1 = abs(group['net_buying'].shift(1)) * 2 <  abs(group['net_buying'])
+                cond2 = group['buy'].shift(1) * 2 <  group['buy']
+                temp_df = group.loc[cond1 & cond2]
+                if len(temp_df) > 0:
+                    for i , row in temp_df.iterrows():
+                       broker_name = row['broker_name']
+                       date = row['date']
+                       print(f'전일대비순매수 2배 {date}{broker_name}')
+                       brokers.append(broker_name)
+                    
+        ## 최근 n일 양수이어야함.매수한창구.  
+        
+        n = 3
+        temp_start_date = df['date'].unique()[-n]
+        temp_df = df.loc[df['date'] >= temp_start_date]
+        temp_group_data = temp_df.groupby('broker_name')['net_buying'].sum()
+        buying_brokers = temp_group_data.loc[ temp_group_data > 0 ].index
+        for broker_name in buying_brokers:
+            print(f'최근{n}일 매수한 창구 {broker_name}')
+            brokers.append(broker_name)
+         
+        
+        
+        brokers = list(set(brokers)) #3 주요 창구 임. 이 데이터가 있으면 이데이터들만 가져가기. 
+        result_df = df.loc[df['broker_name'].isin(brokers)]
+        
+        return result_df
     
         
     
@@ -760,3 +816,18 @@ class DartBonusIssue(models.Model):
     
     def __str__(self):
         return f"{self.name} 1주당:{self.주당배정주식수} "
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='favorites')
+    ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'ticker')
+        verbose_name='즐겨찾기'
+        verbose_name_plural = '즐겨찾기 목록'
+    
+    def __str__(self):
+        return f"{self.user}의 즐겨찾기 {self.ticker.name}"
+    

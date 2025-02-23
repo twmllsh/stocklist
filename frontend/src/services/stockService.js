@@ -150,6 +150,29 @@ export const stockService = {
       throw error;
     }
   },
+  // 즐겨찾기 조회 추가 삭제.
+  // 즐겨찾기 추가/제거
+  // toggleFavorite: async (code) => {
+  //   console.log('즐겨찾기 요청 시작:', code);
+  //   try {
+  //     const response = await stockAxios.post('/favorites/toggle/', {
+  //       param: { ticker: code },
+  //     });
+  //     return Array.isArray(response.data) ? response.data : response;
+  //   } catch (error) {
+  //     console.error('Favorite toggle failed:', error);
+  //   }
+  // },
+
+  // // 즐겨찾기 목록 조회
+  // getFavorites: async () => {
+  //   try {
+  //     const response = await stockAxios.get('/api/favorites/');
+  //     return Array.isArray(response.data) ? response.data : response;
+  //   } catch (error) {
+  //     console.error('Failed to get favorites:', error);
+  //   }
+  // },
 
   // 종목 Ohlcv 조회
   getStockOhlcv: async (code, interval = 'day') => {
