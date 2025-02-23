@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'api',
     'rest_framework',
     'corsheaders',
@@ -180,3 +181,12 @@ CSRF_TRUSTED_ORIGINS = [
 
 # 커스텀 유저 모델 설정
 AUTH_USER_MODEL = 'accounts.User'
+
+
+SHELL_PLUS_IMPORTS = [
+    "import asyncio",
+    "from api.utils.dart import MyDart"
+    # 'your_app.models',  # 특정 앱의 모델 임포트
+    # 'your_app.views',   # 특정 앱의 뷰 임포트
+    # 'your_app.other_module',  # 추가 모듈 임포트
+]
