@@ -190,11 +190,21 @@ class StocklistViewSet(viewsets.ViewSet):
                 params[param] = int(value)    
             else:
                 params[param] = value
-            
+        
         
         from .utils.dbupdater import Api
         print('params: ' , params)
-        result = Api.choice_for_api(**params)
+        ## favorites 가 들어있으면 파람 모두 무시. 재생산. 
+        ## search 가 들어있어도 파라 모두 무시. 재생산. 
+        if "favorites" in params:
+            username = request.user.username
+            params = {'favorites': username}
+            result = Api.favorite_for_api(**params)
+        elif "search" in params:
+            params = {'search': params['search']}
+            result = Api.search_for_api(**params)
+        else:
+            result = Api.choice_for_api(**params)
         
         # Handle NaN values
         result = result.fillna('N/A')
@@ -292,7 +302,12 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     serializer_class = FavoriteSerializer
 
     def get_queryset(self):
-        return Favorite.objects.filter(user=self.request.user)
+        username = self.request.user.username
+        user = User.objects.get(username=username)
+        queryset = user.favorites.all().select_related('ticker')
+        print("Serialized data:", self.serializer_class(queryset, many=True).data)
+        print("Raw qeuryset: ", queryset.values())
+        return queryset
     
     @action(detail=False, methods=['post'])
     def toggle(self, request):

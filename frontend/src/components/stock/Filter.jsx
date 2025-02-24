@@ -1,7 +1,16 @@
-import { Form, Row, Col, Button, Container } from 'react-bootstrap';
+import {
+  Form,
+  Row,
+  Col,
+  Button,
+  Container,
+  OverlayTrigger,
+  Tooltip,
+} from 'react-bootstrap';
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchFilteredStocks } from '../../store/slices/stockSlice'; // 수정된 임포트
+import { stockService } from '../../services/stockService'; // 상단에 추가
 
 export default function Filter({ onToggle }) {
   const dispatch = useDispatch();
@@ -40,6 +49,30 @@ export default function Filter({ onToggle }) {
     rsi: false,
     exp: false,
   });
+
+  // 필터 설명 추가
+  const filterDescriptions = {
+    newbra: 'NEWBRA',
+    good_buy: '투자자 분석종목',
+    turnarround: '실적 흑자 전환',
+    consen: '컨센서스 상향 종목',
+    realtime: '실시간 데이터 기반 분석',
+    endprice: '종가 기준 분석',
+    change: '등락률 범위 내 종목',
+    sun_ac: '그물망 기준값너비 이하에서 매직봉',
+    coke_up: 'BB 기준값너비 이하에서 매직봉',
+    sun_gcv: '그물망 돌파후 골든크로스',
+    coke_gcv: 'BB 돌파후 골든크로스',
+    array: '정배열',
+    array_exclude: '역배열 제외',
+    ab: '좋은 파동',
+    abv: '최근 거래량 증가추세',
+    goodwave: '20파동과 3파동 쌍바닥',
+    ac: '현재 매직봉',
+    new_listing: '최근상장회사중 상장일종가 돌파',
+    rsi: 'RSI 내려갔다가 반등',
+    exp: '실험실...',
+  };
 
   const buttonGroups = [
     {
@@ -110,6 +143,16 @@ export default function Filter({ onToggle }) {
     }
   };
 
+  // 테스트용 함수 추가 즐겨찾기
+  const handleTestFavorites = async () => {
+    try {
+      const favorites = await stockService.getFavorites();
+      console.log('즐겨찾기 데이터:', favorites);
+    } catch (error) {
+      console.error('즐겨찾기 요청 실패:', error);
+    }
+  };
+
   // 스크롤 방향 감지 및 필터 접기 처리
   useEffect(() => {
     let lastScrollY = window.pageYOffset;
@@ -137,6 +180,64 @@ export default function Filter({ onToggle }) {
     onToggle(!isOpen); // 부모 컴포넌트에 상태 전달
   };
 
+  // 버튼 렌더링 함수 수정
+  const renderButton = (btn) => (
+    <OverlayTrigger
+      key={btn.name} // key를 여기로 이동
+      placement="top"
+      overlay={<Tooltip>{filterDescriptions[btn.name]}</Tooltip>}
+    >
+      <div className="d-flex align-items-center">
+        {' '}
+        {/* key 제거 */}
+        <Button
+          variant={filters[btn.name] ? 'primary' : 'outline-primary'}
+          size="sm"
+          onClick={() => handleFilterChange(btn.name)}
+          className="me-2"
+        >
+          {btn.label}
+        </Button>
+        {btn.hasValue &&
+          (btn.hasRangeValue ? (
+            <div className="d-flex align-items-center gap-1">
+              <Form.Control
+                type="number"
+                size="sm"
+                style={{ width: '70px' }}
+                placeholder="최소"
+                value={filters.change_min || ''}
+                onChange={(e) =>
+                  handleFilterChange('change_min', e.target.value)
+                }
+              />
+              <span>~</span>
+              <Form.Control
+                type="number"
+                size="sm"
+                style={{ width: '70px' }}
+                placeholder="최대"
+                value={filters.change_max || ''}
+                onChange={(e) =>
+                  handleFilterChange('change_max', e.target.value)
+                }
+              />
+            </div>
+          ) : (
+            <Form.Control
+              type="number"
+              size="sm"
+              style={{ width: '70px' }}
+              value={filters[`${btn.name}_value`] || ''}
+              onChange={(e) =>
+                handleFilterChange(`${btn.name}_value`, e.target.value)
+              }
+            />
+          ))}
+      </div>
+    </OverlayTrigger>
+  );
+
   return (
     <Container fluid className="p-0 border-bottom">
       <Form>
@@ -153,60 +254,7 @@ export default function Filter({ onToggle }) {
               <div className="mb-3">
                 <h6 className="mb-2">{group.title}</h6>
                 <div className="d-flex flex-wrap gap-2">
-                  {group.buttons.map((btn) => (
-                    <div key={btn.name} className="d-flex align-items-center">
-                      <Button
-                        variant={
-                          filters[btn.name] ? 'primary' : 'outline-primary'
-                        }
-                        size="sm"
-                        onClick={() => handleFilterChange(btn.name)}
-                        className="me-2"
-                      >
-                        {btn.label}
-                      </Button>
-                      {btn.hasValue && btn.hasRangeValue ? (
-                        <div className="d-flex align-items-center gap-1">
-                          <Form.Control
-                            type="number"
-                            size="sm"
-                            style={{ width: '70px' }}
-                            placeholder="최소"
-                            value={filters.change_min || ''}
-                            onChange={(e) =>
-                              handleFilterChange('change_min', e.target.value)
-                            }
-                          />
-                          <span>~</span>
-                          <Form.Control
-                            type="number"
-                            size="sm"
-                            style={{ width: '70px' }}
-                            placeholder="최대"
-                            value={filters.change_max || ''}
-                            onChange={(e) =>
-                              handleFilterChange('change_max', e.target.value)
-                            }
-                          />
-                        </div>
-                      ) : (
-                        btn.hasValue && (
-                          <Form.Control
-                            type="number"
-                            size="sm"
-                            style={{ width: '70px' }}
-                            value={filters[`${btn.name}_value`] || ''}
-                            onChange={(e) =>
-                              handleFilterChange(
-                                `${btn.name}_value`,
-                                e.target.value
-                              )
-                            }
-                          />
-                        )
-                      )}
-                    </div>
-                  ))}
+                  {group.buttons.map((btn) => renderButton(btn))}
                 </div>
               </div>
               {idx === 0 && <hr className="my-3" />}{' '}
@@ -216,7 +264,7 @@ export default function Filter({ onToggle }) {
         </div>
 
         <div className="d-flex justify-content-between align-items-center py-2 sticky-bottom bg-white">
-          <div className="d-flex align-items-center">
+          <div className="d-flex align-items-center gap-2">
             <Button
               variant="outline-danger px-5"
               onClick={handleSearch}
@@ -224,7 +272,11 @@ export default function Filter({ onToggle }) {
             >
               {isLoading ? '검색 중...' : '검색'}
             </Button>
-            <span className="text-secondary me-2">
+            {/* 테스트 버튼 추가 */}
+            <Button variant="warning" size="sm" onClick={handleTestFavorites}>
+              즐겨찾기 테스트
+            </Button>
+            <span className="text-secondary">
               {resultCount !== undefined && `${resultCount}개 종목`}
             </span>
             {error && <span className="text-danger">{error}</span>}

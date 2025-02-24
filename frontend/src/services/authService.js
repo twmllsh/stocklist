@@ -10,12 +10,12 @@ export const authService = {
   login: async (credentials) => {
     try {
       // 디버깅용 로그 추가
-      console.log('Login request URL:', authAxios.defaults.baseURL + '/login/');
-      console.log('Login request headers:', authAxios.defaults.headers);
-      console.log('Login request data:', credentials);
+      // console.log('Login request URL:', authAxios.defaults.baseURL + '/login/');
+      // console.log('Login request headers:', authAxios.defaults.headers);
+      // console.log('Login request data:', credentials);
 
       const response = await authAxios.post('/login/', credentials);
-      console.log('Login response:', response);
+      // console.log('Login response:', response);
       return response;
     } catch (error) {
       // 에러 상세 정보 출력

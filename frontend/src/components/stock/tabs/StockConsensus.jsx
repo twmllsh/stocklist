@@ -12,16 +12,16 @@ const StockConsensus = ({ stockCode }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log('===== 컨센서스 데이터 요청 시작 =====');
+      // console.log('===== 컨센서스 데이터 요청 시작 =====');
       if (!stockCode) return;
 
       try {
         setLoading(true);
         const data = await stockService.getStockConsensus(stockCode);
-        console.log('컨센서스 데이터:', data);
+        // console.log('컨센서스 데이터:', data);
         setData(data);
       } catch (err) {
-        console.error('컨센서스 데이터 요청 실패:', err);
+        // console.error('컨센서스 데이터 요청 실패:', err);
         setError('데이터를 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);
@@ -32,7 +32,7 @@ const StockConsensus = ({ stockCode }) => {
   }, [stockCode]);
 
   const processChartData = (rawData, type) => {
-    console.log(`Processing ${type} data:`, rawData);
+    // console.log(`Processing ${type} data:`, rawData);
 
     const filtered = rawData
       .filter((item) => {
@@ -223,8 +223,8 @@ const StockConsensus = ({ stockCode }) => {
     const yearlyData = processChartData(data, 'yearly');
     const quarterlyData = processChartData(data, 'quarterly');
 
-    console.log('연간 데이터:', yearlyData);
-    console.log('분기 데이터:', quarterlyData);
+    // console.log('연간 데이터:', yearlyData);
+    // console.log('분기 데이터:', quarterlyData);
 
     if (yearlyData.length > 0) {
       yearlyChartRef.current = createConsensusChart(

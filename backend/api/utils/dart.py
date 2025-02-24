@@ -41,12 +41,20 @@ class MyDart:
     
     
     
-    def run(self):
+    def run(self,n=2):
         '''
         데이터 가져와서 저장까지 하기.
         '''
+        if AllDart.objects.count():
+            self.last_date = AllDart.objects.aggregate(Max('rcept_dt'))['rcept_dt__max']   ## db에서 가져온값.
+            self.last_rcpNo = AllDart.objects.aggregate(Max('rcept_no'))['rcept_no__max']   ## db에서 가져온값.
+            print('database 에서 마지막날짜 가져옴.')
+            print('last_date', self.last_date)
+            print('last_rcpNo', self.last_rcpNo)
+
+
         try:
-            result = asyncio.run(self.get_data())
+            result = asyncio.run(self.get_data(n=n))
         except Exception as e:
             print(f'{e} 데이터 가져오는중 에러발생으로 저장하지 않습니다.')
             return
@@ -56,11 +64,11 @@ class MyDart:
         print('데이터 저장완료')
         
     
-    async def get_data(self):
+    async def get_data(self,n=2):
         '''
         데이터만 가져오기
         '''
-        self.dart_list = self.get_dart_list()
+        self.dart_list = self.get_dart_list(n=n)
 
         # ## 실시간으로 감지할때 사용하는 방법.
         # tasks = [self.get_contract_data_by_df(),
@@ -79,19 +87,19 @@ class MyDart:
         
         
         #############################3
-        # 후처리.
-        if len(self.contract):
-            self.contract = [item for item in self.contract if not isinstance(item, TypeError)]
-            self.contract = [item for item in self.contract if len(item)!=0]
-        if len(self.rights_issue):
-            self.rights_issue = [item for item in self.rights_issue if not isinstance(item, TypeError)]
-            self.rights_issue = [item for item in self.rights_issue if len(item)!=0]
-        if len(self.convertible_bond):
-            self.convertible_bond = [item for item in self.convertible_bond if not isinstance(item, TypeError)]
-            self.convertible_bond = [item for item in self.convertible_bond if len(item)!=0]
-        if len(self.bonus_issue):
-            self.bonus_issue = [item for item in self.bonus_issue if not isinstance(item, TypeError)]
-            self.bonus_issue = [item for item in self.bonus_issue if len(item)!=0]
+        # # 후처리.
+        # if len(self.contract):
+        #     self.contract = [item for item in self.contract if not isinstance(item, TypeError)]
+        #     self.contract = [item for item in self.contract if len(item)!=0]
+        # if len(self.rights_issue):
+        #     self.rights_issue = [item for item in self.rights_issue if not isinstance(item, TypeError)]
+        #     self.rights_issue = [item for item in self.rights_issue if len(item)!=0]
+        # if len(self.convertible_bond):
+        #     self.convertible_bond = [item for item in self.convertible_bond if not isinstance(item, TypeError)]
+        #     self.convertible_bond = [item for item in self.convertible_bond if len(item)!=0]
+        # if len(self.bonus_issue):
+        #     self.bonus_issue = [item for item in self.bonus_issue if not isinstance(item, TypeError)]
+        #     self.bonus_issue = [item for item in self.bonus_issue if len(item)!=0]
         
         
         ## 모두 성공하면 dart_list 로 저장하기.
@@ -99,6 +107,29 @@ class MyDart:
         
         return self.contract, self.rights_issue, self.convertible_bond, self.bonus_issue 
     
+    def delete_latest_data(self):
+        all_dart = AllDart.objects.filter(rcept_dt__gt=self.last_date)
+        if all_dart.count():
+            all_dart.delete()
+            print('최신데이터 삭제완료')
+        contract = DartContract.objects.filter(rcept_dt__gt=self.last_date)
+        if contract.count():
+            contract.delete()
+            print('contract 삭제완료')
+        rights_issue = DartRightsIssue.objects.filter(rcept_dt__gt=self.last_date)
+        if rights_issue.count():
+            rights_issue.delete()
+            print('rights_issue 삭제완료')
+        convertible_bond = DartConvertibleBond.objects.filter(rcept_dt__gt=self.last_date)
+        if convertible_bond.count():
+            convertible_bond.delete()
+            print('convertible_bond 삭제완료')
+        bonus_issue = DartBonusIssue.objects.filter(rcept_dt__gt=self.last_date)
+        if bonus_issue.count():
+            bonus_issue.delete()
+            print('bonus_issue 삭제완료')
+        
+        
     
     def save_dart_list(self):
         if len(self.dart_list) == 0:
@@ -248,22 +279,29 @@ class MyDart:
             print('convertible_bond is empty')
     
     def save_dart_all_to_db(self):
-        if len(self.dart_list) > 0:
-            self.save_dart_list()
+    
         if len(self.contract) > 0:
             self.save_contract()
+            
         if len(self.bonus_issue) > 0:
             self.save_bonus_issue()
+            
         if len(self.convertible_bond) > 0:
             self.save_convertible_bond()
+            
         if len(self.rights_issue) > 0:
             self.save_rights_issue()
-
-
+            
+        if len(self.dart_list) > 0:
+            self.save_dart_list()
+    
+        
+        
+        
                     
     
     
-    def get_dart_list(self):
+    def get_dart_list(self, n=2):
         
         if self.last_date is None:
             self.last_date = pd.Timestamp.now().date() - pd.Timedelta(days=302)
@@ -282,7 +320,7 @@ class MyDart:
 
         # date_range 생성
         dates = pd.date_range(self.last_date, now, freq='b')
-        dates = dates[:5]  # 앞에서 5일만 작업하기
+        dates = dates[:n]  # 앞에서 5일만 작업하기
         print(dates)
         
         all_ls = []
@@ -297,11 +335,12 @@ class MyDart:
         corp_codes = corp_codes.loc[corp_codes['stock_code'].str.len() > 5]
         df = pd.merge(df, corp_codes[['corp_name','stock_code']], how='left', on='corp_name')
         df = df.loc[:, ~df.columns.str.contains('flr_nm|rm')]
-        print(f"{len(df)} 개의 공시데이터 작업시작!!")
+        download_cnt = len(df)
         if self.last_rcpNo:
             df = df.loc[df['rcept_no'] > self.last_rcpNo]
         if len(df)> 0 :
             df['rcept_dt'] = df['rcept_dt'].dt.tz_localize('Asia/Seoul')
+        print(f"{len(df)} / {download_cnt} 공시데이터 작업시작!!")
         return df
     
     
@@ -341,7 +380,12 @@ class MyDart:
         resp = requests.get(url)
         stringio = StringIO(resp.text)
         dic['계약내용'] = Text_mining._extract_table(stringio, '공급계약', '공급계약 내용', verbose=False)
+        
         dic['계약금액'] = Text_mining._extract_table(stringio, '공급계약', '계약금액 총액', verbose=False)
+        try:
+            dic['계약금액'] = int(dic['계약금액'])
+        except:
+            dic['계약금액'] = 0
         dic['계약상대방'] = Text_mining._extract_table(stringio, '공급계약', '계약상대', verbose=False)
         dic['공급지역'] = Text_mining._extract_table(stringio, '공급계약', '공급지역', verbose=False)
         매출액대비 = Text_mining._extract_table(stringio, '공급계약', '매출액 대비 -최근', verbose=False)
@@ -375,7 +419,11 @@ class MyDart:
             else:
                 result_dict[key] = value  # 문자열이 아닐 경우 원본 저장
 
-        
+        if not 'code' in result_dict.keys():
+            print('code is not in result_dict')
+            print('dic:;', dic)
+            print('result_dict :;', result_dict)
+            print('url:: ', url)
         return result_dict
     
     async def get_contract_data_by_df(self):
@@ -396,7 +444,13 @@ class MyDart:
         tasks = [limited_get_contract(row['rcept_no'], row['corp_name'], row['stock_code'], row['rcept_dt']) 
                  for _, row in contract_df.iterrows()]
         results = await asyncio.gather(*tasks,  return_exceptions=True)
-        return results
+        # 후처리.
+        self.contract = results
+        if len(self.contract):
+            self.contract = [item for item in self.contract if not isinstance(item, TypeError)]
+            self.contract = [item for item in self.contract if len(item)!=0]
+
+        return self.contract
     
     ## 유상증자
     async def get_rights_issue(self, rcpNo, corp_name=None, code=None, rcept_dt=None):
@@ -509,7 +563,13 @@ class MyDart:
         tasks = [limited_get_data(row['rcept_no'],  row['corp_name'], row['stock_code'], row['rcept_dt']) 
                  for _, row in rights_issue_df.iterrows()]
         results = await asyncio.gather(*tasks,  return_exceptions=True)
-        return results
+        # 후처리.
+        self.rights_issue = results
+        if len(self.rights_issue):
+            self.rights_issue = [item for item in self.rights_issue if not isinstance(item, TypeError)]
+            self.rights_issue = [item for item in self.rights_issue if len(item)!=0]
+        
+        return self.rights_issue
     
 ## 전환사채
     async def get_convertible_bond(self, rcpNo, corp_name=None, code=None, rcept_dt=None):
@@ -532,7 +592,11 @@ class MyDart:
             stringio = StringIO(resp.text)
 
             dic['전환사채총액'] = Text_mining._extract_table(stringio, '사채의 종류', '사채의 총액 +(원)')
-
+            try:
+                dic['전환사채총액'] = int(dic['전환사채총액'])
+            except:
+                dic['전환사채총액'] = 0
+                
             자금조달목적_list = []
             시설자금 = Text_mining._extract_table(stringio, '자금조달 목적' ,'목적 +시설' )
             if isinstance(시설자금, (int, float)):
@@ -602,7 +666,7 @@ class MyDart:
     
     async def get_convertible_bond_data_by_df(self):
         df = self.dart_list
-        convertible_bond_df = df.loc[df['report_nm'].str.contains('전환사채권발행결정') & ~df['report_nm'].str.contains('기재정정')]
+        convertible_bond_df = df.loc[df['report_nm'].str.contains('전환사채권발행결정') & ~df['report_nm'].str.contains('첨부정정|기재정정|해지')]
         if len(convertible_bond_df)==0:
             print('No convertible_bond_data!')
             return []
@@ -617,7 +681,13 @@ class MyDart:
         tasks = [limited_get_data(row['rcept_no'],  row['corp_name'], row['stock_code'], row['rcept_dt']) 
                  for _, row in convertible_bond_df.iterrows()]
         results = await asyncio.gather(*tasks,  return_exceptions=True)
-        return results
+        # 후처리.
+        self.convertible_bond = results
+        if len(self.convertible_bond):
+            self.convertible_bond = [item for item in self.convertible_bond if not isinstance(item, TypeError)]
+            self.convertible_bond = [item for item in self.convertible_bond if len(item)!=0]
+        
+        return self.convertible_bond
 
     ## 무상증자
     async def get_bonus_issue(self, rcpNo, corp_name=None, code=None, rcept_dt=None):
@@ -677,7 +747,7 @@ class MyDart:
     
     async def get_bonus_issue_data_by_df(self):
         df = self.dart_list
-        bonus_issue_df = df.loc[df['report_nm'].str.contains('무상증자결정') & ~df['report_nm'].str.contains('기재정정')]
+        bonus_issue_df = df.loc[df['report_nm'].str.contains('무상증자결정') & ~df['report_nm'].str.contains('기재정정|유무상|해지')]
         if len(bonus_issue_df)==0:
             print('No bonus_issue data!')
             return []
@@ -692,8 +762,155 @@ class MyDart:
         tasks = [limited_get_data(row['rcept_no'],  row['corp_name'], row['stock_code'], row['rcept_dt']) 
                  for _, row in bonus_issue_df.iterrows()]
         results = await asyncio.gather(*tasks,  return_exceptions=True)
-        return results
+        # 후처리.
+        self.bonus_issue = results
+        if len(self.bonus_issue):
+            self.bonus_issue = [item for item in self.bonus_issue if not isinstance(item, TypeError)]
+            self.bonus_issue = [item for item in self.bonus_issue if len(item)!=0]
+        return self.bonus_issue
     
+    
+    def delete_dupplication_dartModel(self, dartModel:models.Model):
+        from django.db.models import Count
+        if dartModel.__name__== "DartConvertibleBond":
+            temp_col = '전환사채총액'
+        elif dartModel.__name__ == "DartContract":
+            temp_col = '계약상대방'
+        elif dartModel.__name__ == "DartRightsIssue":
+            temp_col = '제3자배정대상자'
+        elif dartModel.__name__ == "DartBonusIssue":
+            temp_col = '주당배정주식수'
+        else:
+            print('no dartModel !')
+            return
+        print("temp_col: ", temp_col)
+        
+            
+        old_cnt = dartModel.objects.count()
+        # 중복된 데이터 찾기
+        duplicates = (
+            dartModel.objects
+            .values('rcept_dt', temp_col)
+            .annotate(count=Count('id'))
+            .filter(count__gt=1)
+        )
+        # 중복된 데이터 삭제
+     
+        for duplicate in duplicates:
+            filter_dict = {
+                "rcept_dt": duplicate['rcept_dt'],
+                f"{temp_col}":duplicate[temp_col]
+            }
+            
+            # 중복된 데이터 가져오기 (그룹화된 필드로)
+            duplicate_records = dartModel.objects.filter(
+                **filter_dict
+            )
+            
+            # 첫 번째 항목을 제외한 나머지 항목 삭제
+            duplicate_records.exclude(id=duplicate_records.first().id).delete()
+            
+        new_cnt = dartModel.objects.count()
+        print(f" {str(dartModel)} 중복 제거 완료. {old_cnt} -> {new_cnt}")
+    
+    
+    def delete_dupplication_convertible_bond(self):
+        from django.db.models import Count
+        old_cnt = DartConvertibleBond.objects.count()
+        # 중복된 데이터 찾기
+        duplicates = (
+            DartConvertibleBond.objects
+            .values('rcept_dt', '전환사채총액')
+            .annotate(count=Count('id'))
+            .filter(count__gt=1)
+        )
+        # 중복된 데이터 삭제
+        for duplicate in duplicates:
+            # 중복된 데이터 가져오기 (그룹화된 필드로)
+            duplicate_records = DartConvertibleBond.objects.filter(
+                rcept_dt=duplicate['rcept_dt'],
+                전환사채총액=duplicate['전환사채총액']
+            )
+            
+            # 첫 번째 항목을 제외한 나머지 항목 삭제
+            duplicate_records.exclude(id=duplicate_records.first().id).delete()
+            
+        new_cnt = DartConvertibleBond.objects.count()
+        print(f"DartConvertibleBond 중복 제거 완료. {old_cnt} -> {new_cnt}")
+    
+    
+    def delete_dupplication_contract(self):
+        from django.db.models import Count
+        old_cnt = DartContract.objects.count()
+        # 중복된 데이터 찾기
+        duplicates = (
+            DartContract.objects
+            .values('rcept_dt', '계약상대방')
+            .annotate(count=Count('id'))
+            .filter(count__gt=1)
+        )
+        # 중복된 데이터 삭제
+        for duplicate in duplicates:
+            # 중복된 데이터 가져오기 (그룹화된 필드로)
+            duplicate_records = DartContract.objects.filter(
+                rcept_dt=duplicate['rcept_dt'],
+                전환사채총액=duplicate['계약상대방']
+            )
+            
+            # 첫 번째 항목을 제외한 나머지 항목 삭제
+            duplicate_records.exclude(id=duplicate_records.first().id).delete()
+            
+        new_cnt = DartContract.objects.count()
+        print(f"DartContract 중복 제거 완료. {old_cnt} -> {new_cnt}")
+        
+    def delete_dupplication_dartrightsIssue(self):
+        from django.db.models import Count
+        old_cnt = DartRightsIssue.objects.count()
+        # 중복된 데이터 찾기
+        duplicates = (
+            DartRightsIssue.objects
+            .values('rcept_dt', '제3자배정대상자')
+            .annotate(count=Count('id'))
+            .filter(count__gt=1)
+        )
+        # 중복된 데이터 삭제
+        for duplicate in duplicates:
+            # 중복된 데이터 가져오기 (그룹화된 필드로)
+            duplicate_records = DartRightsIssue.objects.filter(
+                rcept_dt=duplicate['rcept_dt'],
+                전환사채총액=duplicate['제3자배정대상자']
+            )
+            
+            # 첫 번째 항목을 제외한 나머지 항목 삭제
+            duplicate_records.exclude(id=duplicate_records.first().id).delete()
+            
+        new_cnt = DartRightsIssue.objects.count()
+        print(f"DartRightsIssue 중복 제거 완료. {old_cnt} -> {new_cnt}")
+        
+    def delete_dupplication_bonus(self):
+        from django.db.models import Count
+        old_cnt = DartBonusIssue.objects.count()
+        # 중복된 데이터 찾기
+        duplicates = (
+            DartBonusIssue.objects
+            .values('rcept_dt', '주당배정주식수')
+            .annotate(count=Count('id'))
+            .filter(count__gt=1)
+        )
+        # 중복된 데이터 삭제
+        for duplicate in duplicates:
+            # 중복된 데이터 가져오기 (그룹화된 필드로)
+            duplicate_records = DartBonusIssue.objects.filter(
+                rcept_dt=duplicate['rcept_dt'],
+                전환사채총액=duplicate['주당배정주식수']
+            )
+            
+            # 첫 번째 항목을 제외한 나머지 항목 삭제
+            duplicate_records.exclude(id=duplicate_records.first().id).delete()
+            
+        new_cnt = DartBonusIssue.objects.count()
+        print(f"DartBonusIssue 중복 제거 완료. {old_cnt} -> {new_cnt}")
+        
 if __name__ == "__main__":
     mydart = MyDart()
     mydart.run()

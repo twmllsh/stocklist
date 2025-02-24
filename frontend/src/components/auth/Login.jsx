@@ -12,6 +12,7 @@ import {
   Alert,
   Card,
 } from 'react-bootstrap';
+import { fetchFavorites } from '../../store/slices/favoriteSlice';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -40,6 +41,10 @@ export default function Login() {
           refresh: response.refresh,
         })
       );
+
+      // 로그인 성공 후 즐겨찾기 데이터 가져오기
+      await dispatch(fetchFavorites());
+
       navigate('/list');
     } catch (error) {
       setError('로그인에 실패했습니다.');
@@ -50,81 +55,46 @@ export default function Login() {
   };
 
   return (
-    <Container
-      fluid
-      className="vh-100 d-flex align-items-center"
-      style={{ background: '#f8f9fa' }}
-    >
-      <Container
-        style={{ maxWidth: '460px', minWidth: '320px', width: '100%' }}
-      >
-        <div className="text-center mb-5">
-          <h1
-            className="fw-bold"
-            style={{ color: '#2c3e50', fontSize: '2.5rem' }}
-          >
-            Stock List
-          </h1>
-          <p className="text-muted">......</p>
-        </div>
-        {error && (
-          <Alert variant="danger" className="py-2 mb-4 text-center rounded-3">
-            {error}
-          </Alert>
-        )}
-        <Form onSubmit={handleSubmit} className="d-flex flex-column gap-3">
-          <Form.Control
-            type="text"
-            placeholder="아이디"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="form-control-lg border-0 shadow-sm py-3"
-            style={{
-              background: '#fff',
-              fontSize: '1rem',
-              minHeight: '3.2rem',
-            }}
-          />
-          <Form.Control
-            type="password"
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="form-control-lg border-0 shadow-sm py-3"
-            style={{
-              background: '#fff',
-              fontSize: '1rem',
-              minHeight: '3.2rem',
-            }}
-          />
-          <Button
-            variant="primary"
-            type="submit"
-            disabled={loading}
-            className="py-3 mt-3 rounded-3 shadow-sm"
-            style={{
-              background: '#3498db',
-              border: 'none',
-              fontSize: '1.1rem',
-              minHeight: '3.5rem',
-            }}
-          >
-            {loading ? '로그인 중...' : '로그인'}
-          </Button>
-          <div className="text-center mt-4">
-            <span className="text-muted">계정이 없으신가요?</span>{' '}
-            <Link
-              to="/register"
-              className="text-decoration-none fw-bold"
-              style={{ color: '#3498db' }}
-            >
-              회원가입
-            </Link>
-          </div>
-        </Form>
-      </Container>
+    <Container fluid className="auth-container bg-light">
+      <Row className="justify-content-center align-items-center min-vh-100">
+        <Col xs={12} sm={8} md={6} lg={4} className="my-3">
+          <Card className="shadow-lg" style={{ maxHeight: '600px' }}>
+            <Card.Body className="p-4">
+              <h2 className="text-center mb-4">로그인</h2>
+              {error && <Alert variant="danger">{error}</Alert>}
+              <Form
+                onSubmit={handleSubmit}
+                className="d-flex flex-column gap-3"
+              >
+                <Form.Group>
+                  <Form.Label>아이디</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>비밀번호</Form.Label>
+                  <Form.Control
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+                <Button variant="primary" type="submit" className="mt-2">
+                  로그인
+                </Button>
+                <div className="text-center mt-2">
+                  계정이 없으신가요? <Link to="/register">회원가입</Link>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </Container>
   );
 }

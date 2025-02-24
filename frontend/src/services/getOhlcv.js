@@ -53,7 +53,7 @@ async function fetchOhlcvData(code, candleType) {
     url = `${baseUrl}${code}/day?startDateTime=${startDateTime}&endDateTime=${endDateTime}`;
   }
 
-  console.log('Request URL:', url); // URL 확인
+  // console.log('Request URL:', url); // URL 확인
 
   try {
     const response = await axios.get(url, {

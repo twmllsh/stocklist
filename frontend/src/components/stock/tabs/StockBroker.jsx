@@ -25,7 +25,7 @@ const StockBroker = ({ stockCode }) => {
       try {
         setLoading(true);
         const response = await stockService.getStockBroker(stockCode);
-        console.log('거래원 데이터:', response);
+        // console.log('거래원 데이터:', response);
         setData(response);
       } catch (err) {
         console.error('거래원 데이터 요청 실패:', err);

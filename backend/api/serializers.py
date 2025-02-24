@@ -80,6 +80,8 @@ class ChartValueSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.Serializer):
-      class Meta:
+    ticker = TickerSerializer(many=False, read_only=True)
+    buy_price = serializers.FloatField()
+    class Meta:
         model = Favorite
-        fields = ('id', 'ticker', 'created_at')
+        fields = ("__all__")

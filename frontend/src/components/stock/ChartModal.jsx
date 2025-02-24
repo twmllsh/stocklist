@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Modal, ButtonGroup, Button, Nav, Tab } from 'react-bootstrap';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectStocks } from '../../store/slices/stockSlice';
 import { stockService } from '../../services/stockService'; // 추가: stockService import
 import CandlestickChart from './CandlestickChart';
@@ -12,6 +12,10 @@ import StockNews from './tabs/StockNews';
 import StockInvestor from './tabs/StockInvestor';
 import StockBroker from './tabs/StockBroker'; // 새로운 import 추가
 import { AiFillStar, AiOutlineStar } from 'react-icons/ai'; // 별 아이콘 추가
+import {
+  selectFavorites,
+  toggleFavoriteStock,
+} from '../../store/slices/favoriteSlice';
 
 const ChartModal = ({
   show,
@@ -20,7 +24,9 @@ const ChartModal = ({
   stockCode,
   onIntervalChange,
 }) => {
+  const dispatch = useDispatch();
   const stocks = useSelector(selectStocks);
+  const favorites = useSelector(selectFavorites);
   const selectedStock = stocks.find((stock) => stock.code === stockCode);
 
   const [interval, setInterval] = useState('day');
@@ -147,39 +153,24 @@ const ChartModal = ({
 
   // 탭 변경 핸들러 수정
   const handleTabSelect = (key) => {
-    console.log('===== 탭 클릭 =====');
-    console.log('선택된 탭:', key);
-    console.log('현재 종목 코드:', stockCode);
+    // console.log('===== 탭 클릭 =====');
+    // console.log('선택된 탭:', key);
+    // console.log('현재 종목 코드:', stockCode);
     setActiveTab(key);
   };
 
   // 즐겨찾기 상태 초기화
   useEffect(() => {
-    const checkFavoriteStatus = async () => {
-      try {
-        const favorites = await stockService.getFavorites();
-        setIsFavorite(
-          favorites?.some((fav) => fav.ticker === stockCode) || false
-        );
-      } catch (error) {
-        console.error('즐겨찾기 상태 확인 실패:', error);
-      }
-    };
-
     if (show && stockCode) {
-      checkFavoriteStatus();
+      const isFav = favorites.includes(stockCode);
+      setIsFavorite(isFav);
     }
-  }, [show, stockCode]);
+  }, [show, stockCode, favorites]);
 
   // 즐겨찾기 토글 핸들러
   const handleFavoriteToggle = async () => {
     try {
-      const response = await stockService.toggleFavorite(stockCode);
-      if (response?.status === 'added') {
-        setIsFavorite(true);
-      } else if (response?.status === 'removed') {
-        setIsFavorite(false);
-      }
+      await dispatch(toggleFavoriteStock(stockCode)).unwrap();
     } catch (error) {
       console.error('즐겨찾기 처리 실패:', error);
     }

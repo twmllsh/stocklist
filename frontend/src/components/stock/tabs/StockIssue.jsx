@@ -9,11 +9,11 @@ const StockIssue = ({ stockCode }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log('===== 이슈 데이터 요청 시작 =====');
-      console.log('종목코드:', stockCode);
+      // console.log('===== 이슈 데이터 요청 시작 =====');
+      // console.log('종목코드:', stockCode);
 
       if (!stockCode) {
-        console.log('종목코드가 없어서 요청 취소');
+        // console.log('종목코드가 없어서 요청 취소');
         return;
       }
 
@@ -22,7 +22,7 @@ const StockIssue = ({ stockCode }) => {
         setError(null);
 
         const response = await stockService.getStockIssue(stockCode);
-        console.log('이슈 API 전체 응답:', response);
+        // console.log('이슈 API 전체 응답:', response);
 
         // response가 직접 데이터 배열인 경우 처리
         const issueData = Array.isArray(response)
@@ -31,10 +31,10 @@ const StockIssue = ({ stockCode }) => {
           ? response.data
           : [];
 
-        console.log('처리된 이슈 데이터:', issueData);
+        // console.log('처리된 이슈 데이터:', issueData);
         setData(issueData);
       } catch (err) {
-        console.error('이슈 데이터 요청 실패:', err);
+        // console.error('이슈 데이터 요청 실패:', err);
         setError('데이터를 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);

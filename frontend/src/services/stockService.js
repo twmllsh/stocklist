@@ -51,12 +51,12 @@ export const stockService = {
         if (filters.change_max) validParams.change_max = filters.change_max;
       }
 
-      console.log('Sending request with params:', validParams);
+      // console.log('Sending request with params:', validParams);
       const response = await stockAxios.get('/stocklist/', {
         params: validParams,
       });
 
-      console.log('Raw API response:', response);
+      // console.log('Raw API response:', response);
 
       // response가 배열인 경우와 response.data가 배열인 경우 모두 처리
       let stockData = Array.isArray(response) ? response : response.data;
@@ -80,11 +80,17 @@ export const stockService = {
 
   // 종목 뉴스 조회
   getStockNews: async (code) => {
-    const response = await stockAxios.get('/news/', {
-      params: { ticker: code },
-    }); // '/trade' 제거
-    console.log('뉴스 데이터 요청 성공:', response);
-    return response;
+    try {
+      const response = await stockAxios.get('/news/', {
+        params: { ticker: code },
+      });
+      // console.log('뉴스 데이터 요청 성공:', response);
+      // response.data가 배열인지 확인하고 반환
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('뉴스 데이터 요청 실패:', error);
+      throw error;
+    }
   },
 
   // 종목 이슈 조회
@@ -93,11 +99,12 @@ export const stockService = {
       const response = await stockAxios.get('/iss/', {
         params: { ticker: code },
       });
-      console.log('이슈 API 응답 구조:', {
-        responseType: typeof response,
-        hasData: 'data' in response,
-        dataType: response.data ? typeof response.data : 'no data',
-      });
+      // // console.log('이슈 API 응답 구조:',
+      //   {
+      // responseType: typeof response,
+      // hasData: 'data' in response,
+      // dataType: response.data ? typeof response.data : 'no data',
+      // });
       // response 자체가 데이터인 경우를 위해 직접 반환
       return response.data || response;
     } catch (error) {
@@ -108,26 +115,42 @@ export const stockService = {
 
   // 종목 투자자 조회
   getStockInvestor: async (code) => {
-    console.log('투자자 데이터 요청 시작:', code);
+    // console.log('투자자 데이터 요청 시작:', code);
     try {
       const response = await stockAxios.get('/investor/', {
         params: { ticker: code },
       });
-      console.log('투자자 데이터 요청 성공:', response);
-      return response;
+      // console.log('투자자 데이터 요청 성공:', response);
+
+      // 응답 데이터 구조 확인 및 처리
+      if (response.data) {
+        const { data, columns, index } = response.data;
+        return {
+          data: data || [],
+          columns: columns || [],
+          index: index || [],
+        };
+      }
+
+      return {
+        data: [],
+        columns: [],
+        index: [],
+      };
     } catch (error) {
       console.error('투자자 데이터 요청 실패:', error);
       throw error;
     }
   },
+
   // 컨센 조회
   getStockConsensus: async (code) => {
-    console.log('컨센 데이터 요청 시작:', code);
+    // console.log('컨센 데이터 요청 시작:', code);
     try {
       const response = await stockAxios.get('/finstats/', {
         params: { ticker: code },
       });
-      console.log('컨센 데이터 요청 성공:', response);
+      // console.log('컨센 데이터 요청 성공:', response);
       // response.data가 있으면 사용하고, 없으면 response 자체를 반환
       return Array.isArray(response.data) ? response.data : response;
     } catch (error) {
@@ -169,10 +192,15 @@ export const stockService = {
   // 즐겨찾기 목록 조회
   getFavorites: async () => {
     try {
-      const response = await stockAxios.get('/favorites/'); // 경로 수정
+      // 요청 전 URL 출력
+      const requestUrl = '/favorites/';
+      // console.log('즐겨찾기 요청 URL:', requestUrl);
+      const response = await stockAxios.get(requestUrl);
+      // console.log('즐겨찾기 응답:', response);
       return Array.isArray(response.data) ? response.data : response;
     } catch (error) {
       console.error('Failed to get favorites:', error);
+      console.error('Failed URL:', '/favorites/'); // 에러 시에도 URL 출력
       throw error;
     }
   },
@@ -180,7 +208,7 @@ export const stockService = {
   // 종목 Ohlcv 조회
   getStockOhlcv: async (code, interval = 'day') => {
     try {
-      console.log(`Requesting OHLCV for ${code} with interval ${interval}`);
+      // console.log(`Requesting OHLCV for ${code} with interval ${interval}`);
 
       const response = await stockAxios.get('/ohlcv1/', {
         params: {

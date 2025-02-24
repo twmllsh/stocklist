@@ -11,12 +11,12 @@ const authAxios = axios.create({
 // 요청 인터셉터에 디버깅 로그 추가
 authAxios.interceptors.request.use(
   (config) => {
-    console.log('Request config:', {
-      url: config.url,
-      method: config.method,
-      headers: config.headers,
-      data: config.data,
-    });
+    // console.log('Request config:', {
+    //   url: config.url,
+    //   method: config.method,
+    //   headers: config.headers,
+    //   data: config.data,
+    // });
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -32,7 +32,7 @@ authAxios.interceptors.request.use(
 // 응답 인터셉터에 디버깅 로그 추가
 authAxios.interceptors.response.use(
   (response) => {
-    console.log('Response data:', response.data);
+    // console.log('Response data:', response.data);
     return response.data;
   },
   async (error) => {

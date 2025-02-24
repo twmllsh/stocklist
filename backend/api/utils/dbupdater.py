@@ -2978,7 +2978,7 @@ class Api:
         ## df 가지고 장중인지 아닌지 확인하기. 
         time_rate = StockFunc.get_progress_percentage() # 시간에 따른 비율.  실시간이 아니면 1로 특히 휴일인경우 처리해야한다. ## 수정필요함.
         time_rate = time_rate if time_rate is not None else 1
-        
+        print("time_rate :::: ", time_rate)
         if sum(df['현재가'] == df['cur_close']) == len(df): # 데이터 전체를 보고 장중이 아닌경우는 장마감기준으로 처리하기. 
             print('장중이 아님.')
             전일종가 = 'pre_close'

@@ -21,4 +21,5 @@ app_name = "api"
 
 urlpatterns = [
     path('', include(router.urls)),  # API URL에 포함
-] + router.urls
+] 
+
