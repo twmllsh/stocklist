@@ -59,45 +59,84 @@ const StockBroker = ({ stockCode }) => {
     fetchData();
   }, [stockCode]);
 
-  const prepareBrokerChart = (brokerData, brokerName) => {
-    if (!brokerData?.length) return null;
+  const prepareBrokerData = (data) => {
+    // 거래원별로 데이터 그룹화
+    const brokerGroups = {};
 
-    const filteredData = brokerData.filter(
-      (item) => item.broker_name === brokerName
-    );
-    const dates = filteredData.map((item) => item.date);
+    // 모든 날짜를 수집하고 정렬
+    const allDates = [...new Set(data.map((item) => item.date))].sort();
 
-    return {
-      labels: dates,
-      datasets: [
-        {
-          label: '매수',
-          data: filteredData.map((item) => item.buy || 0),
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        },
-        {
-          label: '매도',
-          data: filteredData.map((item) => item.sell || 0),
-          borderColor: 'rgb(54, 162, 235)',
-          backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        },
-        {
-          label: '순매수',
-          data: filteredData.map((item) => (item.buy || 0) - (item.sell || 0)),
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.5)',
-        },
-      ],
-    };
+    // 각 거래원별 데이터 초기화
+    data.forEach((item) => {
+      if (!brokerGroups[item.broker_name]) {
+        brokerGroups[item.broker_name] = {
+          dates: allDates,
+          buys: Array(allDates.length).fill(0),
+          sells: Array(allDates.length).fill(0),
+        };
+      }
+
+      const dateIndex = allDates.indexOf(item.date);
+      if (dateIndex !== -1) {
+        brokerGroups[item.broker_name].buys[dateIndex] = item.buy || 0;
+        brokerGroups[item.broker_name].sells[dateIndex] = item.sell || 0;
+      }
+    });
+
+    return { brokerGroups, allDates };
   };
 
-  const chartOptions = {
+  const createChartData = (brokerData) => ({
+    labels: brokerData.dates,
+    datasets: [
+      {
+        label: '매수',
+        data: brokerData.buys,
+        borderColor: '#FF6B6B',
+        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.1,
+      },
+      {
+        label: '매도',
+        data: brokerData.sells,
+        borderColor: '#2962FF',
+        backgroundColor: 'rgba(41, 98, 255, 0.1)',
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.1,
+      },
+    ],
+  });
+
+  const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.dataset.label || '';
+            const value = context.parsed.y;
+            return `${label}: ${value.toLocaleString()}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        ticks: {
+          callback: (value) => value.toLocaleString(),
+        },
       },
     },
   };
@@ -106,29 +145,25 @@ const StockBroker = ({ stockCode }) => {
   if (error) return <div className="text-danger">{error}</div>;
   if (!data || !data.length) return <div>거래원 데이터가 없습니다.</div>;
 
-  // 데이터 처리 로직을 렌더링 이전에 수행
-  const brokers = [...new Set(data.map((item) => item.broker_name))];
+  const { brokerGroups, allDates } = prepareBrokerData(data);
   const groupedData = groupByDate(data);
-  const dates = Object.keys(groupedData).sort().reverse();
+  const sortedDates = allDates.sort().reverse();
 
   return (
     <div className="d-flex flex-column gap-4">
       {/* 차트 섹션 */}
-      <div className="broker-charts">
-        {brokers.map((broker) => (
-          <div key={broker} style={{ height: '300px', marginBottom: '2rem' }}>
-            <h6 className="text-center mb-3">{broker}</h6>
-            <Line
-              data={prepareBrokerChart(data, broker)}
-              options={chartOptions}
-            />
+      {Object.entries(brokerGroups).map(([brokerName, brokerData]) => (
+        <div key={brokerName} style={{ marginBottom: '2rem' }}>
+          <h6 className="text-center mb-3">{brokerName}</h6>
+          <div style={{ height: '300px', position: 'relative' }}>
+            <Line data={createChartData(brokerData)} options={options} />
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
 
       {/* 테이블 섹션 */}
       <div className="table-responsive">
-        {dates.map((date) => (
+        {sortedDates.map((date) => (
           <div key={date} className="mb-4">
             <h6 className="mb-3">{date}</h6>
             <Table striped bordered hover size="sm">

@@ -6,14 +6,10 @@ export const fetchFilteredStocks = createAsyncThunk(
   'stock/fetchFiltered',
   async (filters, { rejectWithValue }) => {
     try {
-      // favorites가 true인 경우 다른 필터는 무시
-      const params = filters.favorites ? { favorites: true } : filters;
-      const data = await stockService.getFilteredStocks(params);
-
-      if (!data) {
-        throw new Error('No data received');
-      }
-
+      // URL 파라미터 생성 및 로깅 부분 제거
+      // console.log('Fetching stocks with filters:', filters);
+      const data = await stockService.getFilteredStocks(filters);
+      if (!data) throw new Error('No data received');
       return data;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -28,7 +24,13 @@ const stockSlice = createSlice({
     loading: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    setStocks: (state, action) => {
+      state.stocks = action.payload;
+      state.searchCount = action.payload.length; // 검색 결과 수 추가
+    },
+    // ...other reducers...
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchFilteredStocks.pending, (state) => {
@@ -57,5 +59,6 @@ export const selectStocks = (state) => {
 };
 export const selectStockLoading = (state) => state.stock.loading;
 export const selectStockError = (state) => state.stock.error;
+export const selectSearchCount = (state) => state.stock.searchCount;
 
 export default stockSlice.reducer;

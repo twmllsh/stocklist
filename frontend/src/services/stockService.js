@@ -3,82 +3,59 @@ import stockAxios from './config/stockAxios';
 export const stockService = {
   getFilteredStocks: async (filters) => {
     try {
-      if (filters.favorites) {
-        console.log('[StockService] 즐겨찾기 필터 요청:', filters);
-        const response = await stockAxios.get('/stocklist/', {
-          params: filters,
-        });
-        console.log('[StockService] 즐겨찾기 응답:', response.data);
-        return Array.isArray(response.data) ? response.data : [];
+      const queryString = new URLSearchParams();
+
+      // 등락률 파라미터 특별 처리
+      if (filters.change_min !== undefined) {
+        queryString.append('change_min', filters.change_min);
+      }
+      if (filters.change_max !== undefined) {
+        queryString.append('change_max', filters.change_max);
       }
 
-      const validParams = {};
-
-      // 필요한 파라미터만 추출
-      const booleanFields = [
-        'turnarround',
-        'newbra',
-        'realtime',
-        'endprice',
-        'sun_gcv',
-        'coke_gcv',
-        'array',
-        'array_exclude',
-        'ab',
-        'abv',
-        'goodwave',
-        'ac',
-        'new_listing',
-        'rsi',
-        'exp',
-      ];
-
-      // 값이 있는 필터 처리
-      const valueFields = {
+      // 값을 가지는 필드와 해당하는 값 필드 매핑
+      const valueFieldMappings = {
         consen: 'consen_value',
         sun_ac: 'sun_ac_value',
         coke_up: 'coke_up_value',
       };
 
-      // 불리언 필드 처리
-      booleanFields.forEach((field) => {
-        if (filters[field]) {
-          validParams[field] = '1';
+      // 나머지 필터 처리
+      for (let [key, value] of Object.entries(filters)) {
+        // change 관련 파라미터는 건너뛰기
+        if (key === 'change' || key === 'change_min' || key === 'change_max') {
+          continue;
         }
-      });
 
-      // 값이 있는 필드 처리
-      Object.entries(valueFields).forEach(([key, valueKey]) => {
-        if (filters[key] && filters[valueKey]) {
-          validParams[key] = filters[valueKey];
+        // 값이 있는 필드 처리
+        if (key in valueFieldMappings && value === true) {
+          const valueField = valueFieldMappings[key];
+          if (filters[valueField]) {
+            queryString.append(key, filters[valueField]);
+          }
+          continue;
         }
-      });
 
-      // 등락률 범위 처리 (값이 있을 때만)
-      if (filters.change) {
-        if (filters.change_min) validParams.change_min = filters.change_min;
-        if (filters.change_max) validParams.change_max = filters.change_max;
+        // 값 필드는 건너뛰기
+        if (Object.values(valueFieldMappings).includes(key)) {
+          continue;
+        }
+
+        // 일반 체크박스나 검색어 처리
+        if ((key === 'search' || key === 'favorites') && value) {
+          queryString.append(key, value);
+        } else if (value === true) {
+          queryString.append(key, value);
+        }
       }
 
-      // console.log('Sending request with params:', validParams);
-      const response = await stockAxios.get('/stocklist/', {
-        params: validParams,
-      });
+      const url = `/stocklist/?${queryString.toString()}`;
+      // console.log('최종 요청 URL:', url);
 
-      // console.log('Raw API response:', response);
-
-      // response가 배열인 경우와 response.data가 배열인 경우 모두 처리
-      let stockData = Array.isArray(response) ? response : response.data;
-
-      if (!stockData) {
-        console.error('No data received');
-        throw new Error('No data received');
-      }
-
-      // console.log('Processed stock data:', stockData);
-      return stockData;
+      const response = await stockAxios.get(url);
+      return response.data;
     } catch (error) {
-      console.error('[StockService] 필터 요청 실패:', error);
+      console.error('API 요청 실패:', error);
       throw error;
     }
   },
@@ -148,7 +125,7 @@ export const stockService = {
     }
   },
 
-  // 컨센 조회
+  // 종목 컨센 조회
   getStockConsensus: async (code) => {
     // console.log('컨센 데이터 요청 시작:', code);
     try {
@@ -163,7 +140,7 @@ export const stockService = {
       throw error;
     }
   },
-  // 컨센 조회
+  // 종목 거래원 조회
   getStockBroker: async (code) => {
     console.log('거래원 데이터 요청 시작:', code);
     try {
@@ -245,6 +222,20 @@ export const stockService = {
         error: error.message,
         response: error.response,
       });
+      throw error;
+    }
+  },
+
+  // 매수가격 업데이트 메서드 추가
+  updateBuyPrice: async (code, price) => {
+    try {
+      const response = await stockAxios.post('/favorites/update_price/', {
+        ticker_code: code,
+        buy_price: price,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('매수가격 업데이트 실패:', error);
       throw error;
     }
   },

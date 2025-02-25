@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Spinner, Table } from 'react-bootstrap';
 import { stockService } from '../../../services/stockService';
 
@@ -6,6 +6,11 @@ const StockInvestor = ({ stockCode }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const tableRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,31 +32,62 @@ const StockInvestor = ({ stockCode }) => {
     fetchData();
   }, [stockCode]);
 
-  // 컬럼 순서 정의
-  const columnOrder = ['개인', '외국인', '기관합계', '금융투자'];
+  // 컬럼 순서 수정
+  const columnOrder = [
+    '개인',
+    '외국인',
+    '기관합계',
+    '투신',
+    '금융투자',
+    '연기금',
+    '사모',
+    '보험',
+    '은행',
+    '기타법인',
+    '기타외국인',
+    '기타금융',
+  ];
 
   const getValueStyle = (value, columnValues) => {
+    if (value === null || value === undefined) return {};
+
     const numValue = Number(value);
-    if (isNaN(numValue) || numValue === 0) return {};
-
-    // 해당 컬럼의 최대/최소값 계산
-    const maxAbs = Math.max(...columnValues.map(Math.abs));
-    const percentage = (Math.abs(numValue) / maxAbs) * 100;
-
-    // 양수는 빨간색, 음수는 파란색 그라데이션
-    const color = numValue > 0 ? '#d63031' : '#0984e3';
-    const gradient =
-      numValue > 0
-        ? `linear-gradient(90deg, rgba(255,0,0,0.1) ${percentage}%, transparent ${percentage}%)`
-        : `linear-gradient(90deg, rgba(0,0,255,0.1) ${percentage}%, transparent ${percentage}%)`;
+    if (isNaN(numValue)) return {};
 
     return {
-      color: color,
-      background: gradient,
-      fontWeight: Math.abs(numValue) > maxAbs * 0.7 ? 'bold' : 'normal',
+      position: 'relative',
+      color: numValue > 0 ? '#d63031' : '#0984e3',
       textAlign: 'right',
-      padding: '0.25rem 0.5rem', // 패딩 축소
-      fontSize: '0.875rem', // 글자 크기 축소
+      padding: '0.25rem 0.2rem', // 패딩 더 축소
+      fontSize: '0.7rem', // 폰트 크기 더 축소
+      overflow: 'hidden',
+      minWidth: '70px', // 최소 너비 더 축소
+      maxWidth: '80px', // 최대 너비 더 축소
+      whiteSpace: 'nowrap',
+    };
+  };
+
+  const getBarStyle = (value, columnValues) => {
+    if (value === null || value === undefined) return {};
+
+    const numValue = Number(value);
+    if (isNaN(numValue)) return {};
+
+    const maxAbs = Math.max(
+      ...columnValues.filter((v) => !isNaN(Number(v))).map(Math.abs)
+    );
+    const percentage = maxAbs === 0 ? 0 : (Math.abs(numValue) / maxAbs) * 100;
+
+    return {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: numValue < 0 ? 'auto' : 0,
+      right: numValue < 0 ? 0 : 'auto',
+      width: `${percentage}%`,
+      backgroundColor:
+        numValue > 0 ? 'rgba(214, 48, 49, 0.1)' : 'rgba(9, 132, 227, 0.1)',
+      zIndex: 1,
     };
   };
 
@@ -62,6 +98,37 @@ const StockInvestor = ({ stockCode }) => {
     if (abs >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (abs >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toLocaleString();
+  };
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - tableRef.current.offsetLeft);
+    setScrollLeft(tableRef.current.scrollLeft);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - tableRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    tableRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleTouchStart = (e) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - tableRef.current.offsetLeft);
+    setScrollLeft(tableRef.current.scrollLeft);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    const x = e.touches[0].pageX - tableRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    tableRef.current.scrollLeft = scrollLeft - walk;
   };
 
   if (loading) return <Spinner animation="border" variant="primary" />;
@@ -88,16 +155,46 @@ const StockInvestor = ({ stockCode }) => {
   });
 
   return (
-    <div className="table-responsive">
-      <Table bordered hover size="sm" className="small">
-        <thead className="bg-light">
+    <div
+      ref={tableRef}
+      style={{
+        overflowX: 'auto',
+        maxWidth: '100%',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitOverflowScrolling: 'touch',
+      }}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleMouseUp}
+    >
+      <Table
+        bordered
+        hover
+        size="sm"
+        className="small"
+        style={{
+          minWidth: '900px', // 전체 테이블 최소 너비 축소
+          fontSize: '0.7rem', // 전체 폰트 크기 축소
+        }}
+      >
+        <thead className="bg-light text-center">
           <tr>
             <th
-              className="text-center"
               style={{
-                padding: '0.25rem',
-                fontSize: '0.875rem',
-                width: '80px',
+                position: 'sticky',
+                left: 0,
+                backgroundColor: '#f8f9fa',
+                zIndex: 3,
+                minWidth: '60px', // 날짜 컬럼 너비 더 축소
+                maxWidth: '65px',
+                fontSize: '0.7rem',
+                padding: '0.25rem 0.2rem', // 패딩 더 축소
               }}
             >
               날짜
@@ -105,11 +202,12 @@ const StockInvestor = ({ stockCode }) => {
             {sortedColumns.map((column) => (
               <th
                 key={column}
-                className="text-center"
                 style={{
-                  padding: '0.25rem',
-                  fontSize: '0.875rem',
-                  width: '100px',
+                  minWidth: '70px', // 컬럼 너비 더 축소
+                  maxWidth: '80px',
+                  padding: '0.25rem 0.2rem',
+                  fontSize: '0.7rem',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {column}
@@ -121,8 +219,17 @@ const StockInvestor = ({ stockCode }) => {
           {sortedData.map((row) => (
             <tr key={row.date}>
               <td
-                className="text-center"
-                style={{ padding: '0.25rem', fontSize: '0.875rem' }}
+                style={{
+                  position: 'sticky',
+                  left: 0,
+                  backgroundColor: '#fff',
+                  zIndex: 2,
+                  textAlign: 'center',
+                  padding: '0.25rem 0.2rem',
+                  fontSize: '0.7rem',
+                  minWidth: '60px',
+                  maxWidth: '65px',
+                }}
               >
                 {row.date}
               </td>
@@ -131,7 +238,10 @@ const StockInvestor = ({ stockCode }) => {
                   key={column}
                   style={getValueStyle(row[column], columnData[column])}
                 >
-                  {formatNumber(row[column])}
+                  <div style={getBarStyle(row[column], columnData[column])} />
+                  <span style={{ position: 'relative', zIndex: 2 }}>
+                    {formatNumber(row[column])}
+                  </span>
                 </td>
               ))}
             </tr>

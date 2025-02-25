@@ -21,5 +21,7 @@ app_name = "api"
 
 urlpatterns = [
     path('', include(router.urls)),  # API URL에 포함
-] 
+    # 매수가격 업데이트 URL 추가
+    path('favorites/update_price/', FavoriteViewSet.as_view({'post': 'update_price'}), name='update-price'),
+]
 

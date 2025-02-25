@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Modal, ButtonGroup, Button, Nav, Tab } from 'react-bootstrap';
+import { Modal, ButtonGroup, Button, Nav, Tab, Form } from 'react-bootstrap'; // Form 추가
 import { useSelector, useDispatch } from 'react-redux';
 import { selectStocks } from '../../store/slices/stockSlice';
 import { stockService } from '../../services/stockService'; // 추가: stockService import
@@ -11,10 +11,12 @@ import StockIssue from './tabs/StockIssue';
 import StockNews from './tabs/StockNews';
 import StockInvestor from './tabs/StockInvestor';
 import StockBroker from './tabs/StockBroker'; // 새로운 import 추가
+import StockDisclosure from './tabs/StockDisclosure'; // 새로운 import 추가
 import { AiFillStar, AiOutlineStar } from 'react-icons/ai'; // 별 아이콘 추가
 import {
   selectFavorites,
   toggleFavoriteStock,
+  fetchFavorites, // 상단에 import 추가
 } from '../../store/slices/favoriteSlice';
 
 const ChartModal = ({
@@ -35,6 +37,9 @@ const ChartModal = ({
   const [currentData, setCurrentData] = useState(null);
   const [activeTab, setActiveTab] = useState('consensus');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [buyPrice, setBuyPrice] = useState('');
+  const [localBuyPrice, setLocalBuyPrice] = useState(0); // 새로운 state 추가
 
   // 지표 상태는 유지
   const [visibleIndicators, setVisibleIndicators] = useState({
@@ -167,6 +172,11 @@ const ChartModal = ({
     }
   }, [show, stockCode, favorites]);
 
+  // selectedStock이나 buy_price가 변경될 때마다 localBuyPrice 업데이트
+  useEffect(() => {
+    setLocalBuyPrice(selectedStock?.buy_price || 0);
+  }, [selectedStock?.buy_price]);
+
   // 즐겨찾기 토글 핸들러
   const handleFavoriteToggle = async () => {
     try {
@@ -174,6 +184,73 @@ const ChartModal = ({
     } catch (error) {
       console.error('즐겨찾기 처리 실패:', error);
     }
+  };
+
+  // 매수가격 수정 핸들러
+  const handlePriceEdit = () => {
+    setIsEditingPrice(true);
+    setBuyPrice(selectedStock?.buy_price || '');
+  };
+
+  // 매수가격 입력 처리 핸들러 추가
+  const handlePriceChange = (e) => {
+    const value = e.target.value;
+    // 숫자와 소수점만 허용
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setBuyPrice(value);
+    }
+  };
+
+  // 매수가격 저장 핸들러 수정
+  const handlePriceSave = async () => {
+    try {
+      const numericPrice = buyPrice === '' ? 0 : parseFloat(buyPrice);
+      if (buyPrice !== '' && isNaN(numericPrice)) {
+        alert('유효한 숫자를 입력해주세요.');
+        return;
+      }
+      await stockService.updateBuyPrice(stockCode, numericPrice);
+      setIsEditingPrice(false);
+      await dispatch(fetchFavorites());
+      setLocalBuyPrice(numericPrice);
+    } catch (error) {
+      console.error('매수가격 업데이트 실패:', error);
+    }
+  };
+
+  const getDisplayBuyPrice = (buyPrice) => {
+    return buyPrice ? formatNumber(buyPrice) : '-';
+  };
+
+  // 수익률 표시 함수 수정
+  const getProfitDisplay = (buyPrice, currentPrice) => {
+    if (!buyPrice || !currentPrice) return null;
+
+    const profitRate = (((currentPrice - buyPrice) / buyPrice) * 100).toFixed(
+      2
+    );
+    return (
+      <div className="mt-1" style={{ fontSize: '0.9rem' }}>
+        <span
+          className={
+            profitRate > 0
+              ? 'text-danger'
+              : profitRate < 0
+              ? 'text-primary'
+              : ''
+          }
+        >
+          수익률: {profitRate > 0 ? '+' : ''}
+          {profitRate}%
+        </span>
+      </div>
+    );
+  };
+
+  // 마지막 종가 가져오기
+  const getLastClosePrice = () => {
+    if (!currentData || currentData.length === 0) return null;
+    return currentData[currentData.length - 1].Close;
   };
 
   return (
@@ -202,9 +279,46 @@ const ChartModal = ({
               <span className={`${getPriceColor(selectedStock.등락률)}`}>
                 {formatNumber(selectedStock.현재가)} ({selectedStock.등락률}%)
               </span>
-              <span className="text-muted">
-                거래량: {formatNumber(selectedStock.거래량)}
-              </span>
+              {isFavorite && (
+                <div className="d-flex align-items-center">
+                  {isEditingPrice ? (
+                    <>
+                      <Form.Control
+                        size="sm"
+                        type="text" // number에서 text로 변경
+                        value={buyPrice}
+                        onChange={handlePriceChange} // 새로운 핸들러 사용
+                        style={{ width: '100px' }}
+                        placeholder="매수가 입력"
+                      />
+                      <Button
+                        size="sm"
+                        variant="success"
+                        className="ms-1"
+                        onClick={handlePriceSave}
+                      >
+                        저장
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="d-flex flex-column">
+                      <span className="text-muted">
+                        평균매수가: {getDisplayBuyPrice(localBuyPrice)}
+                      </span>
+                      {localBuyPrice > 0 &&
+                        getProfitDisplay(localBuyPrice, selectedStock?.현재가)}
+                      <Button
+                        size="sm"
+                        variant="outline-secondary"
+                        className="ms-1 py-0 mt-1"
+                        onClick={handlePriceEdit}
+                      >
+                        수정
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </Modal.Title>
@@ -308,6 +422,9 @@ const ChartModal = ({
               <Nav.Link eventKey="consensus">컨센서스</Nav.Link>
             </Nav.Item>
             <Nav.Item>
+              <Nav.Link eventKey="disclosure">공시</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
               <Nav.Link eventKey="issue">이슈</Nav.Link>
             </Nav.Item>
             <Nav.Item>
@@ -334,6 +451,14 @@ const ChartModal = ({
             <Tab.Pane eventKey="consensus" mountOnEnter>
               {activeTab === 'consensus' && (
                 <StockConsensus stockCode={stockCode} />
+              )}
+            </Tab.Pane>
+            <Tab.Pane eventKey="disclosure" mountOnEnter unmountOnExit>
+              {activeTab === 'disclosure' && (
+                <StockDisclosure
+                  key={`disclosure-${stockCode}-${activeTab}`}
+                  stockCode={stockCode}
+                />
               )}
             </Tab.Pane>
             <Tab.Pane eventKey="issue" mountOnEnter unmountOnExit>

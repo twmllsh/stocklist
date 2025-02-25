@@ -46,7 +46,54 @@ const StockConsensus = ({ stockCode }) => {
     fetchData();
   }, [stockCode]);
 
+  const getTargetYear = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    return currentMonth >= 7
+      ? currentDate.getFullYear() + 1
+      : currentDate.getFullYear();
+  };
+
   const processChartData = (rawData, type) => {
+    if (type === 'yearly') {
+      const filtered = rawData
+        .filter((item) => item.fintype === '연결연도' && item.quarter === 0)
+        .sort((a, b) => a.year - b.year);
+
+      return {
+        labels: filtered.map((item) => `${item.year}`),
+        datasets: [
+          {
+            type: 'line',
+            label: '매출액',
+            data: filtered.map((item) => Number(item.매출액 || 0)),
+            borderColor: '#2962FF',
+            backgroundColor: 'rgba(41, 98, 255, 0.1)',
+            borderWidth: 2,
+            yAxisID: 'y-axis-1',
+          },
+          {
+            type: 'line',
+            label: '영업이익',
+            data: filtered.map((item) => Number(item.영업이익 || 0)),
+            borderColor: '#FF6B6B',
+            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+            borderWidth: 2,
+            yAxisID: 'y-axis-2',
+          },
+          {
+            type: 'line',
+            label: '당기순이익',
+            data: filtered.map((item) => Number(item.당기순이익 || 0)),
+            borderColor: '#51CF66',
+            backgroundColor: 'rgba(81, 207, 102, 0.1)',
+            borderWidth: 2,
+            yAxisID: 'y-axis-2',
+          },
+        ],
+      };
+    }
+
     const filtered = rawData
       .filter((item) =>
         type === 'yearly'
@@ -88,6 +135,67 @@ const StockConsensus = ({ stockCode }) => {
     plugins: {
       legend: {
         position: 'top',
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+              const value = context.parsed.y;
+              if (value >= 1000000) {
+                label += (value / 1000000).toFixed(1) + 'M';
+              } else if (value >= 1000) {
+                label += (value / 1000).toFixed(1) + 'K';
+              } else {
+                label += value.toFixed(0);
+              }
+            }
+            return label;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          color: (context) => {
+            if (!context.tick?.label) return 'rgba(0, 0, 0, 0.1)';
+            const year = parseInt(context.tick.label);
+            const targetYear = getTargetYear();
+            return year === targetYear
+              ? 'rgba(41, 98, 255, 0.2)'
+              : 'rgba(0, 0, 0, 0.1)';
+          },
+          lineWidth: (context) => {
+            if (!context.tick?.label) return 1;
+            const year = parseInt(context.tick.label);
+            const targetYear = getTargetYear();
+            return year === targetYear ? 40 : 1;
+          },
+        },
+      },
+      'y-axis-1': {
+        type: 'linear',
+        position: 'left',
+        ticks: {
+          callback: function (value) {
+            if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+            if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+            return value;
+          },
+        },
+      },
+      'y-axis-2': {
+        type: 'linear',
+        position: 'right',
+        ticks: {
+          callback: function (value) {
+            if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+            if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+            return value;
+          },
+        },
       },
     },
   };

@@ -28,6 +28,10 @@ const StockNews = ({ stockCode }) => {
     fetchData();
   }, [stockCode]);
 
+  const getNewsUrl = (newsId) => {
+    return `https://news.stockplus.com/m?news_id=${newsId}`;
+  };
+
   if (loading) return <Spinner animation="border" variant="primary" />;
   if (error) return <div className="text-danger">{error}</div>;
   if (!data || data.length === 0) return <div>뉴스 데이터가 없습니다.</div>;
@@ -35,18 +39,21 @@ const StockNews = ({ stockCode }) => {
   return (
     <ListGroup variant="flush">
       {data.map((item) => (
-        <ListGroup.Item key={item.id}>
+        <ListGroup.Item key={item.no} className="py-2">
           <a
-            href={item.link}
+            href={getNewsUrl(item.no)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-decoration-none"
           >
-            {item.title}
+            <div className="fw-medium text-dark mb-1">{item.title}</div>
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="text-secondary small">{item.writerName}</span>
+              <span className="text-secondary small">
+                {new Date(item.createdAt).toLocaleDateString()}
+              </span>
+            </div>
           </a>
-          <div className="text-muted small">
-            {new Date(item.createdAt).toLocaleDateString()}
-          </div>
         </ListGroup.Item>
       ))}
     </ListGroup>
