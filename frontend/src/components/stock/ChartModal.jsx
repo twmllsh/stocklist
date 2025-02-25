@@ -204,8 +204,8 @@ const ChartModal = ({
   // 매수가격 저장 핸들러 수정
   const handlePriceSave = async () => {
     try {
-      const numericPrice = parseFloat(buyPrice);
-      if (isNaN(numericPrice)) {
+      const numericPrice = buyPrice === '' ? 0 : parseFloat(buyPrice);
+      if (buyPrice !== '' && isNaN(numericPrice)) {
         alert('유효한 숫자를 입력해주세요.');
         return;
       }
@@ -218,8 +218,39 @@ const ChartModal = ({
     }
   };
 
-  const getDisplayBuyPrice = (price) => {
-    return price ? formatNumber(price) : '-';
+  const getDisplayBuyPrice = (buyPrice) => {
+    return buyPrice ? formatNumber(buyPrice) : '-';
+  };
+
+  // 수익률 표시 함수 수정
+  const getProfitDisplay = (buyPrice, currentPrice) => {
+    if (!buyPrice || !currentPrice) return null;
+
+    const profitRate = (((currentPrice - buyPrice) / buyPrice) * 100).toFixed(
+      2
+    );
+    return (
+      <div className="mt-1" style={{ fontSize: '0.9rem' }}>
+        <span
+          className={
+            profitRate > 0
+              ? 'text-danger'
+              : profitRate < 0
+              ? 'text-primary'
+              : ''
+          }
+        >
+          수익률: {profitRate > 0 ? '+' : ''}
+          {profitRate}%
+        </span>
+      </div>
+    );
+  };
+
+  // 마지막 종가 가져오기
+  const getLastClosePrice = () => {
+    if (!currentData || currentData.length === 0) return null;
+    return currentData[currentData.length - 1].Close;
   };
 
   return (
@@ -270,19 +301,21 @@ const ChartModal = ({
                       </Button>
                     </>
                   ) : (
-                    <>
+                    <div className="d-flex flex-column">
                       <span className="text-muted">
                         평균매수가: {getDisplayBuyPrice(localBuyPrice)}
                       </span>
+                      {localBuyPrice > 0 &&
+                        getProfitDisplay(localBuyPrice, selectedStock?.현재가)}
                       <Button
                         size="sm"
                         variant="outline-secondary"
-                        className="ms-1 py-0"
+                        className="ms-1 py-0 mt-1"
                         onClick={handlePriceEdit}
                       >
                         수정
                       </Button>
-                    </>
+                    </div>
                   )}
                 </div>
               )}

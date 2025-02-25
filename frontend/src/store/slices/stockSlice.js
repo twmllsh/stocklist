@@ -7,6 +7,7 @@ export const fetchFilteredStocks = createAsyncThunk(
   async (filters, { rejectWithValue }) => {
     try {
       // URL 파라미터 생성 및 로깅 부분 제거
+      // console.log('Fetching stocks with filters:', filters);
       const data = await stockService.getFilteredStocks(filters);
       if (!data) throw new Error('No data received');
       return data;

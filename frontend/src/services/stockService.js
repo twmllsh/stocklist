@@ -5,31 +5,39 @@ export const stockService = {
     try {
       const queryString = new URLSearchParams();
 
+      // 등락률 파라미터 특별 처리
+      if (filters.change_min !== undefined) {
+        queryString.append('change_min', filters.change_min);
+      }
+      if (filters.change_max !== undefined) {
+        queryString.append('change_max', filters.change_max);
+      }
+
       // 값을 가지는 필드와 해당하는 값 필드 매핑
       const valueFieldMappings = {
         consen: 'consen_value',
         sun_ac: 'sun_ac_value',
         coke_up: 'coke_up_value',
-        change: 'change_min,change_max',
       };
 
+      // 나머지 필터 처리
       for (let [key, value] of Object.entries(filters)) {
-        // 값을 가지는 필드 처리
-        if (key in valueFieldMappings) {
-          if (value === true) {
-            // 값이 있는 필드가 활성화된 경우, 해당 값을 파라미터로 사용
-            const valueFields = valueFieldMappings[key].split(',');
-            valueFields.forEach((valueField) => {
-              if (filters[valueField]) {
-                queryString.append(key, filters[valueField]);
-              }
-            });
+        // change 관련 파라미터는 건너뛰기
+        if (key === 'change' || key === 'change_min' || key === 'change_max') {
+          continue;
+        }
+
+        // 값이 있는 필드 처리
+        if (key in valueFieldMappings && value === true) {
+          const valueField = valueFieldMappings[key];
+          if (filters[valueField]) {
+            queryString.append(key, filters[valueField]);
           }
           continue;
         }
 
-        // 값 필드는 건너뛰기 (consen_value, sun_ac_value 등)
-        if (Object.values(valueFieldMappings).some((v) => v.includes(key))) {
+        // 값 필드는 건너뛰기
+        if (Object.values(valueFieldMappings).includes(key)) {
           continue;
         }
 
@@ -42,10 +50,9 @@ export const stockService = {
       }
 
       const url = `/stocklist/?${queryString.toString()}`;
-      console.log('요청 URL:', url); // 요청 URL 로깅
+      // console.log('최종 요청 URL:', url);
 
       const response = await stockAxios.get(url);
-      console.log('서버 응답 데이터:', response.data); // 응답 데이터 로깅
       return response.data;
     } catch (error) {
       console.error('API 요청 실패:', error);

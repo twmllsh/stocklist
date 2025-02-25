@@ -29,8 +29,8 @@ export default function Filter({ onToggle }) {
 
   const [filters, setFilters] = useState({
     change: true,
-    change_min: 2,
-    change_max: 10,
+    change_min: 2, // 최소값
+    change_max: 10, // 최대값
     consen: true,
     consen_value: 20,
     turnarround: true,
@@ -97,9 +97,11 @@ export default function Filter({ onToggle }) {
         { name: 'endprice', label: '종가' },
         {
           name: 'change',
-          label: '등락율',
+          label: '등락률',
           hasValue: true,
-          hasRangeValue: true, // 범위 값 표시를 위한 새 속성
+          hasRangeValue: true,
+          minValue: 'change_min', // 최소값 필드명
+          maxValue: 'change_max', // 최대값 필드명
         },
       ],
     },
@@ -142,8 +144,42 @@ export default function Filter({ onToggle }) {
 
   const handleSearch = async () => {
     try {
-      // console.log('검색 시작:', filters);
-      await dispatch(fetchFilteredStocks(filters));
+      // 검색 필터 객체 생성
+      const searchFilters = {};
+
+      // 등락률 필터 처리 (change 활성화 여부와 관계없이 값이 있으면 포함)
+      if (filters.change_min || filters.change_max) {
+        searchFilters.change_min = filters.change_min;
+        searchFilters.change_max = filters.change_max;
+      }
+
+      // 일반 필터 처리
+      Object.entries(filters).forEach(([key, value]) => {
+        if (key === 'change' || key === 'change_min' || key === 'change_max')
+          return;
+
+        if (key.endsWith('_value')) return;
+
+        if (value === true) {
+          // 값이 있는 필터 처리
+          if (key === 'consen') {
+            searchFilters[key] = filters.consen_value;
+          } else if (key === 'sun_ac') {
+            searchFilters[key] = filters.sun_ac_value;
+          } else if (key === 'coke_up') {
+            searchFilters[key] = filters.coke_up_value;
+          } else {
+            searchFilters[key] = true;
+          }
+        }
+      });
+
+      // 최종 요청 URL 로깅
+      const queryString = new URLSearchParams(searchFilters).toString();
+      // console.log('최종 요청 URL:', `/stocklist/?${queryString}`);
+
+      // console.log('검색 파라미터:', searchFilters);
+      await dispatch(fetchFilteredStocks(searchFilters));
     } catch (error) {
       console.error('Search error:', error);
     }
@@ -238,9 +274,9 @@ export default function Filter({ onToggle }) {
                 size="sm"
                 style={{ width: '70px' }}
                 placeholder="최소"
-                value={filters.change_min || ''}
+                value={filters[btn.minValue] || ''} // change_min 사용
                 onChange={(e) =>
-                  handleFilterChange('change_min', e.target.value)
+                  handleFilterChange(btn.minValue, e.target.value)
                 }
               />
               <span>~</span>
@@ -249,9 +285,9 @@ export default function Filter({ onToggle }) {
                 size="sm"
                 style={{ width: '70px' }}
                 placeholder="최대"
-                value={filters.change_max || ''}
+                value={filters[btn.maxValue] || ''} // change_max 사용
                 onChange={(e) =>
-                  handleFilterChange('change_max', e.target.value)
+                  handleFilterChange(btn.maxValue, e.target.value)
                 }
               />
             </div>
