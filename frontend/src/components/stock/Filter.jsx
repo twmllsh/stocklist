@@ -8,12 +8,16 @@ import {
   Tooltip,
 } from 'react-bootstrap';
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { fetchFilteredStocks } from '../../store/slices/stockSlice'; // 수정된 임포트
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchFilteredStocks,
+  selectSearchCount,
+} from '../../store/slices/stockSlice'; // 수정된 임포트
 import { stockService } from '../../services/stockService'; // 상단에 추가
 
 export default function Filter({ onToggle }) {
   const dispatch = useDispatch();
+  const searchCount = useSelector(selectSearchCount);
   const [isOpen, setIsOpen] = useState(true);
   const [manualClose, setManualClose] = useState(false); // 수동으로 접었는지 여부
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +25,7 @@ export default function Filter({ onToggle }) {
   const [searchText, setSearchText] = useState('');
   const [resultCount, setResultCount] = useState(undefined);
   const [hasResults, setHasResults] = useState(false);
+  const [searchInput, setSearchInput] = useState(''); // 검색어 입력 상태 추가
 
   const [filters, setFilters] = useState({
     change: true,
@@ -137,7 +142,7 @@ export default function Filter({ onToggle }) {
 
   const handleSearch = async () => {
     try {
-      console.log('검색 시작:', filters);
+      // console.log('검색 시작:', filters);
       await dispatch(fetchFilteredStocks(filters));
     } catch (error) {
       console.error('Search error:', error);
@@ -147,7 +152,7 @@ export default function Filter({ onToggle }) {
   // 즐겨찾기 조회 핸들러 수정
   const handleTestFavorites = async () => {
     try {
-      console.log('[Filter] 즐겨찾기 검색 시작');
+      // console.log('[Filter] 즐겨찾기 검색 시작');
       const favoritesFilter = {
         favorites: true,
       };
@@ -155,7 +160,7 @@ export default function Filter({ onToggle }) {
       const result = await dispatch(
         fetchFilteredStocks(favoritesFilter)
       ).unwrap();
-      console.log('[Filter] 즐겨찾기 검색 결과:', result);
+      // console.log('[Filter] 즐겨찾기 검색 결과:', result);
     } catch (error) {
       console.error('[Filter] 즐겨찾기 요청 실패:', error);
     }
@@ -186,6 +191,25 @@ export default function Filter({ onToggle }) {
     setIsOpen(!isOpen);
     setManualClose(!isOpen); // 수동 토글 시 manualClose 상태 업데이트
     onToggle(!isOpen); // 부모 컴포넌트에 상태 전달
+  };
+
+  // 검색어로 검색하는 핸들러 추가
+  const handleSearchByText = async () => {
+    if (!searchInput.trim()) return;
+
+    try {
+      setIsLoading(true);
+      const updatedFilters = {
+        search: searchInput.trim(), // 검색 시에는 다른 필터 제외하고 search만 전송
+      };
+
+      // console.log('종목검색 요청 데이터:', updatedFilters);
+      await dispatch(fetchFilteredStocks(updatedFilters));
+    } catch (error) {
+      console.error('Search by text failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // 버튼 렌더링 함수 수정
@@ -278,16 +302,41 @@ export default function Filter({ onToggle }) {
               onClick={handleSearch}
               disabled={isLoading}
             >
-              {isLoading ? '검색 중...' : '검색'}
+              {isLoading ? '조건검색 중...' : '조건검색'}
             </Button>
             {/* 테스트 버튼 추가 */}
             <Button variant="warning" size="sm" onClick={handleTestFavorites}>
               내종목
             </Button>
-            <span className="text-secondary">
-              {resultCount !== undefined && `${resultCount}개 종목`}
-            </span>
-            {error && <span className="text-danger">{error}</span>}
+            {/* 검색창 추가 */}
+            <div className="d-flex gap-2">
+              <Form.Control
+                type="text"
+                size="sm"
+                placeholder="종목명 또는 코드"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                style={{ width: '150px' }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchByText();
+                  }
+                }}
+              />
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={handleSearchByText}
+                disabled={isLoading}
+              >
+                종목검색
+              </Button>
+            </div>
+            {searchCount !== undefined && (
+              <span className="text-secondary">
+                {searchCount}개의 종목이 검색되었습니다.
+              </span>
+            )}
           </div>
           <Button variant="link" onClick={handleToggle} className="p-0">
             {isOpen ? '접기' : '펼치기'}

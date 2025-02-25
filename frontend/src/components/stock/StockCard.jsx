@@ -124,6 +124,12 @@ const StockCard = ({ stock, onClick }) => {
     }
   };
 
+  // 숫자 포맷팅 헬퍼 함수 추가
+  const formatRatio = (value) => {
+    if (value === null || value === undefined || isNaN(value)) return '-';
+    return typeof value === 'number' ? value.toFixed(2) : '-';
+  };
+
   return (
     <Card className="stock-card hover-effect mb-0 px-1 py-1" onClick={onClick}>
       <Card.Body className="p-1 mx-1 my-2">
@@ -295,9 +301,7 @@ const StockCard = ({ stock, onClick }) => {
               </div>
               <div className="col-4">
                 <div className="data-label">부채율</div>
-                <div className="data-value">
-                  {formatValue(stock.부채비율?.toFixed(1))}%
-                </div>
+                <div className="data-value">{formatRatio(stock.부채비율)}%</div>
               </div>
             </div>
           </div>

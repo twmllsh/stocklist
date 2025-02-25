@@ -11,6 +11,7 @@ import StockIssue from './tabs/StockIssue';
 import StockNews from './tabs/StockNews';
 import StockInvestor from './tabs/StockInvestor';
 import StockBroker from './tabs/StockBroker'; // 새로운 import 추가
+import StockDisclosure from './tabs/StockDisclosure'; // 새로운 import 추가
 import { AiFillStar, AiOutlineStar } from 'react-icons/ai'; // 별 아이콘 추가
 import {
   selectFavorites,
@@ -308,6 +309,9 @@ const ChartModal = ({
               <Nav.Link eventKey="consensus">컨센서스</Nav.Link>
             </Nav.Item>
             <Nav.Item>
+              <Nav.Link eventKey="disclosure">공시</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
               <Nav.Link eventKey="issue">이슈</Nav.Link>
             </Nav.Item>
             <Nav.Item>
@@ -334,6 +338,14 @@ const ChartModal = ({
             <Tab.Pane eventKey="consensus" mountOnEnter>
               {activeTab === 'consensus' && (
                 <StockConsensus stockCode={stockCode} />
+              )}
+            </Tab.Pane>
+            <Tab.Pane eventKey="disclosure" mountOnEnter unmountOnExit>
+              {activeTab === 'disclosure' && (
+                <StockDisclosure
+                  key={`disclosure-${stockCode}-${activeTab}`}
+                  stockCode={stockCode}
+                />
               )}
             </Tab.Pane>
             <Tab.Pane eventKey="issue" mountOnEnter unmountOnExit>
