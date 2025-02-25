@@ -199,7 +199,8 @@ class MyDart:
                 code = dic.pop('code')
                 if code not in exist_tickers:
                     ticker = Ticker.objects.create(code=code, name=dic['name'])
-                ticker = exist_tickers[code]
+                else:
+                    ticker = exist_tickers[code]
                 object = DartBonusIssue(ticker=ticker, **dic)
                 to_create.append(object)
             
@@ -220,7 +221,8 @@ class MyDart:
                 code = dic.pop('code')
                 if code not in exist_tickers:
                     ticker = Ticker.objects.create(code=code, name=dic['name'])
-                ticker = exist_tickers[code]
+                else:
+                    ticker = exist_tickers[code]
                 if len(dic['name']) > 100:
                     dic['name'] = dic['name'][:100]
                 if len(dic['계약내용']) > 100:
@@ -252,7 +254,8 @@ class MyDart:
                 code = dic.pop('code')
                 if code not in exist_tickers:
                     ticker = Ticker.objects.create(code=code, name=dic['name'])
-                ticker = exist_tickers[code]
+                else:
+                    ticker = exist_tickers[code]
                 object = DartRightsIssue(ticker=ticker, **dic)
                 to_create.append(object)
             
@@ -274,7 +277,8 @@ class MyDart:
                 code = dic.pop('code')
                 if code not in exist_tickers:
                     ticker = Ticker.objects.create(code=code, name=dic['name'])
-                ticker = exist_tickers[code]
+                else:
+                    ticker = exist_tickers[code]
                 object = DartConvertibleBond(ticker=ticker, **dic)
                 to_create.append(object)
             
