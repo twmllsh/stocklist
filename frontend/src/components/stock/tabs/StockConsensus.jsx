@@ -46,12 +46,16 @@ const StockConsensus = ({ stockCode }) => {
     fetchData();
   }, [stockCode]);
 
+  const getTargetYear = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    return currentMonth >= 7
+      ? currentDate.getFullYear() + 1
+      : currentDate.getFullYear();
+  };
+
   const processChartData = (rawData, type) => {
     if (type === 'yearly') {
-      const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth() + 1;
-      const targetYear = currentMonth >= 7 ? currentYear + 1 : currentYear;
-
       const filtered = rawData
         .filter((item) => item.fintype === '연결연도' && item.quarter === 0)
         .sort((a, b) => a.year - b.year);
@@ -64,18 +68,8 @@ const StockConsensus = ({ stockCode }) => {
             label: '매출액',
             data: filtered.map((item) => Number(item.매출액 || 0)),
             borderColor: '#2962FF',
-            pointBackgroundColor: filtered.map((item) =>
-              Number(item.year) === targetYear ? '#2962FF' : 'transparent'
-            ),
-            pointRadius: filtered.map((item) =>
-              Number(item.year) === targetYear ? 6 : 4
-            ),
-            pointBorderWidth: filtered.map((item) =>
-              Number(item.year) === targetYear ? 2 : 1
-            ),
-            borderWidth: filtered.map((item) =>
-              Number(item.year) === targetYear ? 3 : 1
-            ),
+            backgroundColor: 'rgba(41, 98, 255, 0.1)',
+            borderWidth: 2,
             yAxisID: 'y-axis-1',
           },
           {
@@ -83,18 +77,8 @@ const StockConsensus = ({ stockCode }) => {
             label: '영업이익',
             data: filtered.map((item) => Number(item.영업이익 || 0)),
             borderColor: '#FF6B6B',
-            pointBackgroundColor: filtered.map((item) =>
-              Number(item.year) === targetYear ? '#FF6B6B' : 'transparent'
-            ),
-            pointRadius: filtered.map((item) =>
-              Number(item.year) === targetYear ? 6 : 4
-            ),
-            pointBorderWidth: filtered.map((item) =>
-              Number(item.year) === targetYear ? 2 : 1
-            ),
-            borderWidth: filtered.map((item) =>
-              Number(item.year) === targetYear ? 3 : 1
-            ),
+            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+            borderWidth: 2,
             yAxisID: 'y-axis-2',
           },
           {
@@ -102,18 +86,8 @@ const StockConsensus = ({ stockCode }) => {
             label: '당기순이익',
             data: filtered.map((item) => Number(item.당기순이익 || 0)),
             borderColor: '#51CF66',
-            pointBackgroundColor: filtered.map((item) =>
-              Number(item.year) === targetYear ? '#51CF66' : 'transparent'
-            ),
-            pointRadius: filtered.map((item) =>
-              Number(item.year) === targetYear ? 6 : 4
-            ),
-            pointBorderWidth: filtered.map((item) =>
-              Number(item.year) === targetYear ? 2 : 1
-            ),
-            borderWidth: filtered.map((item) =>
-              Number(item.year) === targetYear ? 3 : 1
-            ),
+            backgroundColor: 'rgba(81, 207, 102, 0.1)',
+            borderWidth: 2,
             yAxisID: 'y-axis-2',
           },
         ],
@@ -195,6 +169,24 @@ const StockConsensus = ({ stockCode }) => {
       },
     },
     scales: {
+      x: {
+        grid: {
+          color: (context) => {
+            if (!context.tick?.label) return 'rgba(0, 0, 0, 0.1)';
+            const year = parseInt(context.tick.label);
+            const targetYear = getTargetYear();
+            return year === targetYear
+              ? 'rgba(41, 98, 255, 0.2)'
+              : 'rgba(0, 0, 0, 0.1)';
+          },
+          lineWidth: (context) => {
+            if (!context.tick?.label) return 1;
+            const year = parseInt(context.tick.label);
+            const targetYear = getTargetYear();
+            return year === targetYear ? 40 : 1;
+          },
+        },
+      },
       'y-axis-1': {
         type: 'linear',
         position: 'left',
