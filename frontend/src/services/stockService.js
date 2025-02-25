@@ -41,10 +41,11 @@ export const stockService = {
         }
       }
 
-      const response = await stockAxios.get(
-        `/stocklist/?${queryString.toString()}`
-      );
-      // console.log('요청 URL:', `/stocklist/?${queryString.toString()}`);
+      const url = `/stocklist/?${queryString.toString()}`;
+      console.log('요청 URL:', url); // 요청 URL 로깅
+
+      const response = await stockAxios.get(url);
+      console.log('서버 응답 데이터:', response.data); // 응답 데이터 로깅
       return response.data;
     } catch (error) {
       console.error('API 요청 실패:', error);
@@ -214,6 +215,20 @@ export const stockService = {
         error: error.message,
         response: error.response,
       });
+      throw error;
+    }
+  },
+
+  // 매수가격 업데이트 메서드 추가
+  updateBuyPrice: async (code, price) => {
+    try {
+      const response = await stockAxios.post('/favorites/update_price/', {
+        ticker_code: code,
+        buy_price: price,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('매수가격 업데이트 실패:', error);
       throw error;
     }
   },

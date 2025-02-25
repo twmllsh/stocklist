@@ -2816,10 +2816,10 @@ class Api:
             df_real['매수총잔량'] = 0
             df_real['매도총잔량'] = 0
         elif favorites is not None:
-            user = User.objects.get(username=favorites) # user가져옴.
-            tickers = [ticker.ticker for ticker in user.favorites.all()]
-            chartvalues = ChartValue.objects.filter(ticker__in=tickers)
-            
+            # user = User.objects.get(username=favorites) # user가져옴.
+            # tickers = [ticker.ticker for ticker in user.favorites.all()]
+            print(favorites)
+            chartvalues = ChartValue.objects.filter(ticker__in=favorites.keys())
             searched_names = chartvalues.values_list('ticker__name',flat=True)
             df_real = Api.get_df_real_from_fdr() 
             df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
@@ -2953,10 +2953,11 @@ class Api:
         
         ## 즐겨찾기면 chartvalues 완전 다르게 가져오기.############################
         if favorites is not None:
-            user = User.objects.get(username=favorites) # user가져옴.
+            # user = User.objects.get(username=favorites) # user가져옴.
             
-            tickers = [ticker.ticker for ticker in user.favorites.all()]
-            chartvalues = ChartValue.objects.filter(ticker__in=tickers)
+            # tickers = [ticker.ticker for ticker in user.favorites.all()]
+            # chartvalues = ChartValue.objects.filter(ticker__in=tickers)
+            chartvalues = ChartValue.objects.filter(ticker__in=favorites.keys())
             
         
         ## 필요한 데이터만 추출
@@ -2993,6 +2994,9 @@ class Api:
         # 시가 추정.
         df['시가'] = df['현재가'] / ( 1 + df['등락률'] /100)
         
+        ## buy_price 추가하기. 
+        if favorites is not None:
+            df['buy_price'] = df['code'].map(favorites)
         
         ## df 가지고 장중인지 아닌지 확인하기. 
         time_rate = StockFunc.get_progress_percentage() # 시간에 따른 비율.  실시간이 아니면 1로 특히 휴일인경우 처리해야한다. ## 수정필요함.
