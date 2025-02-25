@@ -53,11 +53,11 @@ class MyDart:
             print('last_rcpNo', self.last_rcpNo)
 
 
-        try:
-            result = asyncio.run(self.get_data(n=n))
-        except Exception as e:
-            print(f'{e} 데이터 가져오는중 에러발생으로 저장하지 않습니다.')
-            return
+        
+        result = asyncio.run(self.get_data(n=n))
+        # except Exception as e:
+        #     print(f'{e} 데이터 가져오는중 에러발생으로 저장하지 않습니다.')
+        #     return
         
         print('데이터 저장하는중')
         self.save_dart_all_to_db()
@@ -448,6 +448,7 @@ class MyDart:
         self.contract = results
         if len(self.contract):
             self.contract = [item for item in self.contract if not isinstance(item, TypeError)]
+            self.contract = [item for item in self.contract if isinstance(item, dict)]
             self.contract = [item for item in self.contract if len(item)!=0]
 
         return self.contract
@@ -478,7 +479,8 @@ class MyDart:
         stringio = StringIO(resp.text)
         
         dic['증자방식'] = Text_mining._extract_table(stringio, '액면가 자금조달 ' ,'증자방식' )
-        
+        if "3" not in dic['증자방식']:
+            return {}
         보통신주의수 = Text_mining._extract_table(stringio, '액면가 자금조달 ' ,'신주 +보통주식' )
         기타신주의수 = Text_mining._extract_table(stringio, '액면가 자금조달 ' ,'신주 +기타주식' )
         try:
@@ -567,6 +569,7 @@ class MyDart:
         self.rights_issue = results
         if len(self.rights_issue):
             self.rights_issue = [item for item in self.rights_issue if not isinstance(item, TypeError)]
+            self.rights_issue = [item for item in self.rights_issue if isinstance(item, dict)]
             self.rights_issue = [item for item in self.rights_issue if len(item)!=0]
         
         return self.rights_issue
@@ -685,6 +688,7 @@ class MyDart:
         self.convertible_bond = results
         if len(self.convertible_bond):
             self.convertible_bond = [item for item in self.convertible_bond if not isinstance(item, TypeError)]
+            self.convertible_bond = [item for item in self.convertible_bond if isinstance(item, dict)]
             self.convertible_bond = [item for item in self.convertible_bond if len(item)!=0]
         
         return self.convertible_bond
@@ -766,6 +770,7 @@ class MyDart:
         self.bonus_issue = results
         if len(self.bonus_issue):
             self.bonus_issue = [item for item in self.bonus_issue if not isinstance(item, TypeError)]
+            self.bonus_issue = [item for item in self.bonus_issue if isinstance(item, dict)]
             self.bonus_issue = [item for item in self.bonus_issue if len(item)!=0]
         return self.bonus_issue
     
