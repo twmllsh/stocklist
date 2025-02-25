@@ -223,7 +223,7 @@ export default function Filter({ onToggle }) {
         {' '}
         {/* key 제거 */}
         <Button
-          variant={filters[btn.name] ? 'primary' : 'outline-primary'}
+          variant={filters[btn.name] ? 'success' : 'outline-success'}
           size="sm"
           onClick={() => handleFilterChange(btn.name)}
           className="me-2"
@@ -296,27 +296,29 @@ export default function Filter({ onToggle }) {
         </div>
 
         <div className="d-flex justify-content-between align-items-center py-2 sticky-bottom bg-white">
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center" style={{ gap: '1.5rem' }}>
+            {/* 조건검색 버튼 */}
             <Button
-              variant="outline-danger px-5"
+              variant="success"
+              className="px-4"
               onClick={handleSearch}
               disabled={isLoading}
             >
               {isLoading ? '조건검색 중...' : '조건검색'}
             </Button>
-            {/* 테스트 버튼 추가 */}
-            <Button variant="warning" size="sm" onClick={handleTestFavorites}>
+
+            {/* 내종목 버튼 */}
+            <Button variant="warning" onClick={handleTestFavorites}>
               내종목
             </Button>
-            {/* 검색창 추가 */}
-            <div className="d-flex gap-2">
+
+            {/* 검색창과 검색버튼 */}
+            <div className="input-group" style={{ width: '300px' }}>
               <Form.Control
                 type="text"
-                size="sm"
                 placeholder="종목명 또는 코드"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                style={{ width: '150px' }}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     handleSearchByText();
@@ -325,13 +327,14 @@ export default function Filter({ onToggle }) {
               />
               <Button
                 variant="outline-secondary"
-                size="sm"
                 onClick={handleSearchByText}
                 disabled={isLoading}
               >
                 종목검색
               </Button>
             </div>
+
+            {/* 검색 결과 카운트 */}
             {searchCount !== undefined && (
               <span className="text-secondary">
                 {searchCount}개의 종목이 검색되었습니다.
