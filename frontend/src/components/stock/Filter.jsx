@@ -137,19 +137,27 @@ export default function Filter({ onToggle }) {
 
   const handleSearch = async () => {
     try {
+      console.log('검색 시작:', filters);
       await dispatch(fetchFilteredStocks(filters));
     } catch (error) {
       console.error('Search error:', error);
     }
   };
 
-  // 테스트용 함수 추가 즐겨찾기
+  // 즐겨찾기 조회 핸들러 수정
   const handleTestFavorites = async () => {
     try {
-      const favorites = await stockService.getFavorites();
-      console.log('즐겨찾기 데이터:', favorites);
+      console.log('[Filter] 즐겨찾기 검색 시작');
+      const favoritesFilter = {
+        favorites: true,
+      };
+
+      const result = await dispatch(
+        fetchFilteredStocks(favoritesFilter)
+      ).unwrap();
+      console.log('[Filter] 즐겨찾기 검색 결과:', result);
     } catch (error) {
-      console.error('즐겨찾기 요청 실패:', error);
+      console.error('[Filter] 즐겨찾기 요청 실패:', error);
     }
   };
 
@@ -274,7 +282,7 @@ export default function Filter({ onToggle }) {
             </Button>
             {/* 테스트 버튼 추가 */}
             <Button variant="warning" size="sm" onClick={handleTestFavorites}>
-              즐겨찾기 테스트
+              내종목
             </Button>
             <span className="text-secondary">
               {resultCount !== undefined && `${resultCount}개 종목`}

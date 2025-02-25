@@ -3,6 +3,15 @@ import stockAxios from './config/stockAxios';
 export const stockService = {
   getFilteredStocks: async (filters) => {
     try {
+      if (filters.favorites) {
+        console.log('[StockService] 즐겨찾기 필터 요청:', filters);
+        const response = await stockAxios.get('/stocklist/', {
+          params: filters,
+        });
+        console.log('[StockService] 즐겨찾기 응답:', response.data);
+        return Array.isArray(response.data) ? response.data : [];
+      }
+
       const validParams = {};
 
       // 필요한 파라미터만 추출
@@ -69,11 +78,7 @@ export const stockService = {
       // console.log('Processed stock data:', stockData);
       return stockData;
     } catch (error) {
-      console.error('Filter request failed:', {
-        error,
-        response: error.response,
-        data: error.response?.data,
-      });
+      console.error('[StockService] 필터 요청 실패:', error);
       throw error;
     }
   },

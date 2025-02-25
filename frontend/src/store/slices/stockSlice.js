@@ -6,10 +6,10 @@ export const fetchFilteredStocks = createAsyncThunk(
   'stock/fetchFiltered',
   async (filters, { rejectWithValue }) => {
     try {
-      const data = await stockService.getFilteredStocks(filters);
-      // console.log('Received data in thunk:', data);
+      // favorites가 true인 경우 다른 필터는 무시
+      const params = filters.favorites ? { favorites: true } : filters;
+      const data = await stockService.getFilteredStocks(params);
 
-      // 데이터가 있는지만 확인하고 바로 반환
       if (!data) {
         throw new Error('No data received');
       }

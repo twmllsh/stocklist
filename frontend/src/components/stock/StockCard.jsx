@@ -106,6 +106,24 @@ const StockCard = ({ stock, onClick }) => {
     }
   };
 
+  const formatFinancialValue = (value, postfix = '') => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === '' ||
+      value === 'N/A' ||
+      isNaN(Number(value))
+    ) {
+      return '-';
+    }
+    try {
+      const numValue = Number(value);
+      return `${numValue.toFixed(1)}${postfix}`;
+    } catch {
+      return '-';
+    }
+  };
+
   return (
     <Card className="stock-card hover-effect mb-0 px-1 py-1" onClick={onClick}>
       <Card.Body className="p-1 mx-1 my-2">
@@ -271,12 +289,8 @@ const StockCard = ({ stock, onClick }) => {
               </div>
               <div className="col-4">
                 <div className="data-label">유보율</div>
-                <div
-                  className={`data-value ${
-                    isGoodFinancial() ? 'text-primary fw-bold' : ''
-                  }`}
-                >
-                  {formatValue(stock.유보율?.toFixed(1))}%
+                <div className="data-value">
+                  {formatFinancialValue(stock.유보율, '%')}
                 </div>
               </div>
               <div className="col-4">

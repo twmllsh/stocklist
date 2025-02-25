@@ -58,7 +58,16 @@ export default function Login() {
     <Container fluid className="auth-container bg-light">
       <Row className="justify-content-center align-items-center min-vh-100">
         <Col xs={12} sm={8} md={6} lg={4} className="my-3">
-          <Card className="shadow-lg" style={{ maxHeight: '600px' }}>
+          <Card
+            className="shadow-lg"
+            style={{
+              maxHeight: '600px',
+              minWidth: '350px',
+              width: '100%',
+              maxWidth: '450px',
+              margin: '0 auto',
+            }}
+          >
             <Card.Body className="p-4">
               <h2 className="text-center mb-4">로그인</h2>
               {error && <Alert variant="danger">{error}</Alert>}

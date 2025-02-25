@@ -199,10 +199,11 @@ class StocklistViewSet(viewsets.ViewSet):
         if "favorites" in params:
             username = request.user.username
             params = {'favorites': username}
-            result = Api.favorite_for_api(**params)
+            print("params::", params)
+            result = Api.choice_for_api(**params)
         elif "search" in params:
             params = {'search': params['search']}
-            result = Api.search_for_api(**params)
+            result = Api.choice_for_api(**params)
         else:
             result = Api.choice_for_api(**params)
         

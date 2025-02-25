@@ -2776,7 +2776,8 @@ class Api:
                        ac=None, array=None, goodwave=None,  ab=None, abv=None, 
                        sun_gcv=None, coke_gcv=None, sun_ac=None, coke_up=None,
                        good_cash=None, w3=None,search=None,endprice=None,exp=None,
-                       array_exclude=None, new_listing=None,rsi=None, **kwargs,
+                       array_exclude=None, new_listing=None,rsi=None,favorites=None,
+                       **kwargs,
                        ):
         ''' api용 추천종목 선택하기. 
         값을 받아오는 param : consen , sun_ac, sun_ac_value, bb_ac : coke_up_value
@@ -2814,18 +2815,29 @@ class Api:
             df_real['현재가'] = df_real['현재가'].astype(float)
             df_real['매수총잔량'] = 0
             df_real['매도총잔량'] = 0
-        
+        elif favorites is not None:
+            user = User.objects.get(username=favorites) # user가져옴.
+            tickers = [ticker.ticker for ticker in user.favorites.all()]
+            chartvalues = ChartValue.objects.filter(ticker__in=tickers)
+            
+            searched_names = chartvalues.values_list('ticker__name',flat=True)
+            df_real = Api.get_df_real_from_fdr() 
+            df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
+            df_real['현재가'] = df_real['현재가'].astype(float)
+            df_real['매수총잔량'] = 0
+            df_real['매도총잔량'] = 0
+            
         else:
             try:
                 df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
             except:
                 df_real = Api.get_df_real_from_db(change_min=change_min, change_max=change_max)
         
-        
+            chartvalues = ChartValue.objects.select_related('ticker').all()
         ######################################################################
         
         ############################ chartvalues  ##############################
-        chartvalues = ChartValue.objects.select_related('ticker').all()
+        # chartvalues = ChartValue.objects.select_related('ticker').all()
         ######### query 필터링 ##########
         all_Q = Q()
         ## 그룹1  
@@ -2939,7 +2951,14 @@ class Api:
         else:   
             chartvalues = chartvalues.filter(all_Q)
         
-    
+        ## 즐겨찾기면 chartvalues 완전 다르게 가져오기.############################
+        if favorites is not None:
+            user = User.objects.get(username=favorites) # user가져옴.
+            
+            tickers = [ticker.ticker for ticker in user.favorites.all()]
+            chartvalues = ChartValue.objects.filter(ticker__in=tickers)
+            
+        
         ## 필요한 데이터만 추출
         if len(chartvalues) == 0:
             return pd.DataFrame()
@@ -2995,7 +3014,9 @@ class Api:
             
         if search is not None: # 검색어가 있을때 그냥 리턴.
             return df
-
+        if favorites is not None: # favorite 일땐 그냥 리턴.
+            return df
+        
 
         ############ realtime 에서 이조건도 넣어야할까? 아직 안넣음. 고민해보자! ##############
         # sun_width_d_q = Q(chart_d_sun_width__lte=30)
