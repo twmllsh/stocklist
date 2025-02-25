@@ -59,91 +59,116 @@ export default function Login() {
       fluid
       className="vh-100 d-flex align-items-center justify-content-center"
       style={{
-        background: 'linear-gradient(135deg, #20bf55 0%, #01baef 100%)',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', // 더 부드러운 그라데이션
+        backdropFilter: 'blur(10px)',
       }}
     >
       <Card
         className="shadow-lg border-0"
-        style={{ maxWidth: '400px', width: '90%' }}
+        style={{
+          maxWidth: '380px',
+          width: '100%',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '16px',
+        }}
       >
-        <Card.Body className="p-5">
+        <Card.Body className="px-4 py-5">
           <div className="text-center mb-4">
-            <h5
-              className="display-4 fw-bold mb-0"
+            <h1
               style={{
+                fontSize: '2.5rem',
+                fontWeight: '700',
                 color: '#2c3e50',
-                letterSpacing: '-1px', // 글자 간격 조정
-                whiteSpace: 'nowrap', // 한 줄로 표시
+                letterSpacing: '-0.5px',
+                marginBottom: '8px',
               }}
             >
               StockList
-            </h5>
-            <p className="text-muted mt-2">시장을 읽는 새로운 방법</p>
+            </h1>
+            <p className="text-muted" style={{ fontSize: '0.95rem' }}>
+              시장을 읽는 새로운 방법
+            </p>
           </div>
 
           {error && (
-            <Alert variant="danger" className="py-2 mb-4">
+            <Alert
+              variant="danger"
+              className="py-2 mb-4 text-center"
+              style={{ borderRadius: '8px', fontSize: '0.9rem' }}
+            >
               {error}
             </Alert>
           )}
 
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
+          <Form onSubmit={handleSubmit} className="d-flex flex-column gap-3">
+            <Form.Group>
               <Form.Control
                 type="text"
+                placeholder="아이디"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="아이디"
-                className="py-2"
                 style={{
+                  padding: '0.8rem 1rem',
+                  fontSize: '0.95rem',
+                  border: '1.5px solid #e1e1e1',
                   borderRadius: '10px',
-                  border: '2px solid #eee',
-                  fontSize: '1rem',
+                  backgroundColor: '#f8f9fa',
+                  transition: 'all 0.2s ease',
                 }}
                 required
               />
             </Form.Group>
 
-            <Form.Group className="mb-4">
+            <Form.Group>
               <Form.Control
                 type="password"
+                placeholder="비밀번호"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호"
-                className="py-2"
                 style={{
+                  padding: '0.8rem 1rem',
+                  fontSize: '0.95rem',
+                  border: '1.5px solid #e1e1e1',
                   borderRadius: '10px',
-                  border: '2px solid #eee',
-                  fontSize: '1rem',
+                  backgroundColor: '#f8f9fa',
+                  transition: 'all 0.2s ease',
                 }}
                 required
               />
             </Form.Group>
 
             <Button
-              variant="primary"
               type="submit"
-              className="w-100 py-2 mb-3"
+              className="w-100 mt-2"
               disabled={loading}
               style={{
+                padding: '0.8rem',
+                fontSize: '1rem',
+                fontWeight: '600',
                 borderRadius: '10px',
-                background: 'linear-gradient(to right, #20bf55, #01baef)',
+                backgroundColor: '#4B6BFB',
                 border: 'none',
-                fontSize: '1.1rem',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 6px rgba(75, 107, 251, 0.2)',
               }}
             >
               {loading ? '로그인 중...' : '로그인'}
             </Button>
 
-            <div className="text-center">
-              <span className="text-muted">계정이 없으신가요?</span>{' '}
-              <Link
-                to="/register"
-                className="text-decoration-none fw-bold"
-                style={{ color: '#20bf55' }}
-              >
-                회원가입
-              </Link>
+            <div className="text-center mt-4">
+              <span style={{ color: '#6c757d', fontSize: '0.95rem' }}>
+                계정이 없으신가요?{' '}
+                <Link
+                  to="/register"
+                  style={{
+                    color: '#4B6BFB',
+                    textDecoration: 'none',
+                    fontWeight: '600',
+                  }}
+                >
+                  회원가입
+                </Link>
+              </span>
             </div>
           </Form>
         </Card.Body>
