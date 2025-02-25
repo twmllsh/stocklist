@@ -189,6 +189,9 @@ class StocklistViewSet(viewsets.ViewSet):
             else:
                 params[param] = value
         
+        favorites = Favorite.objects.select_related('ticker').filter(user=request.user)
+        buy_prices = {fav.ticker.code: fav.buy_price for fav in favorites}
+        params['buy_prices'] = buy_prices
         # favorites 처리
         if "favorites" in params:
             if not request.user.is_authenticated:
@@ -204,15 +207,15 @@ class StocklistViewSet(viewsets.ViewSet):
                 if not favorites.exists():
                     return JsonResponse([], safe=False)
                 
-                favorite_tickers = [fav.ticker.code for fav in favorites]
-                buy_prices = {fav.ticker.code: fav.buy_price for fav in favorites}
+                # favorite_tickers = [fav.ticker.code for fav in favorites]
+                # buy_prices = {fav.ticker.code: fav.buy_price for fav in favorites}
                 
-                print(f"조회된 즐겨찾기: {favorite_tickers}")
+                # print(f"조회된 즐겨찾기: {favorite_tickers}")
                 print(f"조회된 매수가격: {buy_prices}")
 
                 from .utils.dbupdater import Api
                 # API 호출
-                result = Api.choice_for_api(favorites=buy_prices)
+                result = Api.choice_for_api(favorites=True, buy_prices=buy_prices)
                 
 
                 result = result.fillna('N/A')

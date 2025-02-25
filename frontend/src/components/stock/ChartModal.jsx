@@ -192,16 +192,34 @@ const ChartModal = ({
     setBuyPrice(selectedStock?.buy_price || '');
   };
 
+  // 매수가격 입력 처리 핸들러 추가
+  const handlePriceChange = (e) => {
+    const value = e.target.value;
+    // 숫자와 소수점만 허용
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setBuyPrice(value);
+    }
+  };
+
   // 매수가격 저장 핸들러 수정
   const handlePriceSave = async () => {
     try {
-      await stockService.updateBuyPrice(stockCode, buyPrice);
+      const numericPrice = parseFloat(buyPrice);
+      if (isNaN(numericPrice)) {
+        alert('유효한 숫자를 입력해주세요.');
+        return;
+      }
+      await stockService.updateBuyPrice(stockCode, numericPrice);
       setIsEditingPrice(false);
       await dispatch(fetchFavorites());
-      setLocalBuyPrice(buyPrice); // 로컬 상태 업데이트
+      setLocalBuyPrice(numericPrice);
     } catch (error) {
       console.error('매수가격 업데이트 실패:', error);
     }
+  };
+
+  const getDisplayBuyPrice = (price) => {
+    return price ? formatNumber(price) : '-';
   };
 
   return (
@@ -236,10 +254,11 @@ const ChartModal = ({
                     <>
                       <Form.Control
                         size="sm"
-                        type="number"
+                        type="text" // number에서 text로 변경
                         value={buyPrice}
-                        onChange={(e) => setBuyPrice(e.target.value)}
+                        onChange={handlePriceChange} // 새로운 핸들러 사용
                         style={{ width: '100px' }}
+                        placeholder="매수가 입력"
                       />
                       <Button
                         size="sm"
@@ -253,8 +272,7 @@ const ChartModal = ({
                   ) : (
                     <>
                       <span className="text-muted">
-                        평균매수가: {formatNumber(localBuyPrice)}{' '}
-                        {/* selectedStock.buy_price 대신 localBuyPrice 사용 */}
+                        평균매수가: {getDisplayBuyPrice(localBuyPrice)}
                       </span>
                       <Button
                         size="sm"
