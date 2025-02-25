@@ -307,7 +307,7 @@ export default function Filter({ onToggle }) {
   );
 
   return (
-    <Container fluid className="p-0 border-bottom">
+    <Container fluid className="p-0 border-bottom bg-body">
       <Form>
         <div
           style={{
@@ -331,7 +331,16 @@ export default function Filter({ onToggle }) {
           ))}
         </div>
 
-        <div className="d-flex justify-content-between align-items-center py-2 sticky-bottom bg-white">
+        <div
+          className="d-flex justify-content-between align-items-center py-2 px-3"
+          style={{
+            position: 'sticky',
+            bottom: 0,
+            backgroundColor: 'var(--bs-body-bg)',
+            borderTop: '1px solid var(--bs-border-color)',
+            zIndex: 1020,
+          }}
+        >
           <div className="d-flex align-items-center" style={{ gap: '1.5rem' }}>
             {/* 조건검색 버튼 */}
             <Button
@@ -354,6 +363,10 @@ export default function Filter({ onToggle }) {
                 type="text"
                 placeholder="종목명 또는 코드"
                 value={searchInput}
+                className="bg-body"
+                style={{
+                  borderColor: 'var(--bs-border-color)',
+                }}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
@@ -372,7 +385,7 @@ export default function Filter({ onToggle }) {
 
             {/* 검색 결과 카운트 */}
             {searchCount !== undefined && (
-              <span className="text-secondary">
+              <span style={{ color: 'var(--bs-secondary-color)' }}>
                 {searchCount}개의 종목이 검색되었습니다.
               </span>
             )}
