@@ -32,19 +32,15 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: [
+          'vendor-core': [
             'react',
             'react-dom',
             'react-router-dom',
             'react-bootstrap',
-            'chart.js',
-            'react-chartjs-2',
             '@reduxjs/toolkit',
             'react-redux',
           ],
-          chart: ['chart.js', 'react-chartjs-2'],
-          bootstrap: ['react-bootstrap'],
-          redux: ['@reduxjs/toolkit', 'react-redux'],
+          'vendor-chart': ['chart.js', 'react-chartjs-2'],
         },
       },
     },
