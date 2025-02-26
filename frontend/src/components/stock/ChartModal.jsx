@@ -290,6 +290,11 @@ const ChartModal = ({
                         onChange={handlePriceChange} // 새로운 핸들러 사용
                         style={{ width: '100px' }}
                         placeholder="매수가 입력"
+                        inputMode="numeric" // 모바일에서 숫자 키패드 표시
+                        pattern="[0-9]*" // 숫자만 입력 가능
+                        autoComplete="off" // 자동완성 비활성화
+                        autoCorrect="off" // 자동수정 비활성화
+                        autoCapitalize="off" // 자동 대문자 비활성화
                       />
                       <Button
                         size="sm"
