@@ -61,8 +61,8 @@ class Info(models.Model):
         return f"Info[{self.ticker.name} 업종 : {self.업종} 구분 : {self.구분} 외국인소진율: {self.외국인소진율}]"
 
     class Meta:
-        verbose_name='기본정보'
-        verbose_name_plural = '기본정보 목록'
+        verbose_name='Info'
+        verbose_name_plural = 'Infos'
         
         
 class Ohlcv(models.Model):
@@ -86,6 +86,8 @@ class Ohlcv(models.Model):
         )  # 특정 Ticker의 날짜별 데이터가 중복되지 않도록
         ordering = ['Date']
         verbose_name='OHLCV'
+        verbose_name_plural = 'OHLCVs'
+
         
         
     def get_data_xx(ticker:Ticker):
@@ -443,7 +445,7 @@ class ChangeLog(models.Model):
     class Meta():
         unique_together = ['ticker','change_date','change_field']
         ordering = ['change_date','change_field']
-        verbose_name='데이터 변경'
+        verbose_name='데이터변경'
         verbose_name_plural = '데이터변경 목록'
         # db_table = 'stock__changelog'
 
@@ -466,16 +468,15 @@ class Iss(models.Model):
         return f"Issue {self.hl_str}"
     
     class Meta:
-        verbose_name='이슈'
-        verbose_name_plural = '이슈 목록'
-
-    class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=['iss_str', 'regdate'], 
                 name='unique_iss_str_regdate'
             )
         ]
+        verbose_name='이슈'
+        verbose_name_plural = '이슈 목록'
+
 
     # def save(self, *args, **kwargs):
     #     # 날짜 부분만 추출하여 중복 체크
@@ -557,6 +558,8 @@ class News(models.Model):
                 name='unique_title_createdAt'
             )
         ]
+        verbose_name='뉴스'
+        verbose_name_plural = '뉴스 목록'
 
     def save(self, *args, **kwargs):
         # 날짜 부분만 추출하여 중복 체크
@@ -565,7 +568,6 @@ class News(models.Model):
             print(f"{self.title}  이미 존재하는 데이터입니다..")
             return
         super().save(*args, **kwargs)
-    
     
     
 
@@ -768,6 +770,9 @@ class DartContract(models.Model):
     def __str__(self):
         return f"{self.name} {self.매출액대비}"
     
+    class Meta:
+        verbose_name='공급계약'
+        verbose_name_plural = '공급계약 목록'
 
 class DartRightsIssue(models.Model):
     ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE, related_name='dartrightsissue_set')
@@ -786,6 +791,10 @@ class DartRightsIssue(models.Model):
     제3자배정대상자관계 = models.TextField(null=True)
     제3자배정대상자선정경위 = models.TextField(null=True)
 
+    class Meta:
+        verbose_name='유상증자'
+        verbose_name_plural = '유상증자 목록'
+
     def __str__(self):
         return f"{self.name} {self.신주비율} {self.제3자배정대상자}"
 class DartConvertibleBond(models.Model):
@@ -802,7 +811,11 @@ class DartConvertibleBond(models.Model):
     발행주식수 = models.IntegerField(null=True)
     주식총수대비비율 = models.FloatField(null=True)
 
-
+    class Meta:
+        verbose_name='전환사채'
+        verbose_name_plural = '전환사채 목록'
+        
+        
     def __str__(self):
         return f"{self.name} 표면이자:{self.표면이자율} 총주식대비:{self.주식총수대비비율}"
 class DartBonusIssue(models.Model):
@@ -816,7 +829,9 @@ class DartBonusIssue(models.Model):
     
     def __str__(self):
         return f"{self.name} 1주당:{self.주당배정주식수} "
-
+    class Meta:
+        verbose_name='무상증자'
+        verbose_name_plural = '무상증자 목록'
 
 class Favorite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='favorites')

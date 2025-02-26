@@ -4,7 +4,7 @@ from django.contrib import admin
 from .models import User
 from django.contrib import messages
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'membership', 'created_at', 'updated_at')
+    list_display = ('username', 'email', 'membership', 'created_at', 'updated_at','last_login')
     search_fields = ('username', 'name', '구분')
     list_filter = ('username','membership','created_at','updated_at')
     actions = ['upgrade_to_regular']
