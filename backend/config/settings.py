@@ -59,7 +59,7 @@ REST_FRAMEWORK = {
 
 # JWT 설정
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -205,7 +205,8 @@ AUTH_USER_MODEL = 'accounts.User'
 
 SHELL_PLUS_IMPORTS = [
     "import asyncio",
-    "from api.utils.dart import MyDart"
+    "import time",   
+    "from api.utils.dart import MyDart",
     # 'your_app.models',  # 특정 앱의 모델 임포트
     # 'your_app.views',   # 특정 앱의 뷰 임포트
     # 'your_app.other_module',  # 추가 모듈 임포트
