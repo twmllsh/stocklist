@@ -281,13 +281,31 @@ const StockConsensus = ({ stockCode }) => {
   if (!data || !data.length) return <div>컨센서스 데이터가 없습니다.</div>;
 
   return (
-    <div className="d-flex flex-column gap-4">
-      <div style={{ height: '400px' }}>
-        <h6 className="text-center mb-3">연간 실적/전망</h6>
+    <div
+      className="d-flex flex-column"
+      style={{ gap: '3rem', paddingBottom: '2rem' }}
+    >
+      <div
+        style={{
+          height: '400px',
+          padding: '1rem',
+          backgroundColor: 'var(--bs-body-bg)',
+          borderRadius: '8px',
+        }}
+      >
+        <h6 className="text-center mb-4">연간 실적/전망</h6>
         <Line data={processChartData(data, 'yearly')} options={chartOptions} />
       </div>
-      <div style={{ height: '400px' }}>
-        <h6 className="text-center mb-3">분기 실적/전망</h6>
+      <div
+        style={{
+          height: '400px',
+          padding: '1rem',
+          backgroundColor: 'var(--bs-body-bg)',
+          borderRadius: '8px',
+          marginBottom: '1.5rem', // x축 라벨을 위한 추가 여백
+        }}
+      >
+        <h6 className="text-center mb-4">분기 실적/전망</h6>
         <Line
           data={processChartData(data, 'quarterly')}
           options={chartOptions}
