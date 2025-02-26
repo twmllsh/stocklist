@@ -239,7 +239,7 @@ export default function Filter({ onToggle }) {
         search: searchInput.trim(), // 검색 시에는 다른 필터 제외하고 search만 전송
       };
 
-      // console.log('종목검색 요청 데이터:', updatedFilters);
+      console.log('종목검색 요청 데이터:', updatedFilters);
       await dispatch(fetchFilteredStocks(updatedFilters));
     } catch (error) {
       console.error('Search by text failed:', error);
@@ -307,7 +307,16 @@ export default function Filter({ onToggle }) {
   );
 
   return (
-    <Container fluid className="p-0 border-bottom bg-body">
+    <Container
+      fluid
+      className="p-0"
+      style={{
+        backgroundColor: 'var(--bs-body-bg)',
+        borderBottom: '1px solid var(--bs-border-color)',
+        position: 'relative',
+        zIndex: 1000,
+      }}
+    >
       <Form>
         <div
           style={{
@@ -315,6 +324,8 @@ export default function Filter({ onToggle }) {
             maxHeight: isOpen ? '1000px' : '0',
             opacity: isOpen ? 1 : 0,
             overflow: 'hidden',
+            backgroundColor: 'var(--bs-body-bg)',
+            padding: '1rem',
           }}
         >
           {buttonGroups.map((group, idx) => (
@@ -363,9 +374,11 @@ export default function Filter({ onToggle }) {
                 type="text"
                 placeholder="종목명 또는 코드"
                 value={searchInput}
-                className="bg-body"
+                className="bg-transparent"
                 style={{
                   borderColor: 'var(--bs-border-color)',
+                  color: 'var(--bs-body-color)',
+                  backgroundColor: 'var(--bs-body-bg)',
                 }}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={(e) => {
@@ -378,6 +391,7 @@ export default function Filter({ onToggle }) {
                 variant="outline-secondary"
                 onClick={handleSearchByText}
                 disabled={isLoading}
+                className="bg-transparent"
               >
                 종목검색
               </Button>
@@ -390,7 +404,12 @@ export default function Filter({ onToggle }) {
               </span>
             )}
           </div>
-          <Button variant="link" onClick={handleToggle} className="p-0">
+          <Button
+            variant="link"
+            onClick={handleToggle}
+            className="p-0"
+            style={{ color: 'var(--bs-body-color)' }}
+          >
             {isOpen ? '접기' : '펼치기'}
           </Button>
         </div>

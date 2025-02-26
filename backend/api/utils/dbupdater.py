@@ -2813,13 +2813,18 @@ class Api:
             searched_names = chartvalues.values_list('ticker__name',flat=True)
             df_real = Api.get_df_real_from_fdr() 
             df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
-            df_real['현재가'] = df_real['현재가'].astype(float)
+            df_real['현재가'] = pd.to_numeric(df_real['현재가'], errors='coerce')
             df_real['매수총잔량'] = 0
             df_real['매도총잔량'] = 0
         elif favorites:
             # user = User.objects.get(username=favorites) # user가져옴.
             # tickers = [ticker.ticker for ticker in user.favorites.all()]
-            chartvalues = ChartValue.objects.filter(ticker__in=buy_prices.keys())
+            print(buy_prices, 'buy_prices', type(buy_prices)) 
+            if buy_prices:
+                chartvalues = ChartValue.objects.filter(ticker__in=buy_prices.keys())
+            else:
+                return pd.DataFrame()
+                
             searched_names = chartvalues.values_list('ticker__name',flat=True)
             df_real = Api.get_df_real_from_fdr() 
             df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
@@ -2957,8 +2962,10 @@ class Api:
             
             # tickers = [ticker.ticker for ticker in user.favorites.all()]
             # chartvalues = ChartValue.objects.filter(ticker__in=tickers)
-            chartvalues = ChartValue.objects.filter(ticker__in=buy_prices.keys())
-            
+            if buy_prices:
+                chartvalues = ChartValue.objects.filter(ticker__in=buy_prices.keys())
+            else:
+                return pd.DataFrame()
         
         ## 필요한 데이터만 추출
         if len(chartvalues) == 0:
@@ -2996,8 +3003,11 @@ class Api:
         
         ## buy_price 추가하기. 
         if buy_prices is not None:
-            df['buy_price'] = df['code'].map(buy_prices)
-        
+            try:
+                df['buy_price'] = df['code'].map(buy_prices)
+            except:
+                pass
+                    
         ## df 가지고 장중인지 아닌지 확인하기. 
         time_rate = StockFunc.get_progress_percentage() # 시간에 따른 비율.  실시간이 아니면 1로 특히 휴일인경우 처리해야한다. ## 수정필요함.
         time_rate = time_rate if time_rate is not None else 1
