@@ -47,12 +47,9 @@ export default defineConfig({
     // 청크 크기 경고 제한 조정 (선택사항)
     chunkSizeWarningLimit: 1000,
     // 코드 분할 최적화
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // 콘솔 로그 제거
-        drop_debugger: true,
-      },
+    minify: 'esbuild', // terser 대신 esbuild 사용
+    esbuild: {
+      drop: ['console', 'debugger'], // console.log와 debugger 제거
     },
   },
 });
