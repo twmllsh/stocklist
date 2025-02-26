@@ -25,6 +25,7 @@ from django.db.models import F, ExpressionWrapper, IntegerField
 from django.http import JsonResponse, HttpResponse  # 추가된 줄
 from rest_framework.permissions import AllowAny, IsAuthenticated  # 추가된 줄
 from rest_framework.decorators import action  # 추가된 줄
+from .utils.dbupdater import Api
 
 class TickerViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 추가된 줄
@@ -177,8 +178,8 @@ class StocklistViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
 
     def list(self, request):
-    
         all_params = request.query_params
+        print(all_params,"all_params")
         params = {}
         for param, value in all_params.items():
             if param == 'search':
@@ -199,22 +200,15 @@ class StocklistViewSet(viewsets.ViewSet):
                     {"error": "로그인이 필요합니다."}, 
                     status=status.HTTP_401_UNAUTHORIZED
                 )
-
             try:
-                # 즐겨찾기 데이터 가져오기
-                favorites = Favorite.objects.select_related('ticker').filter(user=request.user)
-                
+                # # 즐겨찾기 데이터 가져오기
+                # favorites = Favorite.objects.select_related('ticker').filter(user=request.user)
                 if not favorites.exists():
                     return JsonResponse([], safe=False)
-                
-                # favorite_tickers = [fav.ticker.code for fav in favorites]
-                # buy_prices = {fav.ticker.code: fav.buy_price for fav in favorites}
-                
-                # print(f"조회된 즐겨찾기: {favorite_tickers}")
                 print(f"조회된 매수가격: {buy_prices}")
 
-                from .utils.dbupdater import Api
                 # API 호출
+                from .utils.dbupdater import Api
                 result = Api.choice_for_api(favorites=True, buy_prices=buy_prices)
                 
 

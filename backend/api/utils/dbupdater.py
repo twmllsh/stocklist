@@ -2956,16 +2956,16 @@ class Api:
         else:   
             chartvalues = chartvalues.filter(all_Q)
         
-        ## 즐겨찾기면 chartvalues 완전 다르게 가져오기.############################
-        if favorites:
-            # user = User.objects.get(username=favorites) # user가져옴.
+        # ## 즐겨찾기면 chartvalues 완전 다르게 가져오기.############################
+        # if favorites:
+        #     # user = User.objects.get(username=favorites) # user가져옴.
             
-            # tickers = [ticker.ticker for ticker in user.favorites.all()]
-            # chartvalues = ChartValue.objects.filter(ticker__in=tickers)
-            if buy_prices:
-                chartvalues = ChartValue.objects.filter(ticker__in=buy_prices.keys())
-            else:
-                return pd.DataFrame()
+        #     # tickers = [ticker.ticker for ticker in user.favorites.all()]
+        #     # chartvalues = ChartValue.objects.filter(ticker__in=tickers)
+        #     if buy_prices:
+        #         chartvalues = ChartValue.objects.filter(ticker__in=buy_prices.keys())
+        #     else:
+        #         return pd.DataFrame()
         
         ## 필요한 데이터만 추출
         if len(chartvalues) == 0:
