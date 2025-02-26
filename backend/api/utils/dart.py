@@ -462,6 +462,11 @@ class MyDart:
             self.contract = [item for item in self.contract if not isinstance(item, TypeError)]
             self.contract = [item for item in self.contract if isinstance(item, dict)]
             self.contract = [item for item in self.contract if len(item)!=0]
+            try:
+                self.contract = [item for item in self.contract if item['code'] is not None and item['code'] != 'nan']
+            except:
+                pass
+            
 
         return self.contract
     
@@ -583,7 +588,11 @@ class MyDart:
             self.rights_issue = [item for item in self.rights_issue if not isinstance(item, TypeError)]
             self.rights_issue = [item for item in self.rights_issue if isinstance(item, dict)]
             self.rights_issue = [item for item in self.rights_issue if len(item)!=0]
-        
+            try:
+                self.rights_issue = [item for item in self.rights_issue if item['code'] is not None and item['code'] != 'nan']
+            except:
+                pass
+
         return self.rights_issue
     
 ## 전환사채
@@ -702,7 +711,10 @@ class MyDart:
             self.convertible_bond = [item for item in self.convertible_bond if not isinstance(item, TypeError)]
             self.convertible_bond = [item for item in self.convertible_bond if isinstance(item, dict)]
             self.convertible_bond = [item for item in self.convertible_bond if len(item)!=0]
-        
+            try:
+                self.convertible_bond = [item for item in self.convertible_bond if item['code'] is not None and item['code'] != 'nan']
+            except:
+                pass
         return self.convertible_bond
 
     ## 무상증자
@@ -784,6 +796,10 @@ class MyDart:
             self.bonus_issue = [item for item in self.bonus_issue if not isinstance(item, TypeError)]
             self.bonus_issue = [item for item in self.bonus_issue if isinstance(item, dict)]
             self.bonus_issue = [item for item in self.bonus_issue if len(item)!=0]
+            try:
+                self.bonus_issue = [item for item in self.bonus_issue if item['code'] is not None and item['code'] != 'nan']
+            except:
+                pass
         return self.bonus_issue
     
     
