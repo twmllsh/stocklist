@@ -46,12 +46,25 @@ const StockConsensus = ({ stockCode }) => {
     fetchData();
   }, [stockCode]);
 
-  const getTargetYear = () => {
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
-    return currentMonth >= 7
-      ? currentDate.getFullYear() + 1
-      : currentDate.getFullYear();
+  // 현재 분기와 다음 분기를 구하는 함수 추가
+  const getCurrentQuarter = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const currentQuarter = Math.ceil(currentMonth / 3);
+
+    return {
+      year: currentYear,
+      quarter: currentQuarter,
+    };
+  };
+
+  // 다음 분기를 구하는 함수
+  const getNextQuarter = (year, quarter) => {
+    if (quarter === 4) {
+      return { year: year + 1, quarter: 1 };
+    }
+    return { year: year, quarter: quarter + 1 };
   };
 
   const processChartData = (rawData, type) => {
@@ -100,11 +113,17 @@ const StockConsensus = ({ stockCode }) => {
           ? item.fintype === '연결연도' && item.quarter === 0
           : item.fintype === '연결분기' && [3, 6, 9, 12].includes(item.quarter)
       )
-      .sort((a, b) => a.year - b.year);
+      .sort((a, b) => {
+        // 연도와 분기로 정렬
+        if (a.year !== b.year) return a.year - b.year;
+        return a.quarter - b.quarter;
+      });
 
     return {
       labels: filtered.map((item) =>
-        type === 'yearly' ? String(item.year) : `${item.year}-${item.quarter}Q`
+        type === 'yearly'
+          ? String(item.year)
+          : `${item.year}-${Math.floor(item.quarter / 3)}Q`
       ),
       datasets: [
         {
@@ -161,17 +180,74 @@ const StockConsensus = ({ stockCode }) => {
         grid: {
           color: (context) => {
             if (!context.tick?.label) return 'rgba(0, 0, 0, 0.1)';
-            const year = parseInt(context.tick.label);
-            const targetYear = getTargetYear();
-            return year === targetYear
-              ? 'rgba(41, 98, 255, 0.2)'
-              : 'rgba(0, 0, 0, 0.1)';
+
+            // 현재 연도와 분기 구하기
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+
+            // 다음 분기 계산
+            let nextQuarter = currentQuarter + 1;
+            let nextQuarterYear = currentYear;
+            if (nextQuarter > 4) {
+              nextQuarter = 1;
+              nextQuarterYear = currentYear + 1;
+            }
+
+            // x축 라벨 파싱 (예: "2024-1Q")
+            const [labelYear, quarterLabel] = context.tick.label.split('-');
+            const labelQuarter = quarterLabel ? parseInt(quarterLabel) : null;
+
+            // 연간 차트의 경우 기존 로직 유지
+            if (!quarterLabel) {
+              return parseInt(labelYear) === currentYear + 1
+                ? 'rgba(41, 98, 255, 0.2)'
+                : 'rgba(0, 0, 0, 0.1)';
+            }
+
+            // 다음 분기이거나 다음 분기의 작년 동기 확인
+            const isNextQuarter =
+              parseInt(labelYear) === nextQuarterYear &&
+              labelQuarter === nextQuarter;
+            const isPreviousYearSameQuarter =
+              parseInt(labelYear) === nextQuarterYear - 1 &&
+              labelQuarter === nextQuarter;
+
+            if (isNextQuarter || isPreviousYearSameQuarter)
+              return 'rgba(41, 98, 255, 0.2)';
+            return 'rgba(0, 0, 0, 0.1)';
           },
           lineWidth: (context) => {
+            // 위의 color 로직과 동일한 조건 적용
             if (!context.tick?.label) return 1;
-            const year = parseInt(context.tick.label);
-            const targetYear = getTargetYear();
-            return year === targetYear ? 40 : 1;
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+
+            let nextQuarter = currentQuarter + 1;
+            let nextQuarterYear = currentYear;
+            if (nextQuarter > 4) {
+              nextQuarter = 1;
+              nextQuarterYear = currentYear + 1;
+            }
+
+            const [labelYear, quarterLabel] = context.tick.label.split('-');
+            const labelQuarter = quarterLabel ? parseInt(quarterLabel) : null;
+
+            if (!quarterLabel) {
+              return parseInt(labelYear) === currentYear + 1 ? 40 : 1;
+            }
+
+            const isNextQuarter =
+              parseInt(labelYear) === nextQuarterYear &&
+              labelQuarter === nextQuarter;
+            const isPreviousYearSameQuarter =
+              parseInt(labelYear) === nextQuarterYear - 1 &&
+              labelQuarter === nextQuarter;
+
+            if (isNextQuarter || isPreviousYearSameQuarter) return 40;
+            return 1;
           },
         },
       },
