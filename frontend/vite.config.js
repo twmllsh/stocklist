@@ -28,4 +28,35 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            'react-bootstrap',
+            'chart.js',
+            'react-chartjs-2',
+            '@reduxjs/toolkit',
+            'react-redux',
+          ],
+          chart: ['chart.js', 'react-chartjs-2'],
+          bootstrap: ['react-bootstrap'],
+          redux: ['@reduxjs/toolkit', 'react-redux'],
+        },
+      },
+    },
+    // 청크 크기 경고 제한 조정 (선택사항)
+    chunkSizeWarningLimit: 1000,
+    // 코드 분할 최적화
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // 콘솔 로그 제거
+        drop_debugger: true,
+      },
+    },
+  },
 });

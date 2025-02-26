@@ -1,18 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
-import Login from './components/auth/Login';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './store/store';
 import { selectIsAuthenticated } from './store/slices/authSlice';
-import Register from './components/auth/Register';
-import StockList from './components/stock/StockList';
 import { fetchFavorites } from './store/slices/favoriteSlice';
+
+// 동적 임포트로 변경
+const StockList = lazy(() => import('./components/stock/StockList'));
+const Login = lazy(() => import('./components/auth/Login'));
+const Register = lazy(() => import('./components/auth/Register'));
 
 // future flags 설정
 const router = {
@@ -39,28 +46,30 @@ function App() {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <BrowserRouter future={router.future}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/list"
-              element={
-                <PrivateRoute>
-                  <StockList />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
+        <Router future={router.future}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route
+                path="/list"
+                element={
+                  <PrivateRoute>
+                    <StockList />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </Suspense>
+        </Router>
       </PersistGate>
     </Provider>
   );
