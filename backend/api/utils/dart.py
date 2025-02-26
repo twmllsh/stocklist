@@ -353,6 +353,10 @@ class MyDart:
         if len(df)> 0 :
             df['rcept_dt'] = df['rcept_dt'].dt.tz_localize('Asia/Seoul')
         print(f"{len(df)} / {download_cnt} 공시데이터 작업시작!!")
+        
+        ## stock_code 없는 값 제거
+        df = df.loc[df['stock_code'].notnull()]
+        
         return df
     
     
