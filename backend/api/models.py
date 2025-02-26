@@ -334,6 +334,59 @@ class BrokerTrading(models.Model):
     def __str__(self):
         return f"Broker [{self.ticker.name} - {self.date} - {self.broker_name} +{self.buy} -{self.sell}]"        
     
+    
+    @classmethod
+    def get_ranking_buy_latest(cls, broker_name=None, n=None, cnt=None):
+        '''
+        특정 거래원의 매수량 순위 가져오기
+        n봉전부터 cnt개의 데이터 가져오기
+        ['외국계추정합','메릴린치','제이피모간','에스지','홍콩상하이','맥쿼리',
+        '다이와','골드만삭스','모간스탠리','다올투자증권','노무라','비엔피','CLSA',
+        '씨티그룹','UBS',]
+        ''' 
+    
+        dates = BrokerTrading.objects.values_list('date',flat=True).distinct().order_by('date')
+        dates = list(dates)
+        start_date = dates[-n:][0] if n is not None else None
+        n =  len(dates) if start_date is None else n
+        end_date = dates[-n:][:cnt][-1] if cnt is not None else None
+        print(f"{start_date} ~ {end_date}")
+        qs = cls.objects.all()
+        if start_date is not None:
+            qs = qs.filter(date__gte=start_date)
+        if end_date is not None:
+            qs = qs.filter(date__lte=end_date)
+        if broker_name is not None:
+            qs = qs.filter(broker_name=broker_name)
+            
+        qs = qs.values('ticker', 'ticker__name').annotate(
+            total_buy=Sum('buy'), total_sell=Sum('sell')
+            ).annotate(diff=F("total_buy") - F("total_sell")).order_by(F('diff').desc(nulls_last=True))
+        df = pd.DataFrame(list(qs))
+        return df
+    
+    @classmethod
+    def get_broker_buy_period(cls, ticker=None, broker_name=None, start_date=None, end_date=None):
+        '''
+        특정 종목의 특정 거래원의 매수량 가져오기
+        start_date 부터 end_date 이전까지. ** end_date는 포함하지 않음
+        '''
+        qs = cls.objects.all()
+        if ticker is not None:
+            qs = qs.filter(ticker=ticker)
+        if broker_name is not None:
+            qs = qs.filter(broker_name=broker_name)
+        if start_date is not None:
+            qs = qs.filter(date__gte=start_date)
+        if end_date is not None:
+            qs = qs.filter(date__lt=end_date)
+        qs = qs.values('ticker', 'ticker__name', 'broker_name').annotate(
+            total_buy=Sum('buy'), total_sell=Sum('sell')
+            ).annotate(diff=F("total_buy") - F("total_sell")).order_by(F('diff').desc(nulls_last=True))
+        df = pd.DataFrame(list(qs))
+        return df
+    
+    
     @classmethod
     def good_broker(cls , brokers=None , n=10):
         
