@@ -27,9 +27,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN apt-get update && apt-get install -y iputils-ping
 RUN pip install --upgrade pip
-RUN playwright install
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN playwright install
 # RUN playwright install-dep
 
 COPY . .
