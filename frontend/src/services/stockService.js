@@ -239,12 +239,21 @@ export const stockService = {
       throw error;
     }
   },
+  // AI 의견 조회
   getOpinion: async () => {
     try {
+      console.log('AI Opinion 요청 시작');
       const response = await stockAxios.get('/aiopinion/');
-      return response.data;
+      console.log('AI Opinion 응답:', response);
+      // response.data가 있으면 사용하고, 없으면 response 자체를 반환
+      return response.data || response;
     } catch (error) {
-      console.error('의견 가져오기 실패:', error);
+      console.error('AI Opinion 요청 실패:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       throw error;
     }
   },
