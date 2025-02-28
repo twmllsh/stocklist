@@ -4,19 +4,19 @@ from api.utils.dbupdater import DBUpdater
 from django.core.management import call_command
 from datetime import datetime
 from django.db import transaction
-
+from api.utils import ai
 # 로거 설정
 logger = logging.getLogger(__name__)
 
 
-#@shared_task
-#def scheduler_test():
-#    """테스트 용도임."""
-#    try:
-#        print('scheduler test!!')
-#        return "test scheduler completed successfully"
-#    except Exception as e:
-#        return f"test scheduler failed: {str(e)}"
+@shared_task
+def scheduler_ai_opinion():
+   """ai 의견 저장.."""
+   try:
+       ai.get_korean_stock_status()
+       return "AI scheduler completed successfully"
+   except Exception as e:
+       return f"test scheduler failed: {str(e)}"
 
 @shared_task
 def scheduler_ticker():

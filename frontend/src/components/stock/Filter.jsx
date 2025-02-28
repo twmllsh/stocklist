@@ -26,6 +26,7 @@ export default function Filter({ onToggle }) {
   const [resultCount, setResultCount] = useState(undefined);
   const [hasResults, setHasResults] = useState(false);
   const [searchInput, setSearchInput] = useState(''); // 검색어 입력 상태 추가
+  const [opinion, setOpinion] = useState(''); // 추가
 
   const [filters, setFilters] = useState({
     change: true,
@@ -248,6 +249,23 @@ export default function Filter({ onToggle }) {
     }
   };
 
+  // 컴포넌트 마운트 시 opinion 데이터 가져오기
+  useEffect(() => {
+    const fetchOpinion = async () => {
+      try {
+        console.log('AI Opinion 요청 시작');
+        const data = await stockService.getOpinion();
+        console.log('AI Opinion 응답 데이터:', data);
+        // 전체 응답 데이터를 opinion 상태에 저장
+        setOpinion(data);
+      } catch (error) {
+        console.error('Opinion 가져오기 실패:', error);
+      }
+    };
+
+    fetchOpinion();
+  }, []); // 컴포넌트 마운트 시에만 실행
+
   // 버튼 렌더링 함수 수정
   const renderButton = (btn) => (
     <OverlayTrigger
@@ -412,6 +430,38 @@ export default function Filter({ onToggle }) {
           >
             {isOpen ? '접기' : '펼치기'}
           </Button>
+        </div>
+
+        {/* Opinion 섹션 수정 */}
+        <div
+          className="px-4 py-3 mt-2"
+          style={{
+            borderTop: '2px solid var(--bs-primary)',
+            backgroundColor: 'var(--bs-body-bg)',
+            borderRadius: '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          }}
+        >
+          <div className="d-flex flex-column gap-3">
+            <div className="d-flex align-items-center gap-2">
+              <strong className="text-primary fs-5">AI 투자의견:</strong>
+              <span className="fs-5 fw-bold" style={{ color: '#dc3545' }}>
+                {opinion?.opinion || '로딩중...'}
+              </span>
+            </div>
+            <div>
+              <strong className="text-primary mb-2 d-block">분석근거:</strong>
+              <p className="mb-2" style={{ lineHeight: '1.6' }}>
+                {opinion?.reason || '로딩중...'}
+              </p>
+            </div>
+            <div className="text-muted d-flex gap-2 align-items-center">
+              <strong>분석엔진:</strong>
+              <span className="badge bg-secondary">
+                {opinion?.ai_method?.toUpperCase() || '로딩중...'}
+              </span>
+            </div>
+          </div>
         </div>
       </Form>
     </Container>

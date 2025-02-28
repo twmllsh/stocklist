@@ -25,7 +25,6 @@ from django.db.models import F, ExpressionWrapper, IntegerField
 from django.http import JsonResponse, HttpResponse  # 추가된 줄
 from rest_framework.permissions import AllowAny, IsAuthenticated  # 추가된 줄
 from rest_framework.decorators import action  # 추가된 줄
-from .utils.dbupdater import Api
 
 class TickerViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 추가된 줄
@@ -175,12 +174,14 @@ class Ohlcv1ViewSet(viewsets.ViewSet):
         return JsonResponse(df_dict, safe=False, json_dumps_params={'ensure_ascii': False})    
 
 class StocklistViewSet(viewsets.ViewSet):
-    permission_classes = [AllowAny]
-
+    permission_classes = [AllowAny]  # 추가된 줄
     def list(self, request):
+        
+        # 모든 쿼리 파라미터를 가져옴
         all_params = request.query_params
-        print(all_params,"all_params")
-        params = {}
+
+        # 파라미터별 처리
+        params ={}
         for param, value in all_params.items():
             if param == 'search':
                 params[param] = str(value)
@@ -190,53 +191,28 @@ class StocklistViewSet(viewsets.ViewSet):
             else:
                 params[param] = value
         
-        favorites = Favorite.objects.select_related('ticker').filter(user=request.user)
-        buy_prices = {fav.ticker.code: fav.buy_price for fav in favorites}
-        params['buy_prices'] = buy_prices
-        # favorites 처리
-        if "favorites" in params:
-            if not request.user.is_authenticated:
-                return Response(
-                    {"error": "로그인이 필요합니다."}, 
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-            try:
-                # # 즐겨찾기 데이터 가져오기
-                # favorites = Favorite.objects.select_related('ticker').filter(user=request.user)
-                if not favorites.exists():
-                    return JsonResponse([], safe=False)
-                print(f"조회된 매수가격: {buy_prices}")
-
-                # API 호출
-                from .utils.dbupdater import Api
-                result = Api.choice_for_api(favorites=True, buy_prices=buy_prices)
-                
-
-                result = result.fillna('N/A')
-                result_dict = result.to_dict(orient='records')
-                return JsonResponse(result_dict, safe=False)
-
-            except Exception as e:
-                print(f"즐겨찾기 처리 중 오류: {str(e)}")
-                return Response(
-                    {"error": f"즐겨찾기 처리 중 오류가 발생했습니다: {str(e)}"}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-
-        # 일반 검색 처리
-        from .utils.dbupdater import Api
-        result = Api.choice_for_api(**params)
-        result = result.fillna('N/A')
-        result_dict = result.to_dict(orient='records')
-        return JsonResponse(result_dict, safe=False)
         
-        # except Exception as e:
-        #     print(f"StocklistViewSet 오류: {str(e)}")
-        #     return Response(
-        #         {"error": str(e)}, 
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
-
+        from .utils.dbupdater import Api
+        print('params: ' , params)
+        ## favorites 가 들어있으면 파람 모두 무시. 재생산. 
+        ## search 가 들어있어도 파라 모두 무시. 재생산. 
+        if "favorites" in params:
+            username = request.user.username
+            params = {'favorites': username}
+            print("params::", params)
+            result = Api.choice_for_api(**params)
+        elif "search" in params:
+            params = {'search': params['search']}
+            result = Api.choice_for_api(**params)
+        else:
+            result = Api.choice_for_api(**params)
+        
+        # Handle NaN values
+        result = result.fillna('N/A')
+        
+        result_dict = result.to_dict(orient='records')
+        # return JsonResponse({'result': result_dict}, json_dumps_params={'ensure_ascii': False})
+        return JsonResponse( result_dict, safe=False, json_dumps_params={'ensure_ascii': False})
         
         
 class NewsViewSet(viewsets.ModelViewSet):
@@ -365,44 +341,19 @@ class FavoriteViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(detail=False, methods=['post'])
-    def update_price(self, request):
-        ticker_code = request.data.get('ticker_code')
-        buy_price = request.data.get('buy_price')
-        
-        if not ticker_code or buy_price is None:
-            return Response(
-                {'error': 'ticker_code and buy_price are required'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            # 현재 사용자의 즐겨찾기 항목 찾기
-            favorite = Favorite.objects.get(
-                user=request.user,
-                ticker_id=ticker_code
-            )
-            
-            # 매수가격 업데이트
-            favorite.buy_price = float(buy_price)
-            favorite.save()
-            
-            return Response({'status': 'success', 'buy_price': buy_price})
-        except Favorite.DoesNotExist:
-            return Response(
-                {'error': 'Favorite not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {'error': str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
 class AiOpinionViewSet(viewsets.ModelViewSet):
-    queryset = AiOpinion.objects.last()
+    permission_classes = [AllowAny]  # 인증 요구사항 완화
     serializer_class = AiOpinionSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return AiOpinion.objects.all().order_by('-created_at')[:1]  # 최신 의견 1개만 반환
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        if queryset.exists():
+            serializer = self.get_serializer(queryset.first())
+            return Response(serializer.data)
+        return Response({"message": "의견이 없습니다."})
 
 ######################  rest api  #########################
 
