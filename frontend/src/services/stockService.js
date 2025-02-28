@@ -239,9 +239,9 @@ export const stockService = {
       throw error;
     }
   },
-  getOpinion: async (code, price) => {
+  getOpinion: async () => {
     try {
-      const response = await stockAxios.post('/aiopinion/');
+      const response = await stockAxios.get('/aiopinion/');
       return response.data;
     } catch (error) {
       console.error('의견 가져오기 실패:', error);

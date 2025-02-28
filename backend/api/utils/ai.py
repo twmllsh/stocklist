@@ -27,12 +27,12 @@ def get_korean_stock_status(ai_method="openai"):
         model  = "gemini-1.5-flash"
         print("use gemini")
     
-    
     end = pd.Timestamp.now()
-    start = end - pd.DateOffset(months=3)
-
+    start = end - pd.DateOffset(months=3) 
+       
     ks = fdr.DataReader('KS11',start=start, end=end) # KOSPI 지수 (KRX)
     kq = fdr.DataReader('KQ11',start=start, end=end) # KOSDAQ 지수 (KRX)
+  
     # ks200 = fdr.DataReader('KS200',start=start, end=end) # KOSPI 200 (KRX)
     vix = fdr.DataReader("VIX", start=start, end=end)
     usd_krw = fdr.DataReader('USD/KRW',start=start, end=end) # 달러 원화
