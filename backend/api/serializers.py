@@ -85,3 +85,7 @@ class FavoriteSerializer(serializers.Serializer):
     class Meta:
         model = Favorite
         fields = ("__all__")
+class AiOpinionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AiOpinion
+        fields = ['id', 'opinion', 'reason', 'ai_method', 'created_at']

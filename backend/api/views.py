@@ -399,6 +399,11 @@ class FavoriteViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+class AiOpinionViewSet(viewsets.ModelViewSet):
+    queryset = AiOpinion.objects.last()
+    serializer_class = AiOpinionSerializer
+    permission_classes = [IsAuthenticated]
+
 ######################  rest api  #########################
 
 def health_check(request):

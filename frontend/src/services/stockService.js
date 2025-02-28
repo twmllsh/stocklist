@@ -239,4 +239,13 @@ export const stockService = {
       throw error;
     }
   },
+  getOpinion: async (code, price) => {
+    try {
+      const response = await stockAxios.post('/aiopinion/');
+      return response.data;
+    } catch (error) {
+      console.error('의견 가져오기 실패:', error);
+      throw error;
+    }
+  },
 };

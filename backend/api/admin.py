@@ -82,4 +82,9 @@ class DartBonusIssueAdmin(admin.ModelAdmin):
     list_display = ('ticker', '신주의수', '주당배정주식수', '배당기산일', '상장예정일', 'rcept_dt','name',)
     search_fields = ('ticker', 'name', '주당배정주식수', )
     list_filter = ('상장예정일', )
-    
+
+@admin.register(AiOpinion)
+class AiOpinionAdmin(admin.ModelAdmin):
+    list_display = ('opinion', 'reason', 'created_at')
+    search_fields = ('opinion', 'reason', )
+    list_filter = ('created_at',)

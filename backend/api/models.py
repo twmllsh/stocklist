@@ -899,4 +899,14 @@ class Favorite(models.Model):
     
     def __str__(self):
         return f"{self.user}의 즐겨찾기 {self.ticker.name}"
+
+
+class AiOpinion(models.Model):
+    opinion = models.CharField(max_length=4)
+    reason = models.TextField()
+    ai_method = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.opinion} {self.created_at}"
     
