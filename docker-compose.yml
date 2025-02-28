@@ -43,20 +43,29 @@ services:
       - ./backend:/app
       - static_volume:/app/static
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health/']
-      interval: 30s
+      test: ['CMD', 'python', 'manage.py', 'check'] # 변경된 healthcheck
+      interval: 10s
       timeout: 10s
-      retries: 3
-      start_period: 20s # 시작 시간 여유 증가
+      retries: 5
+      start_period: 40s # 시작 대기 시간 증가
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
     restart: unless-stopped
     networks:
       - app-network
     labels:
       - 'custom.name=backend'
-    command: python manage.py runserver 0.0.0.0:8000 # gunicorn 대신 개발 서버 사용
+    command: >
+      sh -c "
+        python manage.py wait_for_db &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000
+      "  # 명령어 체인 추가
 
   nginx:
     build:
@@ -101,8 +110,8 @@ services:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 10s
+      retries: 10 # 재시도 횟수 증가
+      start_period: 30s # 시작 대기 시간 증가
     env_file:
       - .env
     command: ['postgres', '-c', 'timezone=${TIMEZONE}']
