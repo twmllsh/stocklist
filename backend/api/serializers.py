@@ -64,10 +64,13 @@ class NewsSerializer(serializers.ModelSerializer):
         model = News
         fields = '__all__'
 
+# AllDartSerializer 수정
 class AllDartSerializer(serializers.ModelSerializer):
+    ticker = TickerSerializer(read_only=True)
+    
     class Meta:
         model = AllDart
-        fields = ['rcept_dt','corp_cls','corp_code','report_nm','rcept_no','flr_nm','rpt_nm','rm']
+        fields = ['id', 'ticker', 'rcept_dt', 'rcept_no', 'report_nm', 'corp_cls', 'corp_name']
 
 class ChartValueSerializer(serializers.ModelSerializer):
     class Meta:

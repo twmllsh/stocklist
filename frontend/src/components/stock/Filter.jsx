@@ -447,13 +447,17 @@ export default function Filter({ onToggle }) {
         >
           <div className="d-flex flex-column gap-3">
             <div className="d-flex align-items-center gap-2">
-              <strong className="text-primary fs-5">AI 투자의견:</strong>
+              <strong className="text-primary fs-5">
+                지수로 보는 AI 투자의견:
+              </strong>
               <span className="fs-5 fw-bold" style={{ color: '#dc3545' }}>
                 {opinion?.opinion || '로딩중...'}
               </span>
             </div>
             <div>
-              <strong className="text-primary mb-2 d-block">분석근거:</strong>
+              <strong className="text-primary mb-2 d-block">
+                분석에 대한 설명:
+              </strong>
               <p className="mb-2" style={{ lineHeight: '1.6' }}>
                 {opinion?.reason || '로딩중...'}
               </p>

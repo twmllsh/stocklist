@@ -200,7 +200,6 @@ class StocklistViewSet(viewsets.ViewSet):
             username = request.user.username
             params = {'favorites': username}
             print("params::", params)
-            
             result = Api.choice_for_api(**params)
         elif "search" in params:
             params = {'search': params['search']}
@@ -228,20 +227,20 @@ class NewsViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tickers__code=ticker)
         # 최근 데이터 10개만 가져오기
         # queryset = queryset.order_by('-createdAt')[:10]
-        queryset = queryset.order_by('title','-createdAt').distinct('title')[:30]
+        queryset = queryset.order_by('title','-createdAt').distinct('title')[:10]
         return queryset
-
 class AllDartViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 추가된 줄
     queryset = AllDart.objects.all()
     serializer_class = AllDartSerializer
-    
+
     def get_queryset(self):
         queryset = AllDart.objects.all()
         ticker = self.request.query_params.get('ticker', None)
         if ticker is not None:
-            queryset = queryset.filter(corp_code=ticker)
-        queryset = queryset.order_by('-report_nm')[:100]
+            queryset = queryset.filter(ticker__code=ticker)  # tickers__code를 ticker__code로 수정
+        # 최근 데이터 100개만 가져오기
+        queryset = queryset.order_by('-rcept_dt')[:100]
         return queryset
 
 class IssViewSet(viewsets.ModelViewSet):
@@ -354,55 +353,6 @@ class FavoriteViewSet(viewsets.ModelViewSet):
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-    # 매수가격 업데이트 액션 추가
-    @action(detail=False, methods=['post'])
-    def update_price(self, request):
-        try:
-            ticker_code = request.data.get('ticker_code')
-            buy_price = request.data.get('buy_price')
-
-            if not ticker_code or buy_price is None:
-                return Response(
-                    {'error': 'ticker_code and buy_price are required'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            favorite = Favorite.objects.filter(
-                user=request.user,
-                ticker_id=ticker_code
-            ).first()
-
-            if not favorite:
-                return Response(
-                    {'error': 'Favorite not found'}, 
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-            favorite.buy_price = buy_price
-            favorite.save()
-
-            return Response({'status': 'updated', 'buy_price': buy_price})
-
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-class AiOpinionViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]  # 인증 요구사항 완화
-    serializer_class = AiOpinionSerializer
-
-    def get_queryset(self):
-        return AiOpinion.objects.all().order_by('-created_at')[:1]  # 최신 의견 1개만 반환
-
-    def list(self, request):
-        queryset = self.get_queryset()
-        if queryset.exists():
-            serializer = self.get_serializer(queryset.first())
-            return Response(serializer.data)
-        return Response({"message": "의견이 없습니다."})
 
 ######################  rest api  #########################
 

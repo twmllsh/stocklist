@@ -16,10 +16,8 @@ router.register(r'chartvalue', ChartValueViewSet)  # 'yourmodel' URL에 ViewSet 
 router.register(r'stocklist', StocklistViewSet, basename='stocklist')
 router.register(r'news', NewsViewSet)
 router.register(r'dart', AllDartViewSet)
-
 router.register(r'iss', IssViewSet)
 router.register(r'favorites', FavoriteViewSet, basename='favorite')
-router.register(r'aiopinion', AiOpinionViewSet, basename='aiopinion')
 app_name = "api"
 
 urlpatterns = [
