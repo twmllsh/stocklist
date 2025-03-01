@@ -354,6 +354,41 @@ class FavoriteViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @action(detail=False, methods=['post'])
+    def update_price(self, request):
+        """매수가격 업데이트"""
+        try:
+            ticker_code = request.data.get('ticker_code')
+            buy_price = request.data.get('buy_price')
+
+            if not ticker_code or buy_price is None:
+                return Response(
+                    {'error': 'ticker_code and buy_price are required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            favorite = Favorite.objects.filter(
+                user=request.user,
+                ticker_id=ticker_code
+            ).first()
+
+            if not favorite:
+                return Response(
+                    {'error': 'Favorite not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            favorite.buy_price = buy_price
+            favorite.save()
+
+            return Response({'status': 'success', 'buy_price': buy_price})
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class AiOpinionViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 수정

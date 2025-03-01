@@ -27,6 +27,7 @@ export default function Filter({ onToggle }) {
   const [hasResults, setHasResults] = useState(false);
   const [searchInput, setSearchInput] = useState(''); // 검색어 입력 상태 추가
   const [opinion, setOpinion] = useState(''); // 추가
+  const [showOpinionDetail, setShowOpinionDetail] = useState(true); // 기본값을 true로 설정
 
   const [filters, setFilters] = useState({
     change: true,
@@ -445,28 +446,49 @@ export default function Filter({ onToggle }) {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           }}
         >
-          <div className="d-flex flex-column gap-3">
-            <div className="d-flex align-items-center gap-2">
-              <strong className="text-primary fs-5">
-                지수로 보는 AI 투자의견:
-              </strong>
-              <span className="fs-5 fw-bold" style={{ color: '#dc3545' }}>
-                {opinion?.opinion || '로딩중...'}
-              </span>
+          <div className="d-flex flex-column">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="d-flex align-items-center gap-2">
+                <strong className="text-primary fs-5">
+                  지수로 보는 AI 투자의견:
+                </strong>
+                <span className="fs-5 fw-bold" style={{ color: '#dc3545' }}>
+                  {opinion?.opinion || '로딩중...'}
+                </span>
+              </div>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setShowOpinionDetail(!showOpinionDetail)}
+                style={{ minWidth: '80px' }}
+              >
+                {showOpinionDetail ? '접기 ▼' : '펼치기 ▲'}
+              </Button>
             </div>
-            <div>
-              <strong className="text-primary mb-2 d-block">
-                분석에 대한 설명:
-              </strong>
-              <p className="mb-2" style={{ lineHeight: '1.6' }}>
-                {opinion?.reason || '로딩중...'}
-              </p>
-            </div>
-            <div className="text-muted d-flex gap-2 align-items-center">
-              <strong>분석엔진:</strong>
-              <span className="badge bg-secondary">
-                {opinion?.ai_method?.toUpperCase() || '로딩중...'}
-              </span>
+
+            <div
+              style={{
+                maxHeight: showOpinionDetail ? '500px' : '0',
+                opacity: showOpinionDetail ? 1 : 0,
+                overflow: 'hidden',
+                transition: 'all 0.3s ease-in-out',
+                marginTop: showOpinionDetail ? '1rem' : '0',
+              }}
+            >
+              <div>
+                <strong className="text-primary d-block mb-2">
+                  분석에 대한 설명:
+                </strong>
+                <p className="mb-3" style={{ lineHeight: '1.6' }}>
+                  {opinion?.reason || '로딩중...'}
+                </p>
+              </div>
+              <div className="text-muted d-flex gap-2 align-items-center">
+                <strong>분석엔진:</strong>
+                <span className="badge bg-secondary">
+                  {opinion?.ai_method?.toUpperCase() || '로딩중...'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
