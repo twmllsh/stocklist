@@ -74,6 +74,20 @@ export const stockService = {
       throw error;
     }
   },
+  // 종목 dart 조회
+  getStockDart: async (code) => {
+    try {
+      const response = await stockAxios.get('/dart/', {
+        params: { ticker: code },
+      });
+      // console.log('dart 데이터 요청 성공:', response);
+      // response.data가 배열인지 확인하고 반환
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('dart 데이터 요청 실패:', error);
+      throw error;
+    }
+  },
 
   // 종목 이슈 조회
   getStockIssue: async (code) => {

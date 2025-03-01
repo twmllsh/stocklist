@@ -63,7 +63,12 @@ class NewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
         fields = '__all__'
-        
+
+class AllDartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AllDart
+        fields = ['rcept_dt','corp_cls','corp_code','report_nm','rcept_no','flr_nm','rpt_nm','rm']
+
 class ChartValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChartValue

@@ -228,7 +228,20 @@ class NewsViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tickers__code=ticker)
         # 최근 데이터 10개만 가져오기
         # queryset = queryset.order_by('-createdAt')[:10]
-        queryset = queryset.order_by('title','-createdAt').distinct('title')[:10]
+        queryset = queryset.order_by('title','-createdAt').distinct('title')[:30]
+        return queryset
+
+class AllDartViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]  # 추가된 줄
+    queryset = AllDart.objects.all()
+    serializer_class = AllDartSerializer
+    
+    def get_queryset(self):
+        queryset = AllDart.objects.all()
+        ticker = self.request.query_params.get('ticker', None)
+        if ticker is not None:
+            queryset = queryset.filter(corp_code=ticker)
+        queryset = queryset.order_by('-report_nm')[:100]
         return queryset
 
 class IssViewSet(viewsets.ModelViewSet):

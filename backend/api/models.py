@@ -806,6 +806,19 @@ class AllDart(models.Model):
     def __str__(self):
         return f"{self.corp_name} {self.report_nm}"
 
+    @classmethod
+    def get_all_dart_by_ticker(cls, code):
+        ticker = Ticker.objects.get(code=code)
+        if ticker:
+            q = cls.objects.filter(ticker=ticker)
+            now = pd.Timestamp.now(tz='Asia/Seoul')
+            start = now - pd.Timedelta(days=365)
+            q = q.filter(rcept_dt__gte=start)
+            return q
+        
+            
+            
+    
 class DartContract(models.Model):
     ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE, related_name='dartcontract_set')
     name = models.CharField(max_length=100,null=True)
@@ -910,3 +923,12 @@ class AiOpinion(models.Model):
     def __str__(self):
         return f"{self.opinion} {self.created_at}"
     
+class AiOpinionForStock(models.Model):
+    ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE)
+    opinion = models.CharField(max_length=4)
+    reason = models.TextField()
+    ai_method = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.ticker}{self.opinion} {self.created_at}"
