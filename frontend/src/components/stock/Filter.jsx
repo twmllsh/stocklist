@@ -189,15 +189,18 @@ export default function Filter({ onToggle }) {
   // 즐겨찾기 조회 핸들러 수정
   const handleTestFavorites = async () => {
     try {
-      // console.log('[Filter] 즐겨찾기 검색 시작');
+      console.log('[Filter] 즐겨찾기 검색 시작');
       const favoritesFilter = {
-        favorites: true,
+        favorites: 'true',
       };
+
+      console.log('즐겨찾기 요청 URL: /stocklist/?favorites=true');
+      console.log('즐겨찾기 요청 파라미터:', favoritesFilter);
 
       const result = await dispatch(
         fetchFilteredStocks(favoritesFilter)
       ).unwrap();
-      // console.log('[Filter] 즐겨찾기 검색 결과:', result);
+      console.log('즐겨찾기 응답 데이터:', result);
     } catch (error) {
       console.error('[Filter] 즐겨찾기 요청 실패:', error);
     }

@@ -200,6 +200,7 @@ class StocklistViewSet(viewsets.ViewSet):
             username = request.user.username
             params = {'favorites': username}
             print("params::", params)
+            
             result = Api.choice_for_api(**params)
         elif "search" in params:
             params = {'search': params['search']}
@@ -338,6 +339,41 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response(
                 {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    # 매수가격 업데이트 액션 추가
+    @action(detail=False, methods=['post'])
+    def update_price(self, request):
+        try:
+            ticker_code = request.data.get('ticker_code')
+            buy_price = request.data.get('buy_price')
+
+            if not ticker_code or buy_price is None:
+                return Response(
+                    {'error': 'ticker_code and buy_price are required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            favorite = Favorite.objects.filter(
+                user=request.user,
+                ticker_id=ticker_code
+            ).first()
+
+            if not favorite:
+                return Response(
+                    {'error': 'Favorite not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            favorite.buy_price = buy_price
+            favorite.save()
+
+            return Response({'status': 'updated', 'buy_price': buy_price})
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

@@ -2817,9 +2817,11 @@ class Api:
             df_real['매수총잔량'] = 0
             df_real['매도총잔량'] = 0
         elif favorites:
-            # user = User.objects.get(username=favorites) # user가져옴.
-            # tickers = [ticker.ticker for ticker in user.favorites.all()]
+            user = User.objects.get(username=favorites) # user가져옴.
+            tickers = [ticker.ticker for ticker in user.favorites.all()]
+            buy_prices = {item.ticker.code:item.buy_price for item in user.favorites.all()}    
             print(buy_prices, 'buy_prices', type(buy_prices)) 
+            # {code:buy_price, code:buy_price, ...}
             if buy_prices:
                 chartvalues = ChartValue.objects.filter(ticker__in=buy_prices.keys())
             else:
