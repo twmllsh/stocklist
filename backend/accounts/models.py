@@ -3,6 +3,7 @@ from django.db import models
 
 class User(AbstractUser):
     MEMBERSHIP_CHOICES = (
+        ('SPECIAL', '특별회원'),  # 특별회원 추가
         ('REGULAR', '정회원'),
         ('ASSOCIATE', '준회원'),
     )

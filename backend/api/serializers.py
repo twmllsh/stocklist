@@ -97,3 +97,7 @@ class AiOpinionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AiOpinion
         fields = ['opinion', 'reason', 'ai_method', 'created_at']
+class AiOpinionForStockSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AiOpinionForStock
+        fields = ['ticker','opinion', 'reason', 'ai_method', 'created_at']

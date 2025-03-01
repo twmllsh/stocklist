@@ -33,6 +33,19 @@ export default function StockList() {
     setIsFilterOpen(isOpen);
   };
 
+  const getMembershipLabel = (membership) => {
+    switch (membership) {
+      case 'SPECIAL':
+        return '특별회원';
+      case 'REGULAR':
+        return '정회원';
+      case 'ASSOCIATE':
+        return '준회원';
+      default:
+        return membership;
+    }
+  };
+
   return (
     <div className="d-flex flex-column min-vh-100">
       <Navbar bg="light" variant="light" className="border-bottom" fixed="top">
@@ -40,8 +53,7 @@ export default function StockList() {
           <Navbar.Brand>StockList v0.3</Navbar.Brand>
           <div className="d-flex align-items-center">
             <span className="text-dark me-3">
-              {user?.username}님 (
-              {user?.membership === 'REGULAR' ? '정회원' : '준회원'})
+              {user?.username}님 ({getMembershipLabel(user?.membership)})
             </span>
             <Button variant="danger" onClick={handleLogout}>
               로그아웃

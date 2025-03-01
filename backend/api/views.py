@@ -412,7 +412,27 @@ class AiOpinionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    
+
+class AiOpinonForStockViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]  # 추가된 줄
+    queryset = AiOpinionForStock.objects.all()
+    serializer_class = AiOpinionForStockSerializer
+
+    def get_queryset(self):
+        # 작업후 데이터 저장되고 저장된데이터 가져오기. 
+        from .utils import ai
+        ticker = self.request.query_params.get('ticker', None)
+        print('ai에게 요청중...')
+        result = ai.get_opinion_by_ticker(ticker)
+        print(ticker, result)
+        
+        queryset = AiOpinionForStock.objects.all()
+        if ticker is not None:
+            queryset = queryset.filter(ticker__code=ticker)  # tickers__code를 ticker__code로 수정
+            queryset = queryset.order_by('-created_at')
+        
+        return queryset
+
 ######################  rest api  #########################
 
 def health_check(request):

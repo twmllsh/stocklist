@@ -51,12 +51,30 @@ export default function Dashboard() {
   //   }
   // };
 
+  const getMembershipLabel = (membership) => {
+    switch (membership) {
+      case 'SPECIAL':
+        return '특별회원';
+      case 'REGULAR':
+        return '정회원';
+      case 'ASSOCIATE':
+        return '준회원';
+      default:
+        return membership;
+    }
+  };
+
   return (
     <>
       <Navbar bg="dark" variant="dark" className="mb-4">
         <Container>
           <Navbar.Brand>대시보드</Navbar.Brand>
-          <div>
+          <div className="d-flex align-items-center">
+            <span className="text-light me-3">
+              {user
+                ? `${user.username}님 (${getMembershipLabel(user.membership)})`
+                : ''}
+            </span>
             {user?.membership === 'ASSOCIATE' && (
               <Button
                 variant="success"
@@ -66,14 +84,6 @@ export default function Dashboard() {
                 정회원 신청
               </Button>
             )}
-            {/* 테스트 버튼 추가
-            <Button
-              variant="warning"
-              onClick={handleTestFavorites}
-              className="me-2"
-            >
-              즐겨찾기 테스트
-            </Button> */}
             <Button variant="outline-light" onClick={handleLogout}>
               로그아웃
             </Button>
