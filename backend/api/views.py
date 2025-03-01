@@ -354,6 +354,30 @@ class FavoriteViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
+class AiOpinionViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]  # 수정
+    queryset = AiOpinion.objects.all()
+    serializer_class = AiOpinionSerializer
+
+    def get_queryset(self):
+        try:
+            return AiOpinion.objects.latest('created_at')
+        except AiOpinion.DoesNotExist:
+            return None
+    
+    def list(self, request, *args, **kwargs):
+        instance = self.get_queryset()
+        if instance is None:
+            return Response({
+                'opinion': '관망',
+                'reason': '데이터가 없습니다.',
+                'ai_method': 'NONE'
+            })
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    
 ######################  rest api  #########################
 
 def health_check(request):
