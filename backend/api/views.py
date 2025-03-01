@@ -6,6 +6,7 @@ from django.db.models import Q, Max, Min
 from django.views.generic import ListView
 from django.contrib.auth import views as auth_views
 from django.urls import reverse_lazy , reverse
+from django.utils import timezone
 from .utils import mystock
 from .utils.dbupdater import GetData
 import numpy as np
@@ -419,17 +420,36 @@ class AiOpinonForStockViewSet(viewsets.ModelViewSet):
     serializer_class = AiOpinionForStockSerializer
 
     def get_queryset(self):
-        # 작업후 데이터 저장되고 저장된데이터 가져오기. 
-        from .utils import ai
-        ticker = self.request.query_params.get('ticker', None)
-        print('ai에게 요청중...')
-        result = ai.get_opinion_by_ticker(ticker)
-        print(ticker, result)
+        '''
+        추후에 최근저장시간에 따라 새로 ai 요청할지 말지를 결정해야한다.
+        데이터베이스에 저장된내용이있다면 되도록 그것을 사용하도록한다.
         
+        '''
+        ticker = self.request.query_params.get('ticker', None)
         queryset = AiOpinionForStock.objects.all()
-        if ticker is not None:
-            queryset = queryset.filter(ticker__code=ticker)  # tickers__code를 ticker__code로 수정
+        queryset = queryset.filter(ticker__code=ticker)
+        temp_status = False
+        if queryset.exists():
             queryset = queryset.order_by('-created_at')
+            last_date = queryset.values_list('created_at',flat=True)[0]
+            last_date = timezone.localtime(last_date).date()
+            current_date = pd.Timestamp.now().date()
+            if last_date == current_date:
+                temp_status = True
+        
+        if temp_status == False:
+            from .utils import ai
+            print('ai에게 요청중...')
+            if ticker is not None:
+                result = ai.get_opinion_by_ticker(ticker)
+                print(ticker, result)
+                temp_status = True
+        
+        if temp_status:
+            queryset = AiOpinionForStock.objects.all()
+            if ticker is not None:
+                queryset = queryset.filter(ticker__code=ticker)  # tickers__code를 ticker__code로 수정
+                queryset = queryset.order_by('-created_at')
         
         return queryset
 

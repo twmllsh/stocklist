@@ -16,8 +16,6 @@ const StockTabs = ({ stockData }) => {
       ? [{ id: 'ai', title: 'AI분석', component: StockAI }]
       : []),
   ];
-
-  // ...rest of the code...
 };
 
 export default StockTabs;

@@ -18,6 +18,7 @@ import {
   toggleFavoriteStock,
   fetchFavorites, // 상단에 import 추가
 } from '../../store/slices/favoriteSlice';
+import StockAI from './tabs/StockAI'; // 상단에 import 추가
 
 const ChartModal = ({
   show,
@@ -427,6 +428,9 @@ const ChartModal = ({
               <Nav.Link eventKey="consensus">컨센서스</Nav.Link>
             </Nav.Item>
             <Nav.Item>
+              <Nav.Link eventKey="ai">AI 분석</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
               <Nav.Link eventKey="disclosure">공시</Nav.Link>
             </Nav.Item>
             <Nav.Item>
@@ -456,6 +460,14 @@ const ChartModal = ({
             <Tab.Pane eventKey="consensus" mountOnEnter>
               {activeTab === 'consensus' && (
                 <StockConsensus stockCode={stockCode} />
+              )}
+            </Tab.Pane>
+            <Tab.Pane eventKey="ai" mountOnEnter unmountOnExit>
+              {activeTab === 'ai' && (
+                <StockAI
+                  key={`ai-${stockCode}-${activeTab}`}
+                  stockCode={stockCode}
+                />
               )}
             </Tab.Pane>
             <Tab.Pane eventKey="disclosure" mountOnEnter unmountOnExit>
