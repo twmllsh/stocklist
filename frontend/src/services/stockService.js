@@ -3,54 +3,19 @@ import stockAxios from './config/stockAxios';
 export const stockService = {
   getFilteredStocks: async (filters) => {
     try {
+      // 필터 객체를 URLSearchParams로 직접 변환
       const queryString = new URLSearchParams();
 
-      // 등락률 파라미터 특별 처리
-      if (filters.change_min !== undefined) {
-        queryString.append('change_min', filters.change_min);
-      }
-      if (filters.change_max !== undefined) {
-        queryString.append('change_max', filters.change_max);
-      }
-
-      // 값을 가지는 필드와 해당하는 값 필드 매핑
-      const valueFieldMappings = {
-        consen: 'consen_value',
-        sun_ac: 'sun_ac_value',
-        coke_up: 'coke_up_value',
-      };
-
-      // 나머지 필터 처리
-      for (let [key, value] of Object.entries(filters)) {
-        // change 관련 파라미터는 건너뛰기
-        if (key === 'change' || key === 'change_min' || key === 'change_max') {
-          continue;
-        }
-
-        // 값이 있는 필드 처리
-        if (key in valueFieldMappings && value === true) {
-          const valueField = valueFieldMappings[key];
-          if (filters[valueField]) {
-            queryString.append(key, filters[valueField]);
-          }
-          continue;
-        }
-
-        // 값 필드는 건너뛰기
-        if (Object.values(valueFieldMappings).includes(key)) {
-          continue;
-        }
-
-        // 일반 체크박스나 검색어 처리
-        if ((key === 'search' || key === 'favorites') && value) {
-          queryString.append(key, value);
-        } else if (value === true) {
+      // 필터 처리
+      Object.entries(filters).forEach(([key, value]) => {
+        // undefined나 null이 아닌 경우에만 파라미터 추가
+        if (value !== undefined && value !== null) {
           queryString.append(key, value);
         }
-      }
+      });
 
       const url = `/stocklist/?${queryString.toString()}`;
-      // console.log('최종 요청 URL:', url);
+      console.log('최종 요청 URL:', url);
 
       const response = await stockAxios.get(url);
       return response.data;
@@ -256,9 +221,9 @@ export const stockService = {
   // AI 의견 조회
   getOpinion: async () => {
     try {
-      console.log('AI Opinion 요청 시작');
+      // console.log('AI Opinion 요청 시작');
       const response = await stockAxios.get('/aiopinion/');
-      console.log('AI Opinion 응답:', response);
+      // console.log('AI Opinion 응답:', response);
       // response.data가 있으면 사용하고, 없으면 response 자체를 반환
       return response.data || response;
     } catch (error) {
@@ -280,7 +245,7 @@ export const stockService = {
           ticker: code,
         },
       });
-      console.log('AI Opinion 응답:', response);
+      // console.log('AI Opinion 응답:', response);
       // response.data가 있으면 사용하고, 없으면 response 자체를 반환
       return response.data || response;
     } catch (error) {

@@ -48,7 +48,7 @@ export default function Filter({ onToggle }) {
     coke_gcv: false,
     array: false,
     array_exclude: true,
-    ab: false,
+    ab: true,
     abv: true,
     goodwave: false,
     ac: false,
@@ -146,41 +146,43 @@ export default function Filter({ onToggle }) {
 
   const handleSearch = async () => {
     try {
-      // 검색 필터 객체 생성
       const searchFilters = {};
 
-      // 등락률 필터 처리 (change 활성화 여부와 관계없이 값이 있으면 포함)
+      // 등락률 필터 처리
       if (filters.change_min || filters.change_max) {
         searchFilters.change_min = filters.change_min;
         searchFilters.change_max = filters.change_max;
       }
 
-      // 일반 필터 처리
+      // 필터 로직 수정
       Object.entries(filters).forEach(([key, value]) => {
-        if (key === 'change' || key === 'change_min' || key === 'change_max')
+        if (
+          ['change', 'change_min', 'change_max'].includes(key) ||
+          key.endsWith('_value')
+        ) {
           return;
-
-        if (key.endsWith('_value')) return;
+        }
 
         if (value === true) {
-          // 값이 있는 필터 처리
           if (key === 'consen') {
-            searchFilters[key] = filters.consen_value;
+            searchFilters.consen = filters.consen_value;
           } else if (key === 'sun_ac') {
-            searchFilters[key] = filters.sun_ac_value;
+            searchFilters.sun_ac = Number(filters.sun_ac_value);
           } else if (key === 'coke_up') {
-            searchFilters[key] = filters.coke_up_value;
+            searchFilters.coke_up = Number(filters.coke_up_value);
           } else {
             searchFilters[key] = true;
           }
         }
       });
 
-      // 최종 요청 URL 로깅
+      // URL 파라미터 생성 및 로깅
       const queryString = new URLSearchParams(searchFilters).toString();
-      // console.log('최종 요청 URL:', `/stocklist/?${queryString}`);
+      console.group('===== 검색 요청 정보 =====');
+      console.log('검색 파라미터:', searchFilters);
+      console.log('요청 URL:', `/stocklist/?${queryString}`);
+      console.groupEnd();
 
-      // console.log('검색 파라미터:', searchFilters);
       await dispatch(fetchFilteredStocks(searchFilters));
     } catch (error) {
       console.error('Search error:', error);

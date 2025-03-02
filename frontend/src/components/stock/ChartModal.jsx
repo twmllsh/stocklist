@@ -258,34 +258,33 @@ const ChartModal = ({
 
   // 모달 정보 로깅을 위한 useEffect 수정
   useEffect(() => {
-    console.log('Show 상태 변경:', show);
-    console.log('현재 선택된 종목:', selectedStock);
-    console.log('현재 사용자:', user);
-
-    if (show && stockCode && selectedStock) {
-      console.group('===== 모달 정보 =====');
-      console.log('선택된 종목:', selectedStock?.종목명);
-      console.log('종목코드:', stockCode);
-      console.log('현재가:', selectedStock?.현재가);
-      console.log('등락률:', selectedStock?.등락률);
-      console.log('사용자 정보:', user);
-      console.log('회원등급:', user?.membership);
-      console.log('즐겨찾기 여부:', favorites.includes(stockCode));
-      console.log('매수가:', selectedStock?.buy_price);
-      console.groupEnd();
-    }
+    // console.log('Show 상태 변경:', show);
+    // console.log('현재 선택된 종목:', selectedStock);
+    // console.log('현재 사용자:', user);
+    // if (show && stockCode && selectedStock) {
+    //   console.group('===== 모달 정보 =====');
+    //   console.log('선택된 종목:', selectedStock?.종목명);
+    //   console.log('종목코드:', stockCode);
+    //   console.log('현재가:', selectedStock?.현재가);
+    //   console.log('등락률:', selectedStock?.등락률);
+    //   console.log('사용자 정보:', user);
+    //   console.log('회원등급:', user?.membership);
+    //   console.log('즐겨찾기 여부:', favorites.includes(stockCode));
+    //   console.log('매수가:', selectedStock?.buy_price);
+    //   console.groupEnd();
+    // }
   }, [show, stockCode, selectedStock, user, favorites]); // 의존성 배열 수정
 
   // 사용자 정보 디버깅을 위한 useEffect
-  useEffect(() => {
-    if (user) {
-      console.group('===== User Info Debug =====');
-      console.log('User object:', user);
-      console.log('Membership:', user?.membership);
-      console.log('Is special?:', user?.membership === 'SPECIAL');
-      console.groupEnd();
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user) {
+  //     console.group('===== User Info Debug =====');
+  //     console.log('User object:', user);
+  //     console.log('Membership:', user?.membership);
+  //     console.log('Is special?:', user?.membership === 'SPECIAL');
+  //     console.groupEnd();
+  //   }
+  // }, [user]);
 
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>

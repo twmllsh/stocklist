@@ -2770,6 +2770,27 @@ class Api:
             return df_real
     
         
+# change_min=2&
+# change_max=10&
+# consen=20&
+# turnarround=true&
+# good_buy=true&
+# newbra=true&
+# realtime=true&
+# sun_ac=30&
+# coke_up=55&
+# sun_gcv=true&
+# coke_gcv=true&
+# array=true&
+# array_exclude=true&
+# ab=true&
+# abv=true&
+# goodwave=true&
+# ac=true&
+# new_listing=true&
+# rsi=true&
+# exp=true
+
 
     def choice_for_api(newbra=None,turnarround=None,good_buy=None,consen=None, 
                        realtime=None,change_min=None, change_max=None, 
