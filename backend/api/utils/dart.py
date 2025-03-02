@@ -338,7 +338,10 @@ class MyDart:
         all_ls = []
         for date in dates:
             print('date.date() : ', date.date())
-            temp = self.dart.list_date_ex(date.date())
+            try:
+                temp = self.dart.list_date_ex(date.date())
+            except:
+                continue
             print(date.date(), '데이터 가져오는중.')
             if len(temp)>0:
                 temp = temp.loc[temp['corp_cls'].str.contains("유|코")]
