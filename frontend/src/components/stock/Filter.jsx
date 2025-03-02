@@ -7,7 +7,8 @@ import {
   OverlayTrigger,
   Tooltip,
 } from 'react-bootstrap';
-import { useState, useEffect } from 'react';
+// import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchFilteredStocks,
@@ -137,29 +138,43 @@ export default function Filter({ onToggle }) {
     },
   ];
 
-  const handleFilterChange = (name, value) => {
+  // 버튼 컴포넌트를 별도로 분리하여 메모이제이션
+  const FilterButton = React.memo(
+    ({ name, label, active, onClick, variant = 'success' }) => (
+      <Button
+        variant={active ? variant : `outline-${variant}`}
+        size="sm"
+        onClick={onClick}
+        className="me-2"
+        style={{
+          WebkitTapHighlightColor: 'transparent', // 모바일에서 탭 하이라이트 제거
+          touchAction: 'manipulation', // 터치 최적화
+        }}
+      >
+        {label}
+      </Button>
+    )
+  );
+
+  // handleFilterChange 함수 수정
+  const handleFilterChange = useCallback((name, value) => {
     setFilters((prev) => {
       const newFilters = { ...prev };
 
-      // 값이 명시적으로 전달된 경우
       if (typeof value !== 'undefined') {
         newFilters[name] = value;
         return newFilters;
       }
 
-      // 버튼 토글의 경우
       const newValue = !prev[name];
       newFilters[name] = newValue;
 
-      // 실시간/종가 버튼 상호 배타적 처리
       if (name === 'realtime' && newValue) {
         newFilters.endprice = false;
-        // realtime 활성화 시 등락률 초기값으로 복원
         newFilters.change_min = 2;
         newFilters.change_max = 10;
       } else if (name === 'endprice' && newValue) {
         newFilters.realtime = false;
-        // 종가 선택 시 등락률 값 자동 설정
         newFilters.change = true;
         newFilters.change_min = -2;
         newFilters.change_max = 8;
@@ -167,7 +182,7 @@ export default function Filter({ onToggle }) {
 
       return newFilters;
     });
-  };
+  }, []); // 의존성 없음
 
   const handleSearch = async () => {
     try {
@@ -303,16 +318,12 @@ export default function Filter({ onToggle }) {
       overlay={<Tooltip>{filterDescriptions[btn.name]}</Tooltip>}
     >
       <div className="d-flex align-items-center">
-        {' '}
-        {/* key 제거 */}
-        <Button
-          variant={filters[btn.name] ? 'success' : 'outline-success'}
-          size="sm"
+        <FilterButton
+          name={btn.name}
+          label={btn.label}
+          active={filters[btn.name]}
           onClick={() => handleFilterChange(btn.name)}
-          className="me-2"
-        >
-          {btn.label}
-        </Button>
+        />
         {btn.hasValue &&
           (btn.hasRangeValue ? (
             <div className="d-flex align-items-center gap-1">
