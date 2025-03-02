@@ -19,6 +19,7 @@ import {
   fetchFavorites, // 상단에 import 추가
 } from '../../store/slices/favoriteSlice';
 import StockAI from './tabs/StockAI'; // 상단에 import 추가
+import { selectUser } from '../../store/slices/authSlice'; // 상단에 추가
 
 const ChartModal = ({
   show,
@@ -30,6 +31,7 @@ const ChartModal = ({
   const dispatch = useDispatch();
   const stocks = useSelector(selectStocks);
   const favorites = useSelector(selectFavorites);
+  const user = useSelector(selectUser); // 사용자 정보 가져오기
   const selectedStock = stocks.find((stock) => stock.code === stockCode);
 
   const [interval, setInterval] = useState('day');
@@ -254,6 +256,37 @@ const ChartModal = ({
     return currentData[currentData.length - 1].Close;
   };
 
+  // 모달 정보 로깅을 위한 useEffect 수정
+  useEffect(() => {
+    console.log('Show 상태 변경:', show);
+    console.log('현재 선택된 종목:', selectedStock);
+    console.log('현재 사용자:', user);
+
+    if (show && stockCode && selectedStock) {
+      console.group('===== 모달 정보 =====');
+      console.log('선택된 종목:', selectedStock?.종목명);
+      console.log('종목코드:', stockCode);
+      console.log('현재가:', selectedStock?.현재가);
+      console.log('등락률:', selectedStock?.등락률);
+      console.log('사용자 정보:', user);
+      console.log('회원등급:', user?.membership);
+      console.log('즐겨찾기 여부:', favorites.includes(stockCode));
+      console.log('매수가:', selectedStock?.buy_price);
+      console.groupEnd();
+    }
+  }, [show, stockCode, selectedStock, user, favorites]); // 의존성 배열 수정
+
+  // 사용자 정보 디버깅을 위한 useEffect
+  useEffect(() => {
+    if (user) {
+      console.group('===== User Info Debug =====');
+      console.log('User object:', user);
+      console.log('Membership:', user?.membership);
+      console.log('Is special?:', user?.membership === 'SPECIAL');
+      console.groupEnd();
+    }
+  }, [user]);
+
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
       <Modal.Header closeButton>
@@ -427,9 +460,11 @@ const ChartModal = ({
             <Nav.Item>
               <Nav.Link eventKey="consensus">컨센서스</Nav.Link>
             </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="ai">AI 분석</Nav.Link>
-            </Nav.Item>
+            {user?.membership === 'SPECIAL' && (
+              <Nav.Item>
+                <Nav.Link eventKey="ai">AI 분석</Nav.Link>
+              </Nav.Item>
+            )}
             <Nav.Item>
               <Nav.Link eventKey="disclosure">공시</Nav.Link>
             </Nav.Item>
@@ -462,14 +497,16 @@ const ChartModal = ({
                 <StockConsensus stockCode={stockCode} />
               )}
             </Tab.Pane>
-            <Tab.Pane eventKey="ai" mountOnEnter unmountOnExit>
-              {activeTab === 'ai' && (
-                <StockAI
-                  key={`ai-${stockCode}-${activeTab}`}
-                  stockCode={stockCode}
-                />
-              )}
-            </Tab.Pane>
+            {user?.membership === 'SPECIAL' && (
+              <Tab.Pane eventKey="ai" mountOnEnter unmountOnExit>
+                {activeTab === 'ai' && (
+                  <StockAI
+                    key={`ai-${stockCode}-${activeTab}`}
+                    stockCode={stockCode}
+                  />
+                )}
+              </Tab.Pane>
+            )}
             <Tab.Pane eventKey="disclosure" mountOnEnter unmountOnExit>
               {activeTab === 'disclosure' && (
                 <StockDisclosure

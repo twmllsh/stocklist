@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Alert, Spinner, Card, Badge } from 'react-bootstrap';
 import { stockService } from '../../../services/stockService';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../store/slices/authSlice';
 
 const StockAI = ({ stockCode }) => {
+  const user = useSelector(selectUser);
+
+  // 특별회원이 아닌 경우 접근 차단
+  if (user?.membership !== 'SPECIAL') {
+    return (
+      <Alert variant="warning">이 기능은 특별회원 전용 서비스입니다.</Alert>
+    );
+  }
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

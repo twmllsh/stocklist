@@ -257,9 +257,9 @@ export default function Filter({ onToggle }) {
   useEffect(() => {
     const fetchOpinion = async () => {
       try {
-        console.log('AI Opinion 요청 시작');
+        // console.log('AI Opinion 요청 시작');
         const data = await stockService.getOpinion();
-        console.log('AI Opinion 응답 데이터:', data);
+        // console.log('AI Opinion 응답 데이터:', data);
         // 전체 응답 데이터를 opinion 상태에 저장
         setOpinion(data);
       } catch (error) {
