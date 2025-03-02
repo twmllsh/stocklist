@@ -81,6 +81,16 @@ def scheduler_update_stockplus_news():
         return "News data updated successfully"
     except Exception as e:
         return f"News update failed: {str(e)}"
+@shared_task
+def scheduler_update_dart():
+    """dart 정보 업데이트"""
+    from .utils.dart import MyDart
+    try:
+        dart =  MyDart()
+        dart.run(2)
+        return "Dart data updated successfully"
+    except Exception as e:
+        return f"Dart update failed: {str(e)}"
 
 @shared_task
 def scheduler_update_theme_upjong():

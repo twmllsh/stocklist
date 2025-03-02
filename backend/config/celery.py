@@ -22,10 +22,22 @@ app.autodiscover_tasks()
 # 정기적 작업 스케줄 설정
 app.conf.beat_schedule = {
     # test (1분)
+    'update_dart_test': {
+        'task': 'api.tasks.scheduler_update_dart',
+        'schedule': crontab(hour="22", minute="22", day_of_week='sun'),
+    },
+    
+    
+    'update_dart': {
+        'task': 'api.tasks.scheduler_update_dart',
+        'schedule': crontab(hour="8-19", minute="*/10", day_of_week='mon-fri'),
+    },
+    
     'update_ai_opionion': {
         'task': 'api.tasks.scheduler_ai_opinion',
-        'schedule': crontab(hour="7,13", minute=10, day_of_week='mon-sun'),
+        'schedule': crontab(hour="7,13", minute="10", day_of_week='mon-sat'),
     },
+    
     # 주식 티커 정보 업데이트 (평일 07:30)
     'update-ticker': {
         'task': 'api.tasks.scheduler_ticker',
@@ -70,9 +82,9 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour=22, minute=0, day_of_week='sat'),
     },
     
-    # DB 백업 (일요일 01:00)
-    'backup-db': {
-        'task': 'api.tasks.scheduler_db_backup',
-        'schedule': crontab(hour=1, minute=0, day_of_week='sun'),
-    },
+    # # DB 백업 (일요일 01:00)
+    # 'backup-db': {
+    #     'task': 'api.tasks.scheduler_db_backup',
+    #     'schedule': crontab(hour=1, minute=0, day_of_week='sun'),
+    # },
 }
