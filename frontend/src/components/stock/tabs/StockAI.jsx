@@ -19,6 +19,7 @@ const StockAI = ({ stockCode }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     let timeoutId;
     const controller = new AbortController();
 
@@ -27,39 +28,37 @@ const StockAI = ({ stockCode }) => {
       setError(null);
 
       try {
-        // 5초 타임아웃 설정
+        // 5초 후에 타임아웃 경고 메시지를 표시하지만, 요청은 계속 유지
         timeoutId = setTimeout(() => {
-          controller.abort();
-          setError('요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.');
-          setLoading(false);
+          if (isMounted) {
+            setLoading(true); // 로딩 상태 유지
+            setError('분석에 시간이 걸리고 있습니다. 잠시만 기다려주세요...');
+          }
         }, 5000);
 
-        const response = await Promise.race([
-          stockService.getOpinionForStock(stockCode, {
-            signal: controller.signal,
-          }),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('TIMEOUT')), 5000)
-          ),
-        ]);
+        const response = await stockService.getOpinionForStock(stockCode, {
+          signal: controller.signal,
+        });
 
-        clearTimeout(timeoutId);
-        setData(response[0]);
-      } catch (err) {
-        clearTimeout(timeoutId);
-        if (err.name === 'AbortError' || err.message === 'TIMEOUT') {
-          setError('요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.');
-        } else {
-          setError('AI 분석 데이터를 불러오는데 실패했습니다.');
+        if (isMounted) {
+          clearTimeout(timeoutId);
+          setData(response[0]);
+          setError(null);
+          setLoading(false);
         }
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        if (isMounted) {
+          clearTimeout(timeoutId);
+          setError('AI 분석 데이터를 불러오는데 실패했습니다.');
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
 
     return () => {
+      isMounted = false;
       clearTimeout(timeoutId);
       controller.abort();
     };
@@ -69,7 +68,7 @@ const StockAI = ({ stockCode }) => {
     return (
       <div className="d-flex flex-column align-items-center justify-content-center p-5">
         <Spinner animation="border" variant="primary" className="mb-3" />
-        <div className="text-primary">AI에게 분석 요청중...</div>
+        <div className="text-primary">{error || 'AI에게 분석 요청중...'}</div>
       </div>
     );
   }
