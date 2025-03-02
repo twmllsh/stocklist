@@ -15,7 +15,7 @@ export const stockService = {
       });
 
       const url = `/stocklist/?${queryString.toString()}`;
-      console.log('최종 요청 URL:', url);
+      // console.log('최종 요청 URL:', url);
 
       const response = await stockAxios.get(url);
       return response.data;

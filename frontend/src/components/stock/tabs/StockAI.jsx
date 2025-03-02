@@ -6,51 +6,51 @@ import { selectUser } from '../../../store/slices/authSlice';
 
 const StockAI = ({ stockCode }) => {
   const user = useSelector(selectUser);
-
-  // 특별회원이 아닌 경우 접근 차단
-  if (user?.membership !== 'SPECIAL') {
-    return (
-      <Alert variant="warning">이 기능은 특별회원 전용 서비스입니다.</Alert>
-    );
-  }
-
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [waitMessage, setWaitMessage] = useState('AI에게 분석 요청중...');
 
   useEffect(() => {
     let isMounted = true;
-    let timeoutId;
-    const controller = new AbortController();
+    const messageUpdateInterval = setInterval(() => {
+      if (isMounted && loading) {
+        setWaitMessage((prev) => {
+          const messages = [
+            'AI에게 분석 요청중...',
+            '분석이 진행중입니다. 잠시만 기다려주세요...',
+            'AI가 데이터를 분석하고 있습니다...',
+            '복잡한 분석이 필요한 경우 시간이 좀 걸릴 수 있습니다...',
+          ];
+          const currentIndex = messages.indexOf(prev);
+          return messages[(currentIndex + 1) % messages.length];
+        });
+      }
+    }, 3000);
 
     const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-
       try {
-        // 5초 후에 타임아웃 경고 메시지를 표시하지만, 요청은 계속 유지
-        timeoutId = setTimeout(() => {
-          if (isMounted) {
-            setLoading(true); // 로딩 상태 유지
-            setError('분석에 시간이 걸리고 있습니다. 잠시만 기다려주세요...');
-          }
-        }, 5000);
+        setLoading(true);
+        setError(null);
 
-        const response = await stockService.getOpinionForStock(stockCode, {
-          signal: controller.signal,
-        });
+        const response = await stockService.getOpinionForStock(stockCode);
 
         if (isMounted) {
-          clearTimeout(timeoutId);
           setData(response[0]);
           setError(null);
           setLoading(false);
         }
       } catch (err) {
         if (isMounted) {
-          clearTimeout(timeoutId);
-          setError('AI 분석 데이터를 불러오는데 실패했습니다.');
-          setLoading(false);
+          // 에러 발생 시에도 로딩 상태 유지, 대기 메시지만 변경
+          setWaitMessage(
+            '분석에 시간이 걸리고 있습니다. 잠시만 더 기다려주세요...'
+          );
+          // 실제 오류인 경우에만 에러 상태 설정
+          if (err.response?.status === 404 || err.response?.status === 500) {
+            setError('AI 분석 데이터를 불러오는데 실패했습니다.');
+            setLoading(false);
+          }
         }
       }
     };
@@ -59,16 +59,22 @@ const StockAI = ({ stockCode }) => {
 
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
-      controller.abort();
+      clearInterval(messageUpdateInterval);
     };
   }, [stockCode]);
+
+  // 특별회원 체크는 상단으로 이동
+  if (user?.membership !== 'SPECIAL') {
+    return (
+      <Alert variant="warning">이 기능은 특별회원 전용 서비스입니다.</Alert>
+    );
+  }
 
   if (loading) {
     return (
       <div className="d-flex flex-column align-items-center justify-content-center p-5">
         <Spinner animation="border" variant="primary" className="mb-3" />
-        <div className="text-primary">{error || 'AI에게 분석 요청중...'}</div>
+        <div className="text-primary">{waitMessage}</div>
       </div>
     );
   }

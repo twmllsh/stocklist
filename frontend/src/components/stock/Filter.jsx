@@ -138,51 +138,74 @@ export default function Filter({ onToggle }) {
   ];
 
   const handleFilterChange = (name, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [name]: typeof value === 'undefined' ? !prev[name] : value,
-    }));
+    setFilters((prev) => {
+      const newFilters = { ...prev };
+
+      // 값이 명시적으로 전달된 경우
+      if (typeof value !== 'undefined') {
+        newFilters[name] = value;
+        return newFilters;
+      }
+
+      // 버튼 토글의 경우
+      const newValue = !prev[name];
+      newFilters[name] = newValue;
+
+      // 실시간/종가 버튼 상호 배타적 처리
+      if (name === 'realtime' && newValue) {
+        newFilters.endprice = false;
+        // realtime 활성화 시 등락률 초기값으로 복원
+        newFilters.change_min = 2;
+        newFilters.change_max = 10;
+      } else if (name === 'endprice' && newValue) {
+        newFilters.realtime = false;
+        // 종가 선택 시 등락률 값 자동 설정
+        newFilters.change = true;
+        newFilters.change_min = -2;
+        newFilters.change_max = 8;
+      }
+
+      return newFilters;
+    });
   };
 
   const handleSearch = async () => {
     try {
+      // 검색 필터 객체 생성
       const searchFilters = {};
 
-      // 등락률 필터 처리
+      // 등락률 필터 처리 (change 활성화 여부와 관계없이 값이 있으면 포함)
       if (filters.change_min || filters.change_max) {
         searchFilters.change_min = filters.change_min;
         searchFilters.change_max = filters.change_max;
       }
 
-      // 필터 로직 수정
+      // 일반 필터 처리
       Object.entries(filters).forEach(([key, value]) => {
-        if (
-          ['change', 'change_min', 'change_max'].includes(key) ||
-          key.endsWith('_value')
-        ) {
+        if (key === 'change' || key === 'change_min' || key === 'change_max')
           return;
-        }
+
+        if (key.endsWith('_value')) return;
 
         if (value === true) {
+          // 값이 있는 필터 처리
           if (key === 'consen') {
-            searchFilters.consen = filters.consen_value;
+            searchFilters[key] = filters.consen_value;
           } else if (key === 'sun_ac') {
-            searchFilters.sun_ac = Number(filters.sun_ac_value);
+            searchFilters[key] = filters.sun_ac_value;
           } else if (key === 'coke_up') {
-            searchFilters.coke_up = Number(filters.coke_up_value);
+            searchFilters[key] = filters.coke_up_value;
           } else {
             searchFilters[key] = true;
           }
         }
       });
 
-      // URL 파라미터 생성 및 로깅
+      // 최종 요청 URL 로깅
       const queryString = new URLSearchParams(searchFilters).toString();
-      console.group('===== 검색 요청 정보 =====');
-      console.log('검색 파라미터:', searchFilters);
-      console.log('요청 URL:', `/stocklist/?${queryString}`);
-      console.groupEnd();
+      console.log('최종 요청 URL:', `/stocklist/?${queryString}`);
 
+      // console.log('검색 파라미터:', searchFilters);
       await dispatch(fetchFilteredStocks(searchFilters));
     } catch (error) {
       console.error('Search error:', error);

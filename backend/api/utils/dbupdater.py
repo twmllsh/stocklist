@@ -3071,9 +3071,14 @@ class Api:
         cond30_1 = (df['시가'] <= df['chart_30_bb240_upper']) & (df['현재가'] > df['chart_30_bb240_upper'])
         cond30_2 = (df[전일종가] <= df['chart_30_bb240_upper']) & (df['현재가'] > df['chart_30_bb240_upper'])
         # 일 돌파조건.  ### 요게 장중일때와 아닐때가 달라. ..........
-        
-        condd_1 = (df['시가'] <= df['chart_d_bb240_upper']) & (df['현재가'] > df['chart_d_bb240_upper'])
-        condd_2 = (df[전일종가] <= df['chart_d_bb240_upper']) & (df['현재가'] > df['chart_d_bb240_upper'])
+        try:
+            condd_1 = (df['시가'] <= df['chart_d_bb240_upper']) & (df['현재가'] > df['chart_d_bb240_upper'])
+        except:
+            condd_1 = False
+        try:
+            condd_2 = (df[전일종가] <= df['chart_d_bb240_upper']) & (df['현재가'] > df['chart_d_bb240_upper'])
+        except:
+            condd_2 = False
         #realtime 조건.
         cond_real = (cond5_1 | cond5_2) | (cond30_1 | cond30_2) | (condd_1 | condd_2)
         # df = df.loc[cond_real]
