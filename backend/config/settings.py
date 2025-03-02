@@ -205,6 +205,8 @@ AUTH_USER_MODEL = 'accounts.User'
 
 SHELL_PLUS_IMPORTS = [
     "import asyncio",
+    "import pandas as pd",
+    "import os",
     "import time",   
     "from api.utils.dart import MyDart",
     # 'your_app.models',  # 특정 앱의 모델 임포트

@@ -24,7 +24,7 @@ app.conf.beat_schedule = {
     # test (1분)
     'update_dart_test': {
         'task': 'api.tasks.scheduler_update_dart',
-        'schedule': crontab(hour="22", minute="22", day_of_week='sun'),
+        'schedule': crontab(hour="22", minute="28", day_of_week='sun'),
     },
     
     

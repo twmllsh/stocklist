@@ -15,6 +15,20 @@ from .sean_func import Text_mining
 from api.models import *
 from django.db.models import Max
 from django.db import transaction
+from discord import Embed
+from api.utils.message import My_discord
+
+discord = My_discord()
+DISCORD_WH_CONTRACT="https://discord.com/api/webhooks/1345757362257920000/kz-AUAg0QMOuRN39cdMVVHpa22xIovsZpGihKaNVkKdF8QHKHYI2xHXyruGi18Kv7wF5"
+DISCORD_WH_RIGHTS="https://discord.com/api/webhooks/1345757753062461491/lnNl565RzKwVICyY8_gyiYRDzxUzikCp_FG5_LY-o8T4pQgvUMy7bG91pqO33GzQmRqP"
+DISCORD_WH_BONUS="https://discord.com/api/webhooks/1345757954673999964/l2QVHmvcMljm4pZ9XDJuqbMCe-Bsw8ZgjLII_vRAabsLE7cmcm50524VWPfS1fuvGe5-"
+DISCORD_WH_CONVERTIBLE="https://discord.com/api/webhooks/1345758095028256800/1bVDMzGuJli-uWrnU0kf2Vnu48TeYLnVoQmWQeIhMHZMBzNkUlAl-vwjBy0lKpIyx9mD"
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1340700574521491599/-6u9EVaPRAHYmDXlVjOes49-vK2TcudUMUvxmfsxWFVjUnGtxC3hOoN04JTyI7h-w1Af"
+# DISCORD_WH_CONTRACT = os.getenv('DISCORD_WH_CONTRACT', default=DISCORD_WH_CONTRACT)
+# DISCORD_WH_RIGHTS = os.getenv('DISCORD_WH_RIGHTS', default=DISCORD_WH_RIGHTS)
+# DISCORD_WH_BONUS = os.getenv('DISCORD_WH_BONUS', default=DISCORD_WH_BONUS)
+# DISCORD_WH_CONVERTIBLE = os.getenv('DISCORD_WH_CONVERTIBLE', default=DISCORD_WH_CONVERTIBLE)
+# DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', default=DISCORD_WEBHOOK_URL)
 
 '''
 각각 save 함수에 메세지 보내기 기능 추가하기. 
@@ -444,6 +458,23 @@ class MyDart:
             print('dic:;', dic)
             print('result_dict :;', result_dict)
             print('url:: ', url)
+        
+        # make embed
+        try:
+            embed = Embed(title=f"{corp_name} 공급계약", url=url)
+            for key, value in result_dict.items():
+                if (key == 'code') or (key == 'name'):
+                    continue
+                if isinstance(value, (int, float)):
+                    value1= f"{value:,.0f}"
+                else:
+                    value1 = value
+                embed.add_field(name=key, value=value1, inline=False)
+                
+            await discord.send_embed(DISCORD_WH_CONTRACT, embed)
+        except:
+            print('discord send_embed failed')
+
         return result_dict
     
     async def get_contract_data_by_df(self):
@@ -571,6 +602,24 @@ class MyDart:
             else:
                 result_dict[key] = value  # 문자열이 아닐 경우 원본 저장
         
+        # make embed
+        try:
+            embed = Embed(title=f"{corp_name} 제3자배정유증", url=second_url)
+            for key, value in result_dict.items():
+                if (key == 'code') or (key == 'name'):
+                    continue
+                if isinstance(value, (int, float)):
+                    value1= f"{value:,.0f}"
+                else:
+                    value1 = value
+                embed.add_field(name=key, value=value1, inline=False)
+                
+            await discord.send_embed(DISCORD_WH_RIGHTS, embed)
+        except:
+            print('discord send_embed failed')
+
+        
+        
         return result_dict
     
     async def get_rights_issue_data_by_df(self):
@@ -694,6 +743,22 @@ class MyDart:
             else:
                 result_dict[key] = value  # 문자열이 아닐 경우 원본 저장
         
+        # make embed
+        try:
+            embed = Embed(title=f"{corp_name} 전환사채발행결정", url=second_url)
+            for key, value in result_dict.items():
+                if (key == 'code') or (key == 'name'):
+                    continue
+                if isinstance(value, (int, float)):
+                    value1= f"{value:,.0f}"
+                else:
+                    value1 = value
+                embed.add_field(name=key, value=value1, inline=False)
+                
+            await discord.send_embed(DISCORD_WH_CONVERTIBLE, embed)
+        except:
+            print('discord send_embed failed')
+
         return result_dict
     
     async def get_convertible_bond_data_by_df(self):
@@ -777,7 +842,22 @@ class MyDart:
                     result_dict[key] = value  # 길이가 100 이하일 경우 원본 저장
             else:
                 result_dict[key] = value  # 문자열이 아닐 경우 원본 저장
-        
+
+        # make embed
+        try:
+            embed = Embed(title=f"{corp_name} 무상증자", url=second_url)
+            for key, value in result_dict.items():
+                if (key == 'code') or (key == 'name'):
+                    continue
+                if isinstance(value, (int, float)):
+                    value1= f"{value:,.0f}"
+                else:
+                    value1 = value
+                embed.add_field(name=key, value=value1, inline=False)
+                
+            await discord.send_embed(DISCORD_WH_BONUS, embed)
+        except:
+            print('discord send_embed failed')
         return result_dict
 
     

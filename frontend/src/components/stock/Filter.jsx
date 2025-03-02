@@ -218,7 +218,7 @@ export default function Filter({ onToggle }) {
 
       // 최종 요청 URL 로깅
       const queryString = new URLSearchParams(searchFilters).toString();
-      console.log('최종 요청 URL:', `/stocklist/?${queryString}`);
+      // console.log('최종 요청 URL:', `/stocklist/?${queryString}`);
 
       // console.log('검색 파라미터:', searchFilters);
       await dispatch(fetchFilteredStocks(searchFilters));

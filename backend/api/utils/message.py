@@ -15,24 +15,26 @@ import pandas as pd
 # https://janu8ry.tistory.com/9?category=957746  #embed 참고
 # embed 색상참고.
 ## https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=1&ie=utf8&query=%EC%83%89%EC%83%81+%ED%8C%94%EB%A0%88%ED%8A%B8
-
-
-
-
+DISCORD_WH_CONTRACT="https://discord.com/api/webhooks/1345757362257920000/kz-AUAg0QMOuRN39cdMVVHpa22xIovsZpGihKaNVkKdF8QHKHYI2xHXyruGi18Kv7wF5"
+DISCORD_WH_RIGHTS="https://discord.com/api/webhooks/1345757753062461491/lnNl565RzKwVICyY8_gyiYRDzxUzikCp_FG5_LY-o8T4pQgvUMy7bG91pqO33GzQmRqP"
+DISCORD_WH_BONUS="https://discord.com/api/webhooks/1345757954673999964/l2QVHmvcMljm4pZ9XDJuqbMCe-Bsw8ZgjLII_vRAabsLE7cmcm50524VWPfS1fuvGe5-"
+DISCORD_WH_CONVERTIBLE="https://discord.com/api/webhooks/1345758095028256800/1bVDMzGuJli-uWrnU0kf2Vnu48TeYLnVoQmWQeIhMHZMBzNkUlAl-vwjBy0lKpIyx9mD"
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1340700574521491599/-6u9EVaPRAHYmDXlVjOes49-vK2TcudUMUvxmfsxWFVjUnGtxC3hOoN04JTyI7h-w1Af"
+# DISCORD_WH_CONTRACT = os.getenv('DISCORD_WH_CONTRACT', default=DISCORD_WH_CONTRACT)
+# DISCORD_WH_RIGHTS = os.getenv('DISCORD_WH_RIGHTS', default=DISCORD_WH_RIGHTS)
+# DISCORD_WH_BONUS = os.getenv('DISCORD_WH_BONUS', default=DISCORD_WH_BONUS)
+# DISCORD_WH_CONVERTIBLE = os.getenv('DISCORD_WH_CONVERTIBLE', default=DISCORD_WH_CONVERTIBLE)
+# DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', default=DISCORD_WEBHOOK_URL)
 
 class My_discord:
 
     def __init__(self, webhook_url=None):
        
         if webhook_url is None:
-            webhook_url = os.getenv('DISCORD_WEBHOOK_URL', default="https://discord.com/api/webhooks/1206416453302091847/SxN5qqf7PfWcnde2yD2eNZ-HJ4YJfVrtMYBhit_ikqb8gX4AHyLYOUinso6ab_u55KxS")
+            webhook_url = DISCORD_WEBHOOK_URL
             if webhook_url is None:
                 print('DISCORD_WEBHOOK_URL is None')
                 return
-            # webhook_url = "https://discord.com/api/webhooks/1206416453302091847/SxN5qqf7PfWcnde2yD2eNZ-HJ4YJfVrtMYBhit_ikqb8gX4AHyLYOUinso6ab_u55KxS"
-            # print("webhook_url:" , webhook_url)
-        
-        self.data_path = os.path.dirname(os.path.realpath(__file__)) 
         self.wh = SyncWebhook.from_url(webhook_url)
     
     
@@ -59,6 +61,15 @@ class My_discord:
         
         with open(file_path, 'rb') as image:
             self.wh.send(file=File(image),)
+
+    
+    
+    async def send_embed(self, urlhook, embed):
+        '''
+        embed 객체 생성해서 전달해야함. 
+        '''
+        wh = SyncWebhook.from_url(urlhook)
+        wh.send(embed=embed)
     
     async def df_to_embed_send(self, df:pd.DataFrame, corp_name_col:list, columns:list, dart_title:str, description:str ) -> None:
         '''
@@ -89,15 +100,11 @@ class My_discord:
             # 인베드 보내기. 
             
             await self.send_embed(embed)    
+ 
     
-    async def send_embed(self, embed):
-        '''
-        embed 객체 생성해서 전달해야함. 
-        '''
-        
-        
-        self.wh.send(embed=embed)
-        
+    
+    
+    
 class My_telegram():
     '''
     msg 보내기. 단일 보내기와 asynio 로 여러개 동시 보내기 (list or dict 로 받아 )기능 포함하기. telegram ver 20 이상에서만 사용가능. 
