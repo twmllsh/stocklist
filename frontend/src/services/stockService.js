@@ -121,12 +121,12 @@ export const stockService = {
   },
   // 종목 거래원 조회
   getStockBroker: async (code) => {
-    console.log('거래원 데이터 요청 시작:', code);
+    // console.log('거래원 데이터 요청 시작:', code);
     try {
       const response = await stockAxios.get('/broker/', {
         params: { ticker: code },
       });
-      console.log('거래원 데이터 요청 성공:', response);
+      // console.log('거래원 데이터 요청 성공:', response);
       // response.data가 있으면 사용하고, 없으면 response 자체를 반환
       return Array.isArray(response.data) ? response.data : response;
     } catch (error) {
@@ -239,7 +239,7 @@ export const stockService = {
   // AI 의견 조회
   getOpinionForStock: async (code) => {
     try {
-      console.log('AI Opinion 요청 시작');
+      // console.log('AI Opinion 요청 시작');
       const response = await stockAxios.get('/aiopinionstock/', {
         params: {
           ticker: code,

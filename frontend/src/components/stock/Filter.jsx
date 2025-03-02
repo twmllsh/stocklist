@@ -230,18 +230,18 @@ export default function Filter({ onToggle }) {
   // 즐겨찾기 조회 핸들러 수정
   const handleTestFavorites = async () => {
     try {
-      console.log('[Filter] 즐겨찾기 검색 시작');
+      // console.log('[Filter] 즐겨찾기 검색 시작');
       const favoritesFilter = {
         favorites: 'true',
       };
 
-      console.log('즐겨찾기 요청 URL: /stocklist/?favorites=true');
-      console.log('즐겨찾기 요청 파라미터:', favoritesFilter);
+      // console.log('즐겨찾기 요청 URL: /stocklist/?favorites=true');
+      // console.log('즐겨찾기 요청 파라미터:', favoritesFilter);
 
       const result = await dispatch(
         fetchFilteredStocks(favoritesFilter)
       ).unwrap();
-      console.log('즐겨찾기 응답 데이터:', result);
+      // console.log('즐겨찾기 응답 데이터:', result);
     } catch (error) {
       console.error('[Filter] 즐겨찾기 요청 실패:', error);
     }
@@ -284,7 +284,7 @@ export default function Filter({ onToggle }) {
         search: searchInput.trim(), // 검색 시에는 다른 필터 제외하고 search만 전송
       };
 
-      console.log('종목검색 요청 데이터:', updatedFilters);
+      // console.log('종목검색 요청 데이터:', updatedFilters);
       await dispatch(fetchFilteredStocks(updatedFilters));
     } catch (error) {
       console.error('Search by text failed:', error);
