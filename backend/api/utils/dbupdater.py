@@ -24,7 +24,7 @@ from django.db.models import Max
 from django.db import DatabaseError
 from django.db import connection
 from api.models import *
-from api.utils.sean_func import Text_mining
+from api.utils.sean_func import Text_mining, Sean_func
 from api.utils.mystock import Stock, ElseInfo
 from .message import My_discord
 import xmltodict
@@ -440,7 +440,7 @@ class DBUpdater:
         print("update_ohlcv running.......")
         print("====================================")
         from datetime import time as datetime_time
-
+        
         
 
         def _all_data_from_fdr():
@@ -767,7 +767,7 @@ class DBUpdater:
             print(f"test_cnt = {test_cnt}")
 
             ## data download
-            from api.utils.sean_func import Sean_func
+            
             split_data = Sean_func._split_data(ticker_qs, split_cnt) ## split_cnt 번 나눠서 작업
             
             for splited_data in split_data:

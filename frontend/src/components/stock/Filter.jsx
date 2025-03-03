@@ -311,19 +311,38 @@ export default function Filter({ onToggle }) {
   }, []); // 컴포넌트 마운트 시에만 실행
 
   // 버튼 렌더링 함수 수정
-  const renderButton = (btn) => (
-    <OverlayTrigger
-      key={btn.name} // key를 여기로 이동
-      placement="top"
-      overlay={<Tooltip>{filterDescriptions[btn.name]}</Tooltip>}
-    >
+  const renderButton = (btn) => {
+    // 모바일 환경 체크
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    return (
       <div className="d-flex align-items-center">
-        <FilterButton
-          name={btn.name}
-          label={btn.label}
-          active={filters[btn.name]}
-          onClick={() => handleFilterChange(btn.name)}
-        />
+        {isMobile ? (
+          // 모바일에서는 OverlayTrigger 없이 버튼만 표시
+          <FilterButton
+            name={btn.name}
+            label={btn.label}
+            active={filters[btn.name]}
+            onClick={() => handleFilterChange(btn.name)}
+          />
+        ) : (
+          // 데스크톱에서만 OverlayTrigger 사용
+          <OverlayTrigger
+            key={btn.name}
+            placement="top"
+            overlay={<Tooltip>{filterDescriptions[btn.name]}</Tooltip>}
+            trigger={['hover', 'focus']} // 마우스 호버와 포커스에만 반응
+          >
+            <div>
+              <FilterButton
+                name={btn.name}
+                label={btn.label}
+                active={filters[btn.name]}
+                onClick={() => handleFilterChange(btn.name)}
+              />
+            </div>
+          </OverlayTrigger>
+        )}
         {btn.hasValue &&
           (btn.hasRangeValue ? (
             <div className="d-flex align-items-center gap-1">
@@ -361,8 +380,8 @@ export default function Filter({ onToggle }) {
             />
           ))}
       </div>
-    </OverlayTrigger>
-  );
+    );
+  };
 
   return (
     <Container
@@ -411,15 +430,22 @@ export default function Filter({ onToggle }) {
           }}
         >
           <div className="d-flex align-items-center" style={{ gap: '1.5rem' }}>
-            {/* 조건검색 버튼 */}
-            <Button
-              variant="success"
-              className="px-4"
-              onClick={handleSearch}
-              disabled={isLoading}
-            >
-              {isLoading ? '조건검색 중...' : '조건검색'}
-            </Button>
+            <div className="d-flex align-items-center gap-2">
+              {/* 조건검색 버튼 */}
+              <Button
+                variant="success"
+                className="px-4"
+                onClick={handleSearch}
+                disabled={isLoading}
+              >
+                {isLoading ? '조건검색 중...' : '조건검색'}
+              </Button>
+              {searchCount !== undefined && (
+                <Badge bg="secondary" style={{ fontSize: '0.9rem' }}>
+                  {searchCount}개
+                </Badge>
+              )}
+            </div>
 
             {/* 내종목 버튼 */}
             <Button variant="warning" onClick={handleTestFavorites}>
@@ -427,7 +453,7 @@ export default function Filter({ onToggle }) {
             </Button>
 
             {/* 검색창과 검색버튼 */}
-            <div className="input-group" style={{ width: '300px' }}>
+            <div className="input-group" style={{ width: '200px' }}>
               <Form.Control
                 type="text"
                 placeholder="종목명 또는 코드"
@@ -454,13 +480,6 @@ export default function Filter({ onToggle }) {
                 종목검색
               </Button>
             </div>
-
-            {/* 검색 결과 카운트 */}
-            {searchCount !== undefined && (
-              <span style={{ color: 'var(--bs-secondary-color)' }}>
-                {searchCount}개의 종목이 검색되었습니다.
-              </span>
-            )}
           </div>
           <Button
             variant="link"

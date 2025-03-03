@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from pykrx import stock as pystock
+import FinanceDataReader as fdr
 
 CURRENT_DIR = Path(__file__).resolve().parent
 
@@ -247,6 +248,23 @@ class Sean_func:
     과거거래날짜로 n봉 날짜지정.
     휴장일 체크
     """
+    def is_business_day_from_index():
+        '''
+        일반적인 주중에 대한 휴장일 체크
+        '''
+        today = pd.Timestamp.today()
+        if today.weekday() ==5 or today.weekday() ==6:
+            return False
+        result = True
+        
+        current_time = today.hour + today.minute/60
+        start_time = 8 + 10/60  # 8시 5분
+        end_time = 24         # 24시
+        if start_time < current_time < end_time:
+            today_df = fdr.DataReader('KS11',start=today)
+            if today_df.empty:
+                result =  False
+        return result
 
     def setup_logger(
         name, log_file, level=logging.INFO, max_bytes=5 * 1024 * 1024, backup_count=3

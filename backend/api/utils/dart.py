@@ -11,12 +11,13 @@ import OpenDartReader
 # import nest_asyncio
 # nest_asyncio.apply()
 from playwright.async_api import async_playwright
-from .sean_func import Text_mining
+from .sean_func import Text_mining, Sean_func
 from api.models import *
 from django.db.models import Max
 from django.db import transaction
 from discord import Embed
 from api.utils.message import My_discord
+
 
 discord = My_discord()
 DISCORD_WH_CONTRACT="https://discord.com/api/webhooks/1345757362257920000/kz-AUAg0QMOuRN39cdMVVHpa22xIovsZpGihKaNVkKdF8QHKHYI2xHXyruGi18Kv7wF5"
@@ -37,6 +38,9 @@ DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1340700574521491599/-6u9EV
 class MyDart:
     
     def __init__(self, OPEN_DART_TOKEN=None):
+        
+        
+        # self.is_business_day = True if Sean_func.is_business_day_from_index() else False
         
         self.max_concurrent_requests = 1
         if OPEN_DART_TOKEN is None:
@@ -59,6 +63,11 @@ class MyDart:
         '''
         데이터 가져와서 저장까지 하기.
         '''
+        # if not self.is_business_day:
+        #     print('휴일입니다.')
+        #     return
+            
+        
         if AllDart.objects.count():
             self.last_date = AllDart.objects.aggregate(Max('rcept_dt'))['rcept_dt__max']   ## db에서 가져온값.
             self.last_rcpNo = AllDart.objects.aggregate(Max('rcept_no'))['rcept_no__max']   ## db에서 가져온값.

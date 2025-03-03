@@ -5,6 +5,7 @@ from django.core.management import call_command
 from datetime import datetime
 from django.db import transaction
 from api.utils import ai
+from api.utils.sean_func import Sean_func
 # 로거 설정
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,9 @@ def scheduler_ticker():
 )
 def scheduler_ohlcv(self):
     """OHLCV 데이터 업데이트"""
+    if not Sean_func.is_business_day_from_index():
+        return "It's not a business day . ohlcv update is skipped"
+        
     try:
         with transaction.atomic():  # 트랜잭션 추가
             DBUpdater.update_ohlcv()
@@ -46,6 +50,8 @@ def scheduler_ohlcv(self):
 
 @shared_task
 def scheduler_basic_info2():
+    if not Sean_func.is_business_day_from_index():
+        return "It's not a business day . basic info update is skipped"
     """기본 정보 업데이트 및 주식 분석 (평일 16:05)"""
     try:
         DBUpdater.update_ohlcv()
@@ -58,6 +64,9 @@ def scheduler_basic_info2():
 @shared_task
 def scheduler_update_investor():
     """투자자 정보 업데이트 (평일 18:05)"""
+    if not Sean_func.is_business_day_from_index():
+        return "It's not a business day . investor update is skipped"
+
     try:
         DBUpdater.update_investor()
         return "Investor data updated successfully"
@@ -84,6 +93,9 @@ def scheduler_update_stockplus_news():
 @shared_task
 def scheduler_update_dart():
     """dart 정보 업데이트"""
+    if not Sean_func.is_business_day_from_index():
+        return "It's not a business day . dart update is skipped"
+
     from .utils.dart import MyDart
     try:
         dart =  MyDart()
