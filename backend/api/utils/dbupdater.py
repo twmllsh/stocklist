@@ -2902,10 +2902,6 @@ class Api:
             bad_array_q = Q(chart_d_bad_array=False)
             group3_Q &= bad_array_q
         
-        if new_listing: # 신규상장.  신규상장이 True 인것. 
-            new_listing_q = Q(신규상장=True)
-            group3_Q &= new_listing_q
-            pass
         
         if goodwave:
             w20_3w_q = Q(reasons__contains="is_w20_3w")
@@ -2958,24 +2954,30 @@ class Api:
         # group3 완료
         all_Q &= group3_Q
         
-        # 종가매수 조건 추가하기. 
-        if endprice:
-            print('endprice 적용함. ') 
-            endprice_cond_q = Q(reasons__isnull=False)
-            all_Q &= endprice_cond_q
+        # 종가매수 조건 추가하기.   종가매수 체크해야함. 어떤거 해야하나. 단봉 추가. 
+        # if endprice:
+        #     print('endprice 적용함. ') 
+        #     # endprice_cond_q = Q(reasons__isnull=False)
+        #     all_Q &= endprice_cond_q
         
         ## 실험실 조건 추가
         if exp:
             exp_cond_q = Q(chart_d_bb240_upper20__gte=0.1)
             all_Q &= exp_cond_q
-            
+        ################  여기까지 all_Q #####################
         
         
-        
+        if new_listing: # 신규상장.  신규상장이 True 인것. 
+            new_listing_q = Q(신규상장=True)
+            chartvalues = chartvalues.filter(new_listing_q)
+        else:
+            chartvalues = chartvalues.filter(all_Q)
+
         ##### query 필터링 처리 후 데이터프레임 만들기. 
         if search is not None: # 검색어가 있을때 필터링 처리.
             종목명리스트 = df_real['종목명'].tolist()
             chartvalues = chartvalues.filter(ticker__name__in=종목명리스트)
+        
         else:   
             chartvalues = chartvalues.filter(all_Q)
         
@@ -2993,7 +2995,7 @@ class Api:
         ## 필요한 데이터만 추출
         if len(chartvalues) == 0:
             return pd.DataFrame()
-        
+        print('필터된 데이터 개수 :::: ', chartvalues.count())
         ## bb240_upper20 활용해서 추세 찾을수 있을듯. 
         need_fields = [ 'date','cur_open','cur_close','pre_close','pre_vol','cur_vol','vol20', 
                        'chart_5_vol20','chart_30_vol20','chart_d_vol20',
@@ -3020,7 +3022,7 @@ class Api:
         ################## 공통 데이터 df 로 만들기. ##################
         ## 합치기 공집합
         df = pd.merge(df_real, df_stats, left_on='종목명', right_on='name', how='inner')
-        
+        print('합친데이터 개수 :::: ', len(df))
         # 시가 추정.
         df['시가'] = df['현재가'] / ( 1 + df['등락률'] /100)
         
@@ -3052,6 +3054,8 @@ class Api:
         if search is not None: # 검색어가 있을때 그냥 리턴.
             return df
         if favorites: # favorite 일땐 그냥 리턴.
+            return df
+        if new_listing:
             return df
         
 

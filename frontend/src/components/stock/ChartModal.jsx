@@ -310,7 +310,8 @@ const ChartModal = ({
               style={{ fontSize: '0.9rem' }}
             >
               <span className={`${getPriceColor(selectedStock.등락률)}`}>
-                {formatNumber(selectedStock.현재가)} ({selectedStock.등락률}%)
+                {formatNumber(selectedStock.현재가)} (
+                {parseFloat(selectedStock.등락률).toFixed(1)}%)
               </span>
               {isFavorite && (
                 <div className="d-flex align-items-center">

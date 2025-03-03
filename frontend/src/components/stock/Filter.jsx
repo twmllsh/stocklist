@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from 'react-bootstrap';
 // import { useState, useEffect, useCallback } from 'react';
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchFilteredStocks,
@@ -126,13 +126,13 @@ export default function Filter({ onToggle }) {
         { name: 'abv', label: 'ABV' },
         { name: 'goodwave', label: 'GOODWAVE' },
         { name: 'ac', label: 'AC' },
+        { name: 'rsi', label: 'RSI' }, // RSI 버튼을 그룹 4로 이동
       ],
     },
     {
-      //   title: '그룹 5',
+      title: 'etc..',
       buttons: [
         { name: 'new_listing', label: '신규상장' },
-        { name: 'rsi', label: 'RSI' },
         { name: 'exp', label: 'EXP' },
       ],
     },
@@ -156,6 +156,9 @@ export default function Filter({ onToggle }) {
     )
   );
 
+  // 이전 상태를 저장하기 위한 ref 추가
+  const previousStateRef = useRef({});
+
   // handleFilterChange 함수 수정
   const handleFilterChange = useCallback((name, value) => {
     setFilters((prev) => {
@@ -169,15 +172,92 @@ export default function Filter({ onToggle }) {
       const newValue = !prev[name];
       newFilters[name] = newValue;
 
-      if (name === 'realtime' && newValue) {
-        newFilters.endprice = false;
-        newFilters.change_min = 2;
-        newFilters.change_max = 10;
-      } else if (name === 'endprice' && newValue) {
-        newFilters.realtime = false;
-        newFilters.change = true;
-        newFilters.change_min = -2;
-        newFilters.change_max = 8;
+      // 그룹 2와 그룹 5 버튼들의 처리
+      const group2Buttons = ['realtime', 'endprice'];
+      const group5Buttons = ['new_listing', 'exp'];
+
+      // 상태 저장이 필요한 경우 (버튼이 활성화되는 경우)
+      if (newValue) {
+        // 이전 상태 저장
+        previousStateRef.current = {
+          ...previousStateRef.current,
+          group3and4: {
+            group2: {
+              realtime: prev.realtime,
+              endprice: prev.endprice,
+              change_min: prev.change_min,
+              change_max: prev.change_max,
+            },
+            group3: {
+              sun_ac: prev.sun_ac,
+              coke_up: prev.coke_up,
+              sun_gcv: prev.sun_gcv,
+              coke_gcv: prev.coke_gcv,
+              array: prev.array,
+              array_exclude: prev.array_exclude,
+            },
+            group4: {
+              ab: prev.ab,
+              abv: prev.abv,
+              goodwave: prev.goodwave,
+              ac: prev.ac,
+              rsi: prev.rsi,
+            },
+          },
+        };
+
+        // 그룹 2 버튼들의 상호 배타적 처리
+        if (group2Buttons.includes(name)) {
+          group2Buttons.forEach((btn) => {
+            if (btn !== name) newFilters[btn] = false;
+          });
+
+          // realtime/endprice 특수 처리
+          if (name === 'realtime') {
+            newFilters.change_min = 2;
+            newFilters.change_max = 10;
+          } else if (name === 'endprice') {
+            newFilters.change_min = -2;
+            newFilters.change_max = 8;
+          }
+        }
+
+        // 그룹 5 버튼들의 상호 배타적 처리
+        if (group5Buttons.includes(name)) {
+          group5Buttons.forEach((btn) => {
+            if (btn !== name) newFilters[btn] = false;
+          });
+
+          // 그룹 3, 4 버튼들 비활성화
+          [
+            'sun_ac',
+            'coke_up',
+            'sun_gcv',
+            'coke_gcv',
+            'array',
+            'array_exclude',
+            'ab',
+            'abv',
+            'goodwave',
+            'ac',
+            'rsi',
+          ].forEach((btn) => {
+            newFilters[btn] = false;
+          });
+        }
+      } else {
+        // 버튼이 비활성화되는 경우
+        // 그룹 5 버튼들이 모두 비활성화되었는지 확인
+        const isAllGroup5Inactive = group5Buttons.every((btn) =>
+          btn === name ? !newValue : !newFilters[btn]
+        );
+
+        if (isAllGroup5Inactive && previousStateRef.current.group3and4) {
+          // 이전 상태 복원
+          const { group2, group3, group4 } =
+            previousStateRef.current.group3and4;
+          Object.assign(newFilters, group2, group3, group4);
+        }
       }
 
       return newFilters;
@@ -311,19 +391,38 @@ export default function Filter({ onToggle }) {
   }, []); // 컴포넌트 마운트 시에만 실행
 
   // 버튼 렌더링 함수 수정
-  const renderButton = (btn) => {
-    // 모바일 환경 체크
+  const renderButton = (btn, index) => {
+    // index 매개변수 추가
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isDisabled =
+      (filters.new_listing || filters.exp) &&
+      [
+        'sun_ac',
+        'coke_up',
+        'sun_gcv',
+        'coke_gcv',
+        'array',
+        'array_exclude',
+        'ab',
+        'abv',
+        'goodwave',
+        'ac',
+        'rsi',
+      ].includes(btn.name);
 
     return (
-      <div className="d-flex align-items-center">
+      <div className="d-flex align-items-center" key={`${btn.name}-${index}`}>
+        {' '}
+        {/* key 추가 */}
         {isMobile ? (
           // 모바일에서는 OverlayTrigger 없이 버튼만 표시
           <FilterButton
             name={btn.name}
             label={btn.label}
             active={filters[btn.name]}
-            onClick={() => handleFilterChange(btn.name)}
+            onClick={() => !isDisabled && handleFilterChange(btn.name)}
+            variant={isDisabled ? 'secondary' : 'success'}
+            style={{ opacity: isDisabled ? 0.5 : 1 }}
           />
         ) : (
           // 데스크톱에서만 OverlayTrigger 사용
@@ -338,7 +437,9 @@ export default function Filter({ onToggle }) {
                 name={btn.name}
                 label={btn.label}
                 active={filters[btn.name]}
-                onClick={() => handleFilterChange(btn.name)}
+                onClick={() => !isDisabled && handleFilterChange(btn.name)}
+                variant={isDisabled ? 'secondary' : 'success'}
+                style={{ opacity: isDisabled ? 0.5 : 1 }}
               />
             </div>
           </OverlayTrigger>
@@ -405,15 +506,17 @@ export default function Filter({ onToggle }) {
             padding: '1rem',
           }}
         >
-          {buttonGroups.map((group, idx) => (
-            <div key={idx}>
+          {buttonGroups.map((group, groupIdx) => (
+            <div key={`group-${groupIdx}`}>
               <div className="mb-3">
                 <h6 className="mb-2">{group.title}</h6>
                 <div className="d-flex flex-wrap gap-2">
-                  {group.buttons.map((btn) => renderButton(btn))}
+                  {group.buttons.map((btn, btnIdx) =>
+                    renderButton(btn, `${groupIdx}-${btnIdx}`)
+                  )}
                 </div>
               </div>
-              {idx === 0 && <hr className="my-3" />}{' '}
+              {groupIdx === 0 && <hr className="my-3" />}{' '}
               {/* 첫 번째 그룹 다음에 구분선 추가 */}
             </div>
           ))}
