@@ -41,7 +41,7 @@ class Ticker(models.Model):
                 dic = {}
                 dic['날짜'] = row['rcept_dt']
                 dic['카테고리'] = '계약'
-                dic['대략적인 내용'] = f"{row['계약내용']} ({row['계약상대방']}) 매출액대비: {row['매출액대비']}%"        
+                dic['대략적인 내용'] = f"{row['계약내용']} ({row['계약상대방']}) 매출액대비: {row['매출액대비']:,.0f}%"        
                 all_ls.append(dic)
         bonusissue = ticker.dartbonusissue_set.all()
         if bonusissue.count():
@@ -60,7 +60,7 @@ class Ticker(models.Model):
                 dic = {}
                 dic['날짜'] = row['rcept_dt']
                 dic['카테고리'] = '전환사채'
-                dic['대략적인 내용'] = f"전환사채총액: {row['전환사채총액']} 전환가액: {row['전환가액']}원 표면이자율: {row['표면이자율']}% 만기이자율: {row['만기이자율']}%"
+                dic['대략적인 내용'] = f"전환사채총액: {row['전환사채총액']:,.0f} 전환가액: {row['전환가액']:,.0f}원 표면이자율: {row['표면이자율']}% 만기이자율: {row['만기이자율']}%"
                 all_ls.append(dic)
         
         rightsissue = ticker.dartrightsissue_set.all()
@@ -70,7 +70,7 @@ class Ticker(models.Model):
                 dic = {}
                 dic['날짜'] = row['rcept_dt']
                 dic['카테고리'] = '3자배정유증'
-                dic['대략적인 내용'] = f"증자방식: {row['증자방식']} 발행가액: {row['발행가액']}원 제3자배정대상자: {row['제3자배정대상자']} 신주비율: {row['신주비율']}%"
+                dic['대략적인 내용'] = f"증자방식: {row['증자방식']} 발행가액: {row['발행가액']:,.0f}원 제3자배정대상자: {row['제3자배정대상자']} 신주비율: {row['신주비율']}%"
                 all_ls.append(dic)
                 
         return all_ls

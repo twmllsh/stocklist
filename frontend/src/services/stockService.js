@@ -15,8 +15,6 @@ export const stockService = {
       });
 
       const url = `/stocklist/?${queryString.toString()}`;
-      // console.log('최종 요청 URL:', url);
-
       const response = await stockAxios.get(url);
       return response.data;
     } catch (error) {
@@ -31,7 +29,6 @@ export const stockService = {
       const response = await stockAxios.get('/news/', {
         params: { ticker: code },
       });
-      // console.log('뉴스 데이터 요청 성공:', response);
       // response.data가 배열인지 확인하고 반환
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
@@ -45,7 +42,6 @@ export const stockService = {
       const response = await stockAxios.get('/dart/', {
         params: { ticker: code },
       });
-      // console.log('dart 데이터 요청 성공:', response);
       // response.data가 배열인지 확인하고 반환
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
@@ -60,12 +56,6 @@ export const stockService = {
       const response = await stockAxios.get('/iss/', {
         params: { ticker: code },
       });
-      // // console.log('이슈 API 응답 구조:',
-      //   {
-      // responseType: typeof response,
-      // hasData: 'data' in response,
-      // dataType: response.data ? typeof response.data : 'no data',
-      // });
       // response 자체가 데이터인 경우를 위해 직접 반환
       return response.data || response;
     } catch (error) {
@@ -76,12 +66,10 @@ export const stockService = {
 
   // 종목 투자자 조회
   getStockInvestor: async (code) => {
-    // console.log('투자자 데이터 요청 시작:', code);
     try {
       const response = await stockAxios.get('/investor/', {
         params: { ticker: code },
       });
-      // console.log('투자자 데이터 요청 성공:', response);
 
       // 응답 데이터 구조 확인 및 처리
       if (response.data) {
@@ -111,7 +99,6 @@ export const stockService = {
       const response = await stockAxios.get('/finstats/', {
         params: { ticker: code },
       });
-      // console.log('컨센 데이터 요청 성공:', response);
       // response.data가 있으면 사용하고, 없으면 response 자체를 반환
       return Array.isArray(response.data) ? response.data : response;
     } catch (error) {
@@ -121,12 +108,10 @@ export const stockService = {
   },
   // 종목 거래원 조회
   getStockBroker: async (code) => {
-    // console.log('거래원 데이터 요청 시작:', code);
     try {
       const response = await stockAxios.get('/broker/', {
         params: { ticker: code },
       });
-      // console.log('거래원 데이터 요청 성공:', response);
       // response.data가 있으면 사용하고, 없으면 response 자체를 반환
       return Array.isArray(response.data) ? response.data : response;
     } catch (error) {
@@ -134,7 +119,6 @@ export const stockService = {
       throw error;
     }
   },
-  // 즐겨찾기 조회 추가 삭제.
   // 즐겨찾기 추가/제거
   toggleFavorite: async (code) => {
     console.log('즐겨찾기 요청 시작:', code);
@@ -153,11 +137,8 @@ export const stockService = {
   // 즐겨찾기 목록 조회
   getFavorites: async () => {
     try {
-      // 요청 전 URL 출력
       const requestUrl = '/favorites/';
-      // console.log('즐겨찾기 요청 URL:', requestUrl);
       const response = await stockAxios.get(requestUrl);
-      // console.log('즐겨찾기 응답:', response);
       return Array.isArray(response.data) ? response.data : response;
     } catch (error) {
       console.error('Failed to get favorites:', error);
@@ -169,16 +150,12 @@ export const stockService = {
   // 종목 Ohlcv 조회
   getStockOhlcv: async (code, interval = 'day') => {
     try {
-      // console.log(`Requesting OHLCV for ${code} with interval ${interval}`);
-
       const response = await stockAxios.get('/ohlcv1/', {
         params: {
           ticker: code,
           interval: interval,
         },
       });
-
-      // console.log('Full OHLCV Response:', response);
 
       // response가 배열인 경우와 response.data가 배열인 경우 모두 처리
       let ohlcvData = Array.isArray(response) ? response : response.data;
@@ -187,8 +164,6 @@ export const stockService = {
         console.error('No OHLCV data received');
         throw new Error('차트 데이터를 받지 못했습니다.');
       }
-
-      // console.log('Processed OHLCV data:', ohlcvData);
 
       return {
         data: ohlcvData,
@@ -221,10 +196,7 @@ export const stockService = {
   // AI 의견 조회
   getOpinion: async () => {
     try {
-      // console.log('AI Opinion 요청 시작');
       const response = await stockAxios.get('/aiopinion/');
-      // console.log('AI Opinion 응답:', response);
-      // response.data가 있으면 사용하고, 없으면 response 자체를 반환
       return response.data || response;
     } catch (error) {
       console.error('AI Opinion 요청 실패:', error);
@@ -239,14 +211,11 @@ export const stockService = {
   // AI 의견 조회
   getOpinionForStock: async (code) => {
     try {
-      // console.log('AI Opinion 요청 시작');
       const response = await stockAxios.get('/aiopinionstock/', {
         params: {
           ticker: code,
         },
       });
-      // console.log('AI Opinion 응답:', response);
-      // response.data가 있으면 사용하고, 없으면 response 자체를 반환
       return response.data || response;
     } catch (error) {
       console.error('AI Opinion 요청 실패:', error);
