@@ -21,11 +21,11 @@ app.autodiscover_tasks()
 
 # 정기적 작업 스케줄 설정
 app.conf.beat_schedule = {
-    # test (1분)
-    'update_dart_test': {
-        'task': 'api.tasks.scheduler_update_dart',
-        'schedule': crontab(hour="22", minute="28", day_of_week='sun'),
-    },
+    # # test (1분)
+    # 'update_dart_test': {
+    #     'task': 'api.tasks.scheduler_update_dart',
+    #     'schedule': crontab(hour="22", minute="28", day_of_week='sun'),
+    # },
     
     
     'update_dart': {

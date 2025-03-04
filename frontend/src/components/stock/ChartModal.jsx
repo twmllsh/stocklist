@@ -54,7 +54,11 @@ const ChartModal = ({
     ma240: true,
     bb60: false,
     bb240: true,
+    showDisclosure: true, // 주요공시를 기본값으로 true로 설정
   });
+
+  // 주요공시 데이터 상태 추가
+  const [mainDisclosureData, setMainDisclosureData] = useState([]);
 
   // 체크버튼 상태 유지를 위한 ref 추가
   const buttonStateRef = useRef({
@@ -154,6 +158,22 @@ const ChartModal = ({
       return newState;
     });
   };
+
+  // 주요공시 데이터 로드
+  useEffect(() => {
+    const fetchMainDisclosure = async () => {
+      if (stockCode && visibleIndicators.showDisclosure) {
+        try {
+          const data = await stockService.getStockMainDisclosure(stockCode);
+          setMainDisclosureData(data);
+        } catch (error) {
+          console.error('주요공시 데이터 로드 실패:', error);
+        }
+      }
+    };
+
+    fetchMainDisclosure();
+  }, [stockCode, visibleIndicators.showDisclosure]);
 
   // 새로고침 처리
   const handleRefresh = async () => {
@@ -375,6 +395,7 @@ const ChartModal = ({
               { key: 'ma240', label: 'MA240', color: '#999a9e' },
               { key: 'bb60', label: 'BB60', color: '#2962FF' },
               { key: 'bb240', label: 'BB240', color: '#E91E63' },
+              { key: 'showDisclosure', label: '주요공시', color: '#6f42c1' }, // 보라색 계열
             ].map(({ key, label, color }) => (
               <Button
                 key={key}
@@ -445,6 +466,7 @@ const ChartModal = ({
               key={`${stockCode}-${interval}`}
               data={currentData}
               visibleIndicators={visibleIndicators}
+              mainDisclosureData={mainDisclosureData}
             />
           )}
         </div>

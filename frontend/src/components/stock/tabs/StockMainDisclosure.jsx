@@ -12,14 +12,14 @@ const StockMainDisclosure = ({ stockCode }) => {
       try {
         setLoading(true);
         setError(null);
-        console.log(
-          '주요공시 데이터 요청 URL:',
-          `/dartinfo/?ticker=${stockCode}`
-        );
+        // console.log(
+        //   '주요공시 데이터 요청 URL:',
+        //   `/dartinfo/?ticker=${stockCode}`
+        // );
         const response = await stockService.getStockMainDisclosure(stockCode);
-        console.log('주요공시 응답 데이터:', response);
-        console.log('응답 데이터 타입:', typeof response);
-        console.log('응답이 배열인가?:', Array.isArray(response));
+        // console.log('주요공시 응답 데이터:', response);
+        // console.log('응답 데이터 타입:', typeof response);
+        // console.log('응답이 배열인가?:', Array.isArray(response));
         setData(response);
       } catch (err) {
         console.error('주요공시 데이터 요청 실패:', err);

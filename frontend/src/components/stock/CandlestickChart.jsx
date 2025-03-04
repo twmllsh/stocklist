@@ -6,14 +6,16 @@ const CandlestickChart = ({
   data,
   visibleIndicators = {
     ma3: false,
-    ma20: true, // 기본값으로 표시
+    ma20: true,
     ma60: true,
     ma120: false,
     ma240: false,
     bb60: true,
     bb240: false,
+    showDisclosure: true, // 주요공시를 기본값으로 true로 설정
   },
   sharesInfo,
+  mainDisclosureData,
 }) => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
@@ -379,13 +381,42 @@ const CandlestickChart = ({
         close: Number(item.close),
       }));
 
+      // 주요공시 마커 데이터 생성
+      const markers = [];
+      if (visibleIndicators.showDisclosure && mainDisclosureData?.length > 0) {
+        mainDisclosureData.forEach((item) => {
+          const timestamp = Math.floor(new Date(item.날짜).getTime() / 1000);
+          // 차트 데이터 기간 내의 공시만 필터링
+          if (
+            timestamp >= data[0].time &&
+            timestamp <= data[data.length - 1].time
+          ) {
+            markers.push({
+              time: timestamp,
+              position: 'aboveBar',
+              color: getBadgeColor(item.카테고리),
+              shape: 'circle',
+              text: item.카테고리.slice(0, 2), // 텍스트 길이 제한
+              size: 0.5, // 마커 크기를 0.5로 축소 (기존 2)
+            });
+          }
+        });
+      }
+
+      // 캔들 데이터와 마커 함께 설정
+      seriesRef.current.candle.setData(candleData);
+      if (markers.length > 0) {
+        seriesRef.current.candle.setMarkers(markers);
+      } else {
+        seriesRef.current.candle.setMarkers([]);
+      }
+
       const volumeData = data.map((item) => ({
         time: item.time,
         value: Number(item.volume),
         color: Number(item.close) >= Number(item.open) ? '#ff3737' : '#2962FF',
       }));
 
-      seriesRef.current.candle.setData(candleData);
       seriesRef.current.volume.setData(volumeData);
 
       // 이동평균선 데이터 계산 및 설정
@@ -462,7 +493,7 @@ const CandlestickChart = ({
     } catch (error) {
       console.error('Error updating chart data:', error);
     }
-  }, [data]);
+  }, [data, visibleIndicators.showDisclosure, mainDisclosureData]);
 
   // 지표 표시 여부 업데이트
   useEffect(() => {
@@ -492,6 +523,22 @@ const CandlestickChart = ({
       });
     });
   }, [visibleIndicators]);
+
+  // 카테고리별 색상 지정
+  const getBadgeColor = (category) => {
+    switch (category) {
+      case '계약':
+        return '#198754';
+      case '3자배정유증':
+        return '#0d6efd';
+      case '전환사채':
+        return '#ffc107';
+      case '무상증자':
+        return '#0dcaf0';
+      default:
+        return '#6c757d';
+    }
+  };
 
   return (
     <div ref={chartContainerRef} style={{ width: '100%', height: '400px' }} />
