@@ -453,6 +453,26 @@ class AiOpinonForStockViewSet(viewsets.ModelViewSet):
         
         return queryset
 
+class DartInfoViewSet(viewsets.ViewSet):
+    permission_classes = [AllowAny]
+    
+    def list(self, request):
+        ticker = request.query_params.get('ticker')
+        if not ticker:
+            return Response(
+                {'error': 'ticker parameter is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            dart_list = Ticker.get_dart_list(ticker)
+            serializer = DartListSerializer(dart_list, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 ######################  rest api  #########################
 
 def health_check(request):

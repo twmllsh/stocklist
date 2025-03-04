@@ -18,6 +18,7 @@ router.register(r'news', NewsViewSet)
 router.register(r'aiopinion', AiOpinionViewSet, basename='aiopinion')
 router.register(r'aiopinionstock', AiOpinonForStockViewSet, basename='aiopinionforstock')
 router.register(r'dart', AllDartViewSet)
+router.register(r'dartinfo', DartInfoViewSet, basename='dartinfo')
 router.register(r'iss', IssViewSet)
 router.register(r'favorites', FavoriteViewSet, basename='favorite')
 app_name = "api"

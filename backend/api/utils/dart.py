@@ -413,6 +413,7 @@ class MyDart:
         dic['code'] = code
         dic['name'] = corp_name
         dic['rcept_dt'] = rcept_dt
+        dic['rcept_no'] = rcpNo
         print(f"{corp_name} https://dart.fss.or.kr/dsaf001/main.do?rcpNo={rcpNo} 공급계약 작업중.."  )
         url = await self.get_second_url(async_playwright(),rcpNo)
         if url is None:
@@ -527,6 +528,7 @@ class MyDart:
         dic['code'] = code
         dic['name'] = corp_name
         dic['rcept_dt'] = rcept_dt
+        dic['rcept_no'] = rcpNo
         temp_url = f"https://dart.fss.or.kr/dsaf001/main.do?rcpNo={rcpNo}"
         try:
             second_url = self.dart.sub_docs(rcpNo)['url'].iloc[-1]
@@ -671,6 +673,7 @@ class MyDart:
             dic['code'] = code
             dic['name'] = corp_name
             dic['rcept_dt'] = rcept_dt
+            dic['rcept_no'] = rcpNo
             temp_url = f"https://dart.fss.or.kr/dsaf001/main.do?rcpNo={rcpNo}"
             try:
                 second_url = self.dart.sub_docs(rcpNo)['url'].iloc[-1]
@@ -808,6 +811,7 @@ class MyDart:
         dic['code'] = code
         dic['name'] = corp_name
         dic['rcept_dt'] = rcept_dt
+        dic['rcept_no'] = rcpNo
         temp_url = f"https://dart.fss.or.kr/dsaf001/main.do?rcpNo={rcpNo}"
         try:
             second_url = self.dart.sub_docs(rcpNo)['url'].iloc[-1]

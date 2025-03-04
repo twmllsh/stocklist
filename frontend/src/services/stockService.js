@@ -258,4 +258,17 @@ export const stockService = {
       throw error;
     }
   },
+
+  // 주요공시 조회
+  getStockMainDisclosure: async (code) => {
+    try {
+      const response = await stockAxios.get('/dartinfo/', {
+        params: { ticker: code },
+      });
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('주요공시 데이터 요청 실패:', error);
+      throw error;
+    }
+  },
 };

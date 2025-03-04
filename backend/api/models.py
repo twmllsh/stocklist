@@ -21,7 +21,62 @@ class Ticker(models.Model):
         verbose_name='Ticker'
         verbose_name_plural = 'Tickers'
         # db_table = 'stock__ticker'
+    @classmethod
+    def get_dart_list(cls, code):
+        '''
+        날짜 , 카테고리, 대략적인 내용(link),  
+        all_dic = {'날짜':[], '카테고리':[], '대략적인 내용':[]}
+        '''
+        ticker = cls.objects.get(code=code)
+        if ticker is None:
+            return
+        all_ls = []
         
+        contract = ticker.dartcontract_set.all()
+        if contract.count():
+            cont_df = pd.DataFrame(contract.values('rcept_dt', 'rcept_no', '계약내용', '계약금액',
+        '계약상대방', '공급지역', '매출액대비', '계약기간_시작', '계약기간_종료', '계약기간일', '계약일'))
+            
+            for i, row in cont_df.iterrows():
+                dic = {}
+                dic['날짜'] = row['rcept_dt']
+                dic['카테고리'] = '계약'
+                dic['대략적인 내용'] = f"{row['계약내용']} ({row['계약상대방']}) 매출액대비: {row['매출액대비']}%"        
+                all_ls.append(dic)
+        bonusissue = ticker.dartbonusissue_set.all()
+        if bonusissue.count():
+            bonus_df = pd.DataFrame(bonusissue.values('rcept_dt', 'rcept_no', '주당배정주식수', '상장예정일',))
+            for i, row in bonus_df.iterrows():
+                dic = {}
+                dic['날짜'] = row['rcept_dt']
+                dic['카테고리'] = '무상증자'
+                dic['대략적인 내용'] = f"주당배정주식수: {row['주당배정주식수']} 상장예정일: {row['상장예정일']}"
+                all_ls.append(dic)
+        
+        convertible = ticker.dartconvertiblebond_set.all()
+        if convertible.count():
+            bonus_df = pd.DataFrame(convertible.values('rcept_dt', 'rcept_no', '전환사채총액', '전환가액','표면이자율','만기이자율'))
+            for i, row in bonus_df.iterrows():
+                dic = {}
+                dic['날짜'] = row['rcept_dt']
+                dic['카테고리'] = '전환사채'
+                dic['대략적인 내용'] = f"전환사채총액: {row['전환사채총액']} 전환가액: {row['전환가액']}원 표면이자율: {row['표면이자율']}% 만기이자율: {row['만기이자율']}%"
+                all_ls.append(dic)
+        
+        rightsissue = ticker.dartrightsissue_set.all()
+        if rightsissue.count():
+            rights_df = pd.DataFrame(rightsissue.values('rcept_dt', 'rcept_no', '증자방식', '발행가액', '제3자배정대상자', '신주비율'))
+            for i, row in rights_df.iterrows():
+                dic = {}
+                dic['날짜'] = row['rcept_dt']
+                dic['카테고리'] = '3자배정유증'
+                dic['대략적인 내용'] = f"증자방식: {row['증자방식']} 발행가액: {row['발행가액']}원 제3자배정대상자: {row['제3자배정대상자']} 신주비율: {row['신주비율']}%"
+                all_ls.append(dic)
+                
+        return all_ls
+    
+        
+    
 class Info(models.Model):
     ticker = models.OneToOneField(Ticker, on_delete=models.CASCADE)
     date = models.DateField(null=True) #
@@ -823,6 +878,7 @@ class DartContract(models.Model):
     ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE, related_name='dartcontract_set')
     name = models.CharField(max_length=100,null=True)
     rcept_dt = models.DateTimeField(null=True)
+    rcept_no = models.CharField(max_length=18,null=True)
     계약내용 = models.CharField(max_length=100,null=True)
     계약금액 = models.BigIntegerField(null=True)
     계약상대방 = models.CharField(max_length=100,null=True)
@@ -844,6 +900,7 @@ class DartRightsIssue(models.Model):
     ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE, related_name='dartrightsissue_set')
     name = models.CharField(max_length=100,null=True)
     rcept_dt = models.DateTimeField(null=True)
+    rcept_no = models.CharField(max_length=18,null=True)
     증자방식 = models.CharField(max_length=100,null=True)
     신주의수 = models.IntegerField(null=True)
     증자전주식수 = models.IntegerField(null=True)
@@ -867,6 +924,7 @@ class DartConvertibleBond(models.Model):
     ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE, related_name='dartconvertiblebond_set')
     name = models.CharField(max_length=100,null=True)
     rcept_dt = models.DateTimeField(null=True)
+    rcept_no = models.CharField(max_length=18,null=True)
     전환사채총액 = models.BigIntegerField(null=True)
     자금조달목적 = models.CharField(max_length=100,null=True)
     표면이자율 = models.FloatField(null=True)
@@ -888,6 +946,7 @@ class DartBonusIssue(models.Model):
     ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE, related_name='dartbonusissue_set')
     name = models.CharField(max_length=100,null=True)
     rcept_dt = models.DateTimeField(null=True)
+    rcept_no = models.CharField(max_length=18,null=True)
     신주의수 = models.IntegerField(null=True)
     주당배정주식수 = models.FloatField(null=True)
     배당기산일 = models.DateTimeField(null=True)

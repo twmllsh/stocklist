@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 import math
+from django.utils import timezone
 
 class TickerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -101,3 +102,15 @@ class AiOpinionForStockSerializer(serializers.ModelSerializer):
     class Meta:
         model = AiOpinionForStock
         fields = ['ticker','opinion', 'reason', 'ai_method', 'created_at']
+
+class DartListSerializer(serializers.Serializer):
+    날짜 = serializers.DateTimeField()
+    카테고리 = serializers.CharField()
+    대략적인_내용 = serializers.CharField(source='대략적인 내용')  # 공백이 있는 필드명 처리
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # # UTC 시간을 한국 시간으로 변환
+        # if data['날짜']:
+        #     data['날짜'] = data['날짜'].astimezone(timezone.pytz.timezone('Asia/Seoul'))
+        return data
