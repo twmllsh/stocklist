@@ -121,12 +121,12 @@ export const stockService = {
   },
   // 즐겨찾기 추가/제거
   toggleFavorite: async (code) => {
-    console.log('즐겨찾기 요청 시작:', code);
+    // console.log('즐겨찾기 요청 시작:', code);
     try {
       const response = await stockAxios.post('/favorites/toggle/', {
         ticker_code: code, // param -> ticker_code로 수정
       });
-      console.log('즐겨찾기 응답:', response);
+      // console.log('즐겨찾기 응답:', response);
       return response.data;
     } catch (error) {
       console.error('Favorite toggle failed:', error);

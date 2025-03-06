@@ -3,7 +3,7 @@ from django.db import models
 
 class User(AbstractUser):
     MEMBERSHIP_CHOICES = (
-        ('SPECIAL', '특별회원'),  # 특별회원 추가
+        ('SPECIAL', '특별회원'),
         ('REGULAR', '정회원'),
         ('ASSOCIATE', '준회원'),
     )
@@ -11,7 +11,7 @@ class User(AbstractUser):
     membership = models.CharField(
         max_length=10,
         choices=MEMBERSHIP_CHOICES,
-        default='ASSOCIATE',
+        default='ASSOCIATE',  # 기본값은 준회원
         verbose_name='회원등급'
     )
     created_at = models.DateTimeField(auto_now_add=True)

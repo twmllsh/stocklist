@@ -6,6 +6,7 @@ import {
   Container,
   OverlayTrigger,
   Tooltip,
+  Alert, // Alert import 추가
 } from 'react-bootstrap';
 // import { useState, useEffect, useCallback } from 'react';
 import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
@@ -15,8 +16,12 @@ import {
   selectSearchCount,
 } from '../../store/slices/stockSlice'; // 수정된 임포트
 import { stockService } from '../../services/stockService'; // 상단에 추가
+import { selectUser } from '../../store/slices/authSlice';
 
 export default function Filter({ onToggle }) {
+  const user = useSelector(selectUser);
+  const isBasicMember = user?.membership === 'ASSOCIATE';
+
   const dispatch = useDispatch();
   const searchCount = useSelector(selectSearchCount);
   const [isOpen, setIsOpen] = useState(true);
@@ -484,6 +489,20 @@ export default function Filter({ onToggle }) {
     );
   };
 
+  // 준회원 알림 메시지 컴포넌트
+  const BasicMemberAlert = () => {
+    if (isBasicMember) {
+      return (
+        <Alert variant="warning" className="mb-3">
+          <p className="mb-0">
+            정회원 이상 서비스를 이용할 수 있습니다. 관리자에게 문의하세요.
+          </p>
+        </Alert>
+      );
+    }
+    return null;
+  };
+
   return (
     <Container
       fluid
@@ -495,6 +514,9 @@ export default function Filter({ onToggle }) {
         zIndex: 1000,
       }}
     >
+      {/* Alert 메시지 추가 */}
+      <BasicMemberAlert />
+
       <Form>
         <div
           style={{
@@ -539,7 +561,8 @@ export default function Filter({ onToggle }) {
                 variant="success"
                 className="px-4"
                 onClick={handleSearch}
-                disabled={isLoading}
+                disabled={isLoading || isBasicMember}
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
               >
                 {isLoading ? '조건검색 중...' : '조건검색'}
               </Button>
@@ -551,7 +574,12 @@ export default function Filter({ onToggle }) {
             </div>
 
             {/* 내종목 버튼 */}
-            <Button variant="warning" onClick={handleTestFavorites}>
+            <Button
+              variant="warning"
+              onClick={handleTestFavorites}
+              disabled={isBasicMember}
+              title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+            >
               내종목
             </Button>
 
@@ -573,12 +601,14 @@ export default function Filter({ onToggle }) {
                     handleSearchByText();
                   }
                 }}
+                disabled={isBasicMember}
               />
               <Button
                 variant="outline-secondary"
                 onClick={handleSearchByText}
-                disabled={isLoading}
+                disabled={isLoading || isBasicMember}
                 className="bg-transparent"
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
               >
                 종목검색
               </Button>
