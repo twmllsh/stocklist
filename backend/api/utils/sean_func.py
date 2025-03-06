@@ -261,8 +261,9 @@ class Sean_func:
         start_time = 8 + 10/60  # 8시 5분
         end_time = 24         # 24시
         if start_time < current_time < end_time:
-            today_df = fdr.DataReader('KS11',start=today)
-            if today_df.empty:
+            today_df = fdr.DataReader('KS11',start=today.year)
+            temp_date= today_df.index[-1].date()
+            if temp_date != today.date():
                 result =  False
         return result
 
