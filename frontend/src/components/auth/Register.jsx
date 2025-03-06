@@ -24,6 +24,12 @@ export default function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // 이메일 유효성 검사 함수 추가
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.password2) {
@@ -31,23 +37,48 @@ export default function Register() {
       return;
     }
 
+    // 이메일 형식 검증 추가
+    if (!isValidEmail(formData.email)) {
+      setError('이메일을 정확하게 입력해주세요.');
+      return;
+    }
+
     try {
-      const data = await authService.register({
+      const response = await authService.register({
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
 
-      if (!data.detail) {
-        // 회원가입 성공
-        alert('회원가입이 완료되었습니다. 로그인해주세요.');
-        navigate('/login');
-      } else {
-        setError(data.detail);
-      }
+      // 회원가입 성공
+      alert('회원가입이 완료되었습니다. 로그인해주세요.');
+      navigate('/login');
     } catch (error) {
+      // 서버에서 반환된 에러 메시지 처리
+      if (error.response?.data) {
+        const data = error.response.data;
+        if (data.username) {
+          setError('이미 사용 중인 아이디입니다.');
+        } else if (data.email) {
+          // 이메일 관련 에러 메시지 수정
+          if (data.email.includes('valid')) {
+            setError('이메일을 정확하게 입력해주세요.');
+          } else {
+            setError('이미 등록된 이메일입니다.');
+          }
+        } else if (data.password) {
+          setError(
+            '비밀번호가 유효하지 않습니다. 8자 이상의 영문/숫자 조합을 사용해주세요.'
+          );
+        } else if (data.message) {
+          setError(data.message);
+        } else {
+          setError('회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
+        }
+      } else {
+        setError('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
       console.error('Registration error:', error);
-      setError('서버 연결에 실패했습니다.');
     }
   };
 

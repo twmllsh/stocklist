@@ -3,7 +3,13 @@ import authAxios from './config/authAxios';
 export const authService = {
   // 회원가입
   register: async (userData) => {
-    return await authAxios.post('/register/', userData); // /accounts/register로 요청
+    try {
+      const response = await authAxios.post('/register/', userData);
+      return response;
+    } catch (error) {
+      // 에러 응답을 그대로 throw하여 컴포넌트에서 처리할 수 있게 함
+      throw error;
+    }
   },
 
   // 로그인

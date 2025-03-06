@@ -36,11 +36,11 @@ authAxios.interceptors.response.use(
     return response.data;
   },
   async (error) => {
-    console.error('Response interceptor error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      headers: error.response?.headers,
-    });
+    // console.error('Response interceptor error:', {
+    //   status: error.response?.status,
+    //   data: error.response?.data,
+    //   headers: error.response?.headers,
+    // });
     if (error.response?.status === 401) {
       // auth 관련 401 처리
     }
