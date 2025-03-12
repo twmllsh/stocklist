@@ -35,6 +35,7 @@ export default function Filter({ onToggle }) {
   const [searchInput, setSearchInput] = useState(''); // 검색어 입력 상태 추가
   const [opinion, setOpinion] = useState(''); // 추가
   const [showOpinionDetail, setShowOpinionDetail] = useState(false); // 기본값을 false로 설정
+  const [autoCollapse, setAutoCollapse] = useState(true); // 자동접힘 옵션 상태 추가
 
   const [filters, setFilters] = useState({
     change: true,
@@ -343,18 +344,20 @@ export default function Filter({ onToggle }) {
     }
   };
 
-  // 스크롤 방향 감지 및 필터 접기 처리
+  // 스크롤 방향 감지 및 필터 접기 처리 수정
   useEffect(() => {
     let lastScrollY = window.pageYOffset;
 
     const handleScroll = () => {
+      if (!autoCollapse) return; // 자동접힘 옵션이 꺼져있으면 무시
+
       const currentScrollY = window.pageYOffset;
       const scrollingUp = currentScrollY < lastScrollY;
 
       if (scrollingUp && isOpen) {
         setIsOpen(false);
-        setManualClose(true); // 스크롤로 인한 접기 표시
-        onToggle(false); // 스크롤 시 부모 컴포넌트에도 상태 전달
+        setManualClose(true);
+        onToggle(false);
       }
 
       lastScrollY = currentScrollY;
@@ -362,7 +365,7 @@ export default function Filter({ onToggle }) {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isOpen, onToggle]);
+  }, [isOpen, onToggle, autoCollapse]); // autoCollapse 의존성 추가
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -525,6 +528,39 @@ export default function Filter({ onToggle }) {
         zIndex: 1000,
       }}
     >
+      {/* 자동접힘 옵션 토글 버튼 수정 */}
+      <div
+        className="d-flex align-items-center justify-content-end px-1"
+        style={{
+          borderBottom: '1px solid var(--bs-border-color)',
+          backgroundColor: 'var(--bs-body-bg)',
+          height: '24px', // 높이 고정
+        }}
+      >
+        <div className="d-flex align-items-center">
+          <small
+            className="text-muted me-1"
+            style={{
+              fontSize: '0.7rem',
+              lineHeight: 1,
+            }}
+          >
+            자동접힘
+          </small>
+          <Form.Check
+            type="switch"
+            id="auto-collapse-switch"
+            checked={autoCollapse}
+            onChange={(e) => setAutoCollapse(e.target.checked)}
+            className="mt-0"
+            style={{
+              transform: 'scale(0.8)',
+              marginBottom: 0,
+            }}
+          />
+        </div>
+      </div>
+
       {/* Alert 메시지 추가 */}
       <BasicMemberAlert />
 
