@@ -17,6 +17,7 @@ import {
 } from '../../store/slices/stockSlice'; // 수정된 임포트
 import { stockService } from '../../services/stockService'; // 상단에 추가
 import { selectUser } from '../../store/slices/authSlice';
+import StockAiToday from './StockAiToday'; // 상단에 추가
 
 export default function Filter({ onToggle }) {
   const user = useSelector(selectUser);
@@ -332,6 +333,16 @@ export default function Filter({ onToggle }) {
     }
   };
 
+  // Today AI 버튼 클릭 핸들러 단순화
+  const handleTodayAiClick = async () => {
+    try {
+      // 단순히 필터링된 주식 목록만 요청
+      await dispatch(fetchFilteredStocks({ today_ai: true }));
+    } catch (error) {
+      console.error('Today AI 데이터 로드 실패:', error);
+    }
+  };
+
   // 스크롤 방향 감지 및 필터 접기 처리
   useEffect(() => {
     let lastScrollY = window.pageYOffset;
@@ -581,6 +592,15 @@ export default function Filter({ onToggle }) {
               title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
             >
               내종목
+            </Button>
+
+            <Button
+              variant="info"
+              onClick={handleTodayAiClick}
+              disabled={isBasicMember}
+              title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+            >
+              Today AI
             </Button>
 
             {/* 검색창과 검색버튼 */}
