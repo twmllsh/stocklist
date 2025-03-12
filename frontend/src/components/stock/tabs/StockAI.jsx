@@ -99,7 +99,7 @@ const StockAI = ({ stockCode, anal = false }) => {
                   </Badge>
                   {opinion.close && (
                     <small className="text-muted">
-                      당시 현재가: {formatNumber(opinion.close)}원
+                      분석당시 주가: {formatNumber(opinion.close)}원
                     </small>
                   )}
                 </div>
