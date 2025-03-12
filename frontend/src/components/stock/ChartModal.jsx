@@ -44,6 +44,8 @@ const ChartModal = ({
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [buyPrice, setBuyPrice] = useState('');
   const [localBuyPrice, setLocalBuyPrice] = useState(0); // 새로운 state 추가
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisKey, setAnalysisKey] = useState(0); // AI 분석 컴포넌트 리렌더링용 키
 
   // 지표 상태는 유지
   const [visibleIndicators, setVisibleIndicators] = useState({
@@ -307,6 +309,30 @@ const ChartModal = ({
   //   }
   // }, [user]);
 
+  const requestNewAnalysis = async () => {
+    try {
+      setIsAnalyzing(true);
+      // console.log(
+      //   'AI 분석 요청 URL:',
+      //   `/aiopinionstock/?ticker=${stockCode}&anal=true`
+      // );
+      const response = await stockService.getOpinionForStock(stockCode, {
+        anal: true,
+      });
+      console.log('AI 분석 응답:', response);
+
+      // 응답이 성공적으로 왔을 때만 탭 전환
+      if (response && !response.error) {
+        setActiveTab('ai');
+        setAnalysisKey((prev) => prev + 1); // 컴포넌트 강제 리렌더링
+      }
+    } catch (error) {
+      console.error('AI 분석 요청 실패:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
       <Modal.Header closeButton>
@@ -334,14 +360,15 @@ const ChartModal = ({
                 {formatNumber(selectedStock.현재가)} (
                 {parseFloat(selectedStock.등락률).toFixed(1)}%)
               </span>
-              {/* AI 분석 버튼 추가 */}
+              {/* AI 분석 버튼만 남기고 분석 결과 버튼 제거 */}
               {user?.membership === 'SPECIAL' && (
                 <Button
                   size="sm"
                   variant="outline-primary"
-                  onClick={() => setActiveTab('ai')}
+                  onClick={requestNewAnalysis}
+                  disabled={isAnalyzing}
                 >
-                  AI 분석
+                  {isAnalyzing ? '분석중...' : 'AI 분석'}
                 </Button>
               )}
               {isFavorite && (
@@ -509,8 +536,9 @@ const ChartModal = ({
               <Tab.Pane eventKey="ai" mountOnEnter unmountOnExit>
                 {activeTab === 'ai' && (
                   <StockAI
-                    key={`ai-${stockCode}-${activeTab}`}
+                    key={`ai-${stockCode}-${activeTab}-${analysisKey}`}
                     stockCode={stockCode}
+                    anal={false}
                   />
                 )}
               </Tab.Pane>

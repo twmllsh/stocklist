@@ -426,6 +426,7 @@ class AiOpinonForStockViewSet(viewsets.ModelViewSet):
         
         '''
         ticker = self.request.query_params.get('ticker', None)
+        anal = self.request.query_params.get('anal', '').lower() == 'true'
         queryset = AiOpinionForStock.objects.all()
         queryset = queryset.filter(ticker__code=ticker)
         temp_status = False
@@ -437,7 +438,7 @@ class AiOpinonForStockViewSet(viewsets.ModelViewSet):
             if last_date == current_date:
                 temp_status = True
         
-        if temp_status == False:
+        if anal:
             from .utils import ai
             print('ai에게 요청중...')
             if ticker is not None:

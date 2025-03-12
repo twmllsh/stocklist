@@ -209,11 +209,12 @@ export const stockService = {
     }
   },
   // AI 의견 조회
-  getOpinionForStock: async (code) => {
+  getOpinionForStock: async (code, options = {}) => {
     try {
       const response = await stockAxios.get('/aiopinionstock/', {
         params: {
           ticker: code,
+          anal: options.anal || false,
         },
       });
       return response.data || response;

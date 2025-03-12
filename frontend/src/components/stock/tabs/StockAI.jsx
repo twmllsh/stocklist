@@ -4,64 +4,36 @@ import { stockService } from '../../../services/stockService';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../../store/slices/authSlice';
 
-const StockAI = ({ stockCode }) => {
+const StockAI = ({ stockCode, anal = false }) => {
   const user = useSelector(selectUser);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [waitMessage, setWaitMessage] = useState('AI에게 분석 요청중...');
 
   useEffect(() => {
-    let isMounted = true;
-    const messageUpdateInterval = setInterval(() => {
-      if (isMounted && loading) {
-        setWaitMessage((prev) => {
-          const messages = [
-            'AI에게 분석 요청중...',
-            '분석이 진행중입니다. 잠시만 기다려주세요...',
-            'AI가 데이터를 분석하고 있습니다...',
-            '복잡한 분석이 필요한 경우 시간이 좀 걸릴 수 있습니다...',
-          ];
-          const currentIndex = messages.indexOf(prev);
-          return messages[(currentIndex + 1) % messages.length];
-        });
-      }
-    }, 3000);
-
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        const response = await stockService.getOpinionForStock(stockCode);
-
-        if (isMounted) {
+        const response = await stockService.getOpinionForStock(stockCode, {
+          anal,
+        });
+        if (response && response.length > 0) {
           setData(response[0]);
-          setError(null);
-          setLoading(false);
+        } else {
+          setError('아직 AI 분석 데이터가 없습니다. ');
         }
       } catch (err) {
-        if (isMounted) {
-          // 에러 발생 시에도 로딩 상태 유지, 대기 메시지만 변경
-          setWaitMessage(
-            '분석에 시간이 걸리고 있습니다. 잠시만 더 기다려주세요...'
-          );
-          // 실제 오류인 경우에만 에러 상태 설정
-          if (err.response?.status === 404 || err.response?.status === 500) {
-            setError('AI 분석 데이터를 불러오는데 실패했습니다.');
-            setLoading(false);
-          }
-        }
+        setError('AI 분석 데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
-
-    return () => {
-      isMounted = false;
-      clearInterval(messageUpdateInterval);
-    };
-  }, [stockCode]);
+    if (stockCode) {
+      fetchData();
+    }
+  }, [stockCode, anal]);
 
   // 특별회원 체크는 상단으로 이동
   if (user?.membership !== 'SPECIAL') {
@@ -74,7 +46,7 @@ const StockAI = ({ stockCode }) => {
     return (
       <div className="d-flex flex-column align-items-center justify-content-center p-5">
         <Spinner animation="border" variant="primary" className="mb-3" />
-        <div className="text-primary">{waitMessage}</div>
+        <div className="text-primary">AI에게 분석 요청중...</div>
       </div>
     );
   }
