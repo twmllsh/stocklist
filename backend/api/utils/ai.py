@@ -10,6 +10,8 @@ from api.models import Ticker, AiOpinion, AiOpinionForStock
 import asyncio
 import aiohttp
 from asgiref.sync import sync_to_async
+from .mystock import GetData
+
 
 def get_korean_stock_status(ai_method="openai"):
     '''
@@ -38,14 +40,15 @@ def get_korean_stock_status(ai_method="openai"):
        
     ks = fdr.DataReader('KS11',start=start, end=end) # KOSPI 지수 (KRX)
     kq = fdr.DataReader('KQ11',start=start, end=end) # KOSDAQ 지수 (KRX)
-  
+    kodex_레버리지30 = GetData._get_ohlcv_from_daum(code='122630', data_type='30분봉')
     # ks200 = fdr.DataReader('KS200',start=start, end=end) # KOSPI 200 (KRX)
     vix = fdr.DataReader("VIX", start=start, end=end)
     usd_krw = fdr.DataReader('USD/KRW',start=start, end=end) # 달러 원화
     # 외국계추정합 최근 동향 추가.
-    contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 주어진 여러 지표데이터를 분석하고 현재 투자를할 적절한시기인지 아닌지 판단해줘. 주어진데이터는 최근 6개월치 데이터가 들어있어. 매수,매도,보류 중 어떤상황인지 다음 지표를 고려하여 분석하십시오.:
+    contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 주어진 여러 지표데이터를 분석하고 현재 종목에 단타로 투자를할 적절한 시기인지 아닌지 판단해줘. 주어진데이터는 최근 6개월치 데이터가 들어있어. 매수,매도,보류 중 어떤상황인지 다음 지표를 고려하여 분석하십시오.:
     - 코스피 지수 (KS11)
     - 코스닥 지수 (KQ11)
+    - kodex_레버리지 30분봉 데이터
     - 변동성지수 (VIX)
     - 달러 원화 환율 (USD_KRW)
     
@@ -57,6 +60,7 @@ def get_korean_stock_status(ai_method="openai"):
     {"opinion": "보류", "reason": 의견에 대한 이유}"""
     contents2 = f"""코스피 지수 (KS11): {ks.to_json()}
                     코스닥 지수 (KQ11): {kq.to_json()}
+                    kodex_레버리지 30분봉 데이터: {kodex_레버리지30.to_json()}
                     변동성지수 (VIX): {vix.to_json()}
                     달러 원화 환율 (USD_KRW): {usd_krw.to_json()}"""
                     
@@ -123,6 +127,8 @@ def get_opinion_by_ticker(code , ai_method="openai"):
        
     # 제공할 데이터 ohlcv, 최근투자자, 뉴스, 컨센서스 데이터. 
     ohlcv = fdr.DataReader(ticker.code,  start=start, end=end) # KOSPI 지수 (KRX)
+    ohlcv_30 = GetData._get_ohlcv_from_daum(
+                        code=ticker.code, data_type="30분봉")
     close = int(ohlcv['Close'].iloc[-1])
     # 컨센서스 정보
     start_year = pd.Timestamp.now().year -2
@@ -156,8 +162,9 @@ def get_opinion_by_ticker(code , ai_method="openai"):
     
     
     
-    contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 주어진 데이터를 분석해서 지금이 투자를 할 적절한시기인지 아닌지 판단해줘. :
+    contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 단타위주로 매매할 것이다. 주어진 데이터를 분석해서 지금이 투자를 할 적절한시기인지 아닌지 판단해줘. :
     - 종목 OHLCV 데이터
+    - 종목 OHLCV 30분봉 데이터
     - 종목 컨센서스 정보 (연간, 분기)
     - 최근 투자자 정보
     - 최근 외국계창구 현황.
@@ -169,6 +176,7 @@ def get_opinion_by_ticker(code , ai_method="openai"):
     {"opinion": "매도", "reason": 의견에 대한 이유}
     {"opinion": "보류", "reason": 의견에 대한 이유}"""
     contents2 = f"""종목 OHLCV 데이터: {ohlcv.to_json()}
+                    종목 OHLCV 30분봉 데이터: {ohlcv_30.to_json()}
                     종목 연간 컨센서스 정보: {consen_year.to_json()}
                     종목 분기 컨센서스 정보: {consen_quarter.to_json()}
                     최근 투자자 정보: {invest_df.to_json()}
@@ -234,10 +242,14 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     end = pd.Timestamp.now()
     start = end - pd.DateOffset(months=3)
     
+    
     # 각 데이터 조회를 비동기로 처리
     async with aiohttp.ClientSession() as session:
         # OHLCV 데이터 조회
         ohlcv = await sync_to_async(fdr.DataReader)(ticker.code, start=start, end=end)
+        # ohlcv30 = 
+        ohlcv_30 = await sync_to_async(GetData._get_ohlcv_from_daum)(
+                        code=ticker.code, data_type="30분봉")
         close = int(ohlcv['Close'].iloc[-1])
         # 컨센서스 정보 조회
         start_year = pd.Timestamp.now().year - 2
@@ -286,8 +298,9 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     broker_df = broker_df.fillna(0)
 
     # AI 분석 요청
-    contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 주어진 데이터를 분석해서 지금이 투자를 할 적절한시기인지 아닌지 판단해줘.
+    contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 단타위주로 매매할 것이다. 주어진 데이터를 분석해서 지금이 투자를 할 적절한시기인지 아닌지 판단해줘. :
     - 종목 OHLCV 데이터
+    - 종목 OHLCV 30분봉 데이터
     - 종목 컨센서스 정보 (연간, 분기)
     - 최근 투자자 정보
     - 최근 외국계창구 현황.
@@ -301,6 +314,7 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     """ 
     # 기존 프롬프트 내용
     contents2 = f"""종목 OHLCV 데이터: {ohlcv.to_json()}
+                    종목 OHLCV 30분봉 데이터: {ohlcv_30.to_json()}
                    종목 연간 컨센서스 정보: {consen_year.to_json()}
                    종목 분기 컨센서스 정보: {consen_quarter.to_json()}
                    최근 투자자 정보: {invest_df.to_json()}

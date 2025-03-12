@@ -605,6 +605,149 @@ const CandlestickChart = ({
     });
   }, [visibleIndicators]);
 
+  // 주요공시와 AI의견 마커 추가 (수정된 부분)
+  useEffect(() => {
+    if (!seriesRef.current.candle) return;
+
+    let allMarkers = [];
+
+    // 주요공시 마커 추가 (디버깅 로그 추가)
+    if (visibleIndicators.showDisclosure && mainDisclosureData?.length > 0) {
+      console.log('주요공시 데이터:', mainDisclosureData);
+
+      mainDisclosureData.forEach((disclosure) => {
+        const disclosureDate = new Date(disclosure.날짜);
+        disclosureDate.setHours(9, 0, 0, 0); // 시간을 09:00:00으로 설정
+        const timestamp = Math.floor(disclosureDate.getTime() / 1000);
+
+        console.log('공시 처리:', {
+          date: disclosure.날짜,
+          timestamp,
+          category: disclosure.카테고리,
+        });
+
+        // 해당 날짜의 캔들 찾기
+        const targetCandle = data.find((candle) => {
+          const candleDate = new Date(candle.time * 1000);
+          candleDate.setHours(9, 0, 0, 0);
+          return candleDate.getTime() === disclosureDate.getTime();
+        });
+
+        if (targetCandle) {
+          console.log('매칭된 캔들:', targetCandle);
+          const priceRange = targetCandle.high - targetCandle.low;
+          allMarkers.push({
+            time: timestamp,
+            position: 'aboveBar',
+            color: getBadgeColor(disclosure.카테고리),
+            shape: 'square',
+            text: disclosure.카테고리.slice(0, 2),
+            size: 1,
+            price: targetCandle.high + priceRange * 0.02,
+          });
+        }
+      });
+
+      console.log('생성된 주요공시 마커:', allMarkers);
+    }
+
+    // AI 의견 마커 추가 (기존 코드 유지)
+    if (visibleIndicators.showAiOpinion && aiOpinionData?.length > 0) {
+      aiOpinionData.forEach((opinion) => {
+        const timestamp = Math.floor(
+          new Date(opinion.created_at).getTime() / 1000
+        );
+        const targetCandle = data.find((candle) => candle.time === timestamp);
+
+        if (targetCandle) {
+          const priceRange = targetCandle.high - targetCandle.low;
+          const offset = priceRange * 0.01;
+
+          const markerConfig = {
+            time: timestamp,
+            position: opinion.opinion === '매수' ? 'belowBar' : 'aboveBar',
+            color: opinion.opinion === '매수' ? '#FF5722' : '#2962FF',
+            shape: opinion.opinion === '매수' ? 'arrowUp' : 'arrowDown',
+            text: opinion.opinion,
+            size: 1,
+            price:
+              opinion.opinion === '매수'
+                ? targetCandle.low - offset
+                : targetCandle.high + offset,
+          };
+
+          allMarkers.push(markerConfig);
+        }
+      });
+    }
+
+    // 마커 업데이트 전에 로깅
+    console.log('최종 마커 설정:', allMarkers);
+
+    // 마커 업데이트
+    seriesRef.current.candle.setMarkers(allMarkers);
+  }, [
+    visibleIndicators.showDisclosure,
+    visibleIndicators.showAiOpinion,
+    mainDisclosureData,
+    aiOpinionData,
+    data,
+  ]);
+
+  // 마우스오버 툴팁 업데이트
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    const tooltipHandler = (param) => {
+      if (!param.time) return;
+
+      const timestamp = param.time * 1000;
+      let tooltipText = [];
+
+      // 주요공시 툴팁
+      if (visibleIndicators.showDisclosure) {
+        const disclosure = mainDisclosureData?.find(
+          (d) =>
+            Math.abs(new Date(d.날짜).getTime() - timestamp) <
+            24 * 60 * 60 * 1000
+        );
+        if (disclosure) {
+          tooltipText.push(
+            `공시: ${disclosure.카테고리}`,
+            `내용: ${disclosure.대략적인_내용}`
+          );
+        }
+      }
+
+      // AI의견 툴팁
+      if (visibleIndicators.showAiOpinion) {
+        const opinion = aiOpinionData?.find(
+          (o) =>
+            Math.abs(new Date(o.created_at).getTime() - timestamp) <
+            24 * 60 * 60 * 1000
+        );
+        if (opinion) {
+          tooltipText.push(
+            `AI의견: ${opinion.opinion}`,
+            `분석: ${opinion.reason.slice(0, 50)}...`
+          );
+        }
+      }
+
+      return tooltipText.join('\n');
+    };
+
+    chartRef.current.subscribeCrosshairMove((param) => {
+      const tooltipText = tooltipHandler(param);
+      // 툴팁 표시 로직...
+    });
+  }, [
+    visibleIndicators.showDisclosure,
+    visibleIndicators.showAiOpinion,
+    mainDisclosureData,
+    aiOpinionData,
+  ]);
+
   // 카테고리별 색상 지정
   const getBadgeColor = (category) => {
     switch (category) {
@@ -632,3 +775,99 @@ const formatNumber = (num) => {
 };
 
 export default CandlestickChart;
+
+useEffect(() => {
+  if (!seriesRef.current.candle || !data?.length) return;
+
+  let allMarkers = [];
+
+  // 주요공시 마커 추가
+  if (visibleIndicators.showDisclosure && mainDisclosureData?.length > 0) {
+    mainDisclosureData.forEach((disclosure) => {
+      const disclosureDate = new Date(disclosure.날짜);
+      disclosureDate.setHours(9, 0, 0, 0);
+      const timestamp = Math.floor(disclosureDate.getTime() / 1000);
+
+      const targetCandle = data.find((candle) => {
+        const candleDate = new Date(candle.time * 1000);
+        candleDate.setHours(9, 0, 0, 0);
+        return candleDate.getTime() === disclosureDate.getTime();
+      });
+
+      if (targetCandle) {
+        const priceRange = targetCandle.high - targetCandle.low;
+        allMarkers.push({
+          time: timestamp,
+          position: 'aboveBar',
+          color: getBadgeColor(disclosure.카테고리),
+          shape: 'square',
+          text: disclosure.카테고리.slice(0, 2),
+          size: 1,
+          price: targetCandle.high + priceRange * 0.04, // 주요공시 마커를 AI 의견보다 위에 표시
+        });
+      }
+    });
+  }
+
+  // AI 의견 마커 추가
+  if (visibleIndicators.showAiOpinion && aiOpinionData?.length > 0) {
+    const opinions = Array.isArray(aiOpinionData)
+      ? aiOpinionData
+      : [aiOpinionData];
+
+    opinions.forEach((opinion) => {
+      const opinionDate = new Date(opinion.created_at);
+      opinionDate.setHours(9, 0, 0, 0);
+
+      const targetCandle = data.find((candle) => {
+        const candleDate = new Date(candle.time * 1000);
+        candleDate.setHours(9, 0, 0, 0);
+        return candleDate.getTime() === opinionDate.getTime();
+      });
+
+      if (targetCandle) {
+        const priceRange = targetCandle.high - targetCandle.low;
+        const markerConfig = {
+          time: targetCandle.time,
+          size: 1.2,
+        };
+
+        switch (opinion.opinion) {
+          case '매수':
+            markerConfig.color = '#ff4444';
+            markerConfig.shape = 'arrowUp';
+            markerConfig.position = 'belowBar';
+            markerConfig.price = targetCandle.low - priceRange * 0.02;
+            break;
+          case '매도':
+            markerConfig.color = '#2962FF';
+            markerConfig.shape = 'arrowDown';
+            markerConfig.position = 'aboveBar';
+            markerConfig.price = targetCandle.high + priceRange * 0.02;
+            break;
+          default:
+            markerConfig.color = '#FFB74D';
+            markerConfig.shape = 'circle';
+            markerConfig.position = 'aboveBar';
+            markerConfig.price = targetCandle.high + priceRange * 0.02;
+        }
+
+        allMarkers.push(markerConfig);
+      }
+    });
+  }
+
+  // 마커 설정 - 리렌더링 최적화
+  if (
+    JSON.stringify(seriesRef.current.candle.markers) !==
+    JSON.stringify(allMarkers)
+  ) {
+    seriesRef.current.candle.setMarkers(allMarkers);
+  }
+}, [
+  data,
+  visibleIndicators.showDisclosure,
+  visibleIndicators.showAiOpinion,
+  mainDisclosureData,
+  aiOpinionData,
+]);
