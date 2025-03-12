@@ -59,7 +59,8 @@ export default function Login() {
       fluid
       className="vh-100 d-flex align-items-center justify-content-center"
       style={{
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', // 더 부드러운 그라데이션
+        background:
+          'linear-gradient(135deg,rgb(255, 255, 255) 0%,rgb(255, 255, 255) 100%)', // 더 부드러운 그라데이션
         backdropFilter: 'blur(10px)',
       }}
     >
@@ -149,19 +150,19 @@ export default function Login() {
                 backgroundColor: '#4B6BFB',
                 border: 'none',
                 transition: 'all 0.2s ease',
-                boxShadow: '0 2px 6px rgba(75, 107, 251, 0.2)',
+                boxShadow: '0 2px 6px rgba(64, 98, 249, 0.2)',
               }}
             >
               {loading ? '로그인 중...' : '로그인'}
             </Button>
 
             <div className="text-center mt-4">
-              <span style={{ color: '#6c757d', fontSize: '0.95rem' }}>
+              <span style={{ color: 'rgb(20, 21, 25)', fontSize: '0.95rem' }}>
                 계정이 없으신가요?{' '}
                 <Link
                   to="/register"
                   style={{
-                    color: '#4B6BFB',
+                    color: 'rgba(64,98,249,1)', // '#4B6BFB',
                     textDecoration: 'none',
                     fontWeight: '600',
                   }}

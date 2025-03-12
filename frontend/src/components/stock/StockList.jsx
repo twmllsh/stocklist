@@ -15,15 +15,12 @@ export default function StockList() {
 
   const handleLogout = async () => {
     try {
-      const refresh_token = localStorage.getItem('refresh_token');
-      await authService.logout(refresh_token);
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      await authService.logout();
       dispatch(logout());
       navigate('/login');
     } catch (error) {
-      console.error('Logout failed:', error.message);
-      localStorage.clear();
+      console.error('Logout process failed:', error);
+      // 에러가 발생하더라도 로컬 상태 초기화 및 리다이렉트
       dispatch(logout());
       navigate('/login');
     }
