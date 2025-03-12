@@ -334,49 +334,31 @@ const ChartModal = ({
                 {formatNumber(selectedStock.현재가)} (
                 {parseFloat(selectedStock.등락률).toFixed(1)}%)
               </span>
+              {/* AI 분석 버튼 추가 */}
+              {user?.membership === 'SPECIAL' && (
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={() => setActiveTab('ai')}
+                >
+                  AI 분석
+                </Button>
+              )}
               {isFavorite && (
-                <div className="d-flex align-items-center">
-                  {isEditingPrice ? (
-                    <>
-                      <Form.Control
-                        size="sm"
-                        type="text" // number에서 text로 변경
-                        value={buyPrice}
-                        onChange={handlePriceChange} // 새로운 핸들러 사용
-                        style={{ width: '100px' }}
-                        placeholder="매수가 입력"
-                        inputMode="numeric" // 모바일에서 숫자 키패드 표시
-                        pattern="[0-9]*" // 숫자만 입력 가능
-                        autoComplete="off" // 자동완성 비활성화
-                        autoCorrect="off" // 자동수정 비활성화
-                        autoCapitalize="off" // 자동 대문자 비활성화
-                      />
-                      <Button
-                        size="sm"
-                        variant="success"
-                        className="ms-1"
-                        onClick={handlePriceSave}
-                      >
-                        저장
-                      </Button>
-                    </>
-                  ) : (
-                    <div className="d-flex flex-column">
-                      <span className="text-muted">
-                        평균매수가: {getDisplayBuyPrice(localBuyPrice)}
-                      </span>
-                      {localBuyPrice > 0 &&
-                        getProfitDisplay(localBuyPrice, selectedStock?.현재가)}
-                      <Button
-                        size="sm"
-                        variant="outline-secondary"
-                        className="ms-1 py-0 mt-1"
-                        onClick={handlePriceEdit}
-                      >
-                        수정
-                      </Button>
-                    </div>
-                  )}
+                <div className="d-flex flex-column">
+                  <span className="text-muted">
+                    평균매수가: {getDisplayBuyPrice(localBuyPrice)}
+                  </span>
+                  {localBuyPrice > 0 &&
+                    getProfitDisplay(localBuyPrice, selectedStock?.현재가)}
+                  <Button
+                    size="sm"
+                    variant="outline-secondary"
+                    className="ms-1 py-0 mt-1"
+                    onClick={handlePriceEdit}
+                  >
+                    수정
+                  </Button>
                 </div>
               )}
             </div>
