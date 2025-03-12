@@ -2849,11 +2849,15 @@ class Api:
                 return pd.DataFrame()
                 
             searched_names = chartvalues.values_list('ticker__name',flat=True)
-            df_real = Api.get_df_real_from_fdr() 
+            change_min, change_max = -30, 30
+            df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
             df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
-            df_real['현재가'] = df_real['현재가'].astype(float)
-            df_real['매수총잔량'] = 0
-            df_real['매도총잔량'] = 0
+            if len(df_real) == 0:
+                df_real = Api.get_df_real_from_fdr() 
+                df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
+                df_real['현재가'] = df_real['현재가'].astype(float)
+                df_real['매수총잔량'] = 0
+                df_real['매도총잔량'] = 0
         
         elif today_ai:
             change_min, change_max = -30, 30
@@ -2862,6 +2866,10 @@ class Api:
             q = AiOpinionForStock.get_today_data()
             today_tickers = [item.ticker for item in q]
             chartvalues = chartvalues.filter(ticker__in=today_tickers)
+
+        elif new_listing:
+            change_min, change_max = -30, 30
+            df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
 
         else:
             try:
