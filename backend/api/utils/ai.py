@@ -123,7 +123,7 @@ def get_opinion_by_ticker(code , ai_method="openai"):
        
     # 제공할 데이터 ohlcv, 최근투자자, 뉴스, 컨센서스 데이터. 
     ohlcv = fdr.DataReader(ticker.code,  start=start, end=end) # KOSPI 지수 (KRX)
-    
+    close = int(ohlcv['Close'].iloc[-1])
     # 컨센서스 정보
     start_year = pd.Timestamp.now().year -2
     finstats = ticker.finstats_set.filter(year__gte=start_year)
@@ -196,6 +196,7 @@ def get_opinion_by_ticker(code , ai_method="openai"):
         result = json.loads(result)
         result['ticker'] = ticker
         result['ai_method']= ai_method
+        result['close'] = close
         ob = AiOpinionForStock(**result)
         ob.save()
         print('데이터베이스 저장')
@@ -237,7 +238,7 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     async with aiohttp.ClientSession() as session:
         # OHLCV 데이터 조회
         ohlcv = await sync_to_async(fdr.DataReader)(ticker.code, start=start, end=end)
-        
+        close = int(ohlcv['Close'].iloc[-1])
         # 컨센서스 정보 조회
         start_year = pd.Timestamp.now().year - 2
         finstats = await sync_to_async(lambda: list(
@@ -321,6 +322,7 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
         result = json.loads(result)
         result['ticker'] = ticker
         result['ai_method'] = ai_method
+        result['close'] = close
         await sync_to_async(AiOpinionForStock.objects.create)(**result)
         print('데이터베이스 저장 완료')
     except Exception as e:

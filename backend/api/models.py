@@ -989,6 +989,7 @@ class AiOpinionForStock(models.Model):
     reason = models.TextField()
     ai_method = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
+    close = models.FloatField(null=True)
     
     def __str__(self):
         return f"{self.ticker}{self.opinion} {self.created_at}"
@@ -997,9 +998,17 @@ class AiOpinionForStock(models.Model):
     def get_today_data(cls):
         today = timezone.now().date()
         qs = cls.objects.filter(created_at__date=today)
+        qs = qs.order_by('-created_at')
+        # 서울 시간으로 변환
+        for instance in qs:
+            instance.created_at = timezone.localtime(instance.created_at)
         return qs
     
     @classmethod
     def get_data_by_ticker(cls, ticker):
         qs = cls.objects.filter(ticker=ticker)
+        qs = qs.order_by('-created_at')
+        # 서울 시간으로 변환
+        for instance in qs:
+            instance.created_at = timezone.localtime(instance.created_at)
         return qs

@@ -16,6 +16,7 @@ const CandlestickChart = ({
   },
   sharesInfo,
   mainDisclosureData,
+  aiOpinionData,
 }) => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
@@ -368,7 +369,6 @@ const CandlestickChart = ({
     };
   }, [sharesInfo]);
 
-  // 데이터 업데이트 useEffect 수정
   useEffect(() => {
     if (!chartRef.current || !seriesRef.current.candle || !data?.length) return;
 
@@ -381,34 +381,78 @@ const CandlestickChart = ({
         close: Number(item.close),
       }));
 
-      // 주요공시 마커 데이터 생성
-      const markers = [];
+      let allMarkers = [];
+
+      // AI 의견 마커 추가
+      if (visibleIndicators.showAiOpinion && aiOpinionData?.length > 0) {
+        aiOpinionData.forEach((opinion) => {
+          const opinionDate = new Date(opinion.created_at);
+          const targetCandle = data.find((candle) => {
+            const candleDate = new Date(candle.time * 1000);
+            return candleDate.toDateString() === opinionDate.toDateString();
+          });
+
+          if (targetCandle) {
+            // 마커 설정 단순화
+            const markerConfig = {
+              time: targetCandle.time,
+              size: 1, // 크기를 1로 줄임
+              text:
+                opinion.opinion === '매수'
+                  ? '▲'
+                  : opinion.opinion === '매도'
+                  ? '▼'
+                  : '●',
+              color:
+                opinion.opinion === '매수'
+                  ? '#ff4444'
+                  : opinion.opinion === '매도'
+                  ? '#2962FF'
+                  : '#FFB74D',
+            };
+
+            // shape 속성 제거하고 위치만 설정
+            if (opinion.opinion === '매수') {
+              markerConfig.position = 'belowBar';
+              markerConfig.price = targetCandle.low * 0.9995;
+            } else {
+              markerConfig.position = 'aboveBar';
+              markerConfig.price = targetCandle.high * 1.0005;
+            }
+
+            allMarkers.push(markerConfig);
+          }
+        });
+      }
+
+      // 주요공시 마커 추가
       if (visibleIndicators.showDisclosure && mainDisclosureData?.length > 0) {
         mainDisclosureData.forEach((item) => {
           const timestamp = Math.floor(new Date(item.날짜).getTime() / 1000);
-          // 차트 데이터 기간 내의 공시만 필터링
           if (
             timestamp >= data[0].time &&
             timestamp <= data[data.length - 1].time
           ) {
-            markers.push({
+            allMarkers.push({
               time: timestamp,
               position: 'aboveBar',
               color: getBadgeColor(item.카테고리),
-              shape: 'circle',
-              text: item.카테고리.slice(0, 2), // 텍스트 길이 제한
-              size: 0.5, // 마커 크기를 0.5로 축소 (기존 2)
+              text: item.카테고리.slice(0, 2),
+              size: 1,
             });
           }
         });
       }
 
-      // 캔들 데이터와 마커 함께 설정
+      // 마커 설정 변경
       seriesRef.current.candle.setData(candleData);
-      if (markers.length > 0) {
-        seriesRef.current.candle.setMarkers(markers);
-      } else {
-        seriesRef.current.candle.setMarkers([]);
+      console.log('설정할 마커:', allMarkers);
+      seriesRef.current.candle.setMarkers([]); // 기존 마커 제거
+      if (allMarkers.length > 0) {
+        setTimeout(() => {
+          // 약간의 지연 후 마커 설정
+          seriesRef.current.candle.setMarkers(allMarkers);
+        }, 100);
       }
 
       const volumeData = data.map((item) => ({
@@ -490,10 +534,33 @@ const CandlestickChart = ({
           timeScale.scrollToPosition(barSpace + 15, false); // 오른쪽으로 5단위 이동
         });
       }
+
+      // 차트 설정 업데이트 - 마커가 잘 보이도록 여백 조정
+      chartRef.current.applyOptions({
+        rightPriceScale: {
+          scaleMargins: {
+            top: 0.1, // 위쪽 여백
+            bottom: 0.1, // 아래쪽 여백
+          },
+        },
+        leftPriceScale: {
+          scaleMargins: {
+            top: 0.2, // 위쪽 여백 20%
+            bottom: 0.1, // 아래쪽 여백 10%
+          },
+          entireTextOnly: true,
+        },
+      });
     } catch (error) {
       console.error('Error updating chart data:', error);
     }
-  }, [data, visibleIndicators.showDisclosure, mainDisclosureData]);
+  }, [
+    data,
+    visibleIndicators.showDisclosure,
+    visibleIndicators.showAiOpinion,
+    mainDisclosureData,
+    aiOpinionData,
+  ]);
 
   // 지표 표시 여부 업데이트
   useEffect(() => {

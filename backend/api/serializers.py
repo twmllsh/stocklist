@@ -103,7 +103,7 @@ class AiOpinionSerializer(serializers.ModelSerializer):
 class AiOpinionForStockSerializer(serializers.ModelSerializer):
     class Meta:
         model = AiOpinionForStock
-        fields = ['ticker','opinion', 'reason', 'ai_method', 'created_at']
+        fields = ['ticker','opinion', 'reason', 'ai_method', 'created_at','close']
 
 class DartListSerializer(serializers.Serializer):
     날짜 = serializers.DateTimeField()

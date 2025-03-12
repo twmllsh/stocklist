@@ -15,6 +15,7 @@ export const stockService = {
       });
 
       const url = `/stocklist/?${queryString.toString()}`;
+      console.log('Filtered stock URL:', url);
       const response = await stockAxios.get(url);
       return response.data;
     } catch (error) {

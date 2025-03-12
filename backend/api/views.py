@@ -427,16 +427,6 @@ class AiOpinonForStockViewSet(viewsets.ModelViewSet):
         '''
         ticker = self.request.query_params.get('ticker', None)
         anal = self.request.query_params.get('anal', '').lower() == 'true'
-        queryset = AiOpinionForStock.objects.all()
-        queryset = queryset.filter(ticker__code=ticker)
-        temp_status = False
-        if queryset.exists():
-            queryset = queryset.order_by('-created_at')
-            last_date = queryset.values_list('created_at',flat=True)[0]
-            last_date = timezone.localtime(last_date).date()
-            current_date = pd.Timestamp.now().date()
-            if last_date == current_date:
-                temp_status = True
         
         if anal:
             from .utils import ai
@@ -444,13 +434,24 @@ class AiOpinonForStockViewSet(viewsets.ModelViewSet):
             if ticker is not None:
                 result = ai.get_opinion_by_ticker(ticker)
                 print(ticker, result)
-                temp_status = True
+                # temp_status = True
+
+        queryset = AiOpinionForStock.get_data_by_ticker(ticker)
+        # queryset = queryset.filter(ticker__code=ticker)
+        # temp_status = False
+        # if queryset.exists():
+        #     queryset = queryset.order_by('-created_at')
+        #     last_date = queryset.values_list('created_at',flat=True)[0]
+        #     last_date = timezone.localtime(last_date).date()
+        #     current_date = pd.Timestamp.now().date()
+        #     if last_date == current_date:
+        #         temp_status = True
         
-        if temp_status:
-            queryset = AiOpinionForStock.objects.all()
-            if ticker is not None:
-                queryset = queryset.filter(ticker__code=ticker)  # tickers__code를 ticker__code로 수정
-                queryset = queryset.order_by('-created_at')
+        # if temp_status:
+        #     queryset = AiOpinionForStock.objects.all()
+        #     if ticker is not None:
+        #         queryset = queryset.filter(ticker__code=ticker)  # tickers__code를 ticker__code로 수정
+        #         queryset = queryset.order_by('-created_at')
         
         return queryset
 

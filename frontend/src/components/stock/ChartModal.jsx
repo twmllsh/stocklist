@@ -57,10 +57,14 @@ const ChartModal = ({
     bb60: false,
     bb240: true,
     showDisclosure: true, // 주요공시를 기본값으로 true로 설정
+    showAiOpinion: true, // AI 의견 표시 여부 추가
   });
 
   // 주요공시 데이터 상태 추가
   const [mainDisclosureData, setMainDisclosureData] = useState([]);
+
+  // AI 의견 데이터 상태 추가
+  const [aiOpinionData, setAiOpinionData] = useState([]);
 
   // 체크버튼 상태 유지를 위한 ref 추가
   const buttonStateRef = useRef({
@@ -176,6 +180,24 @@ const ChartModal = ({
 
     fetchMainDisclosure();
   }, [stockCode, visibleIndicators.showDisclosure]);
+
+  // AI 의견 데이터 로드
+  useEffect(() => {
+    const fetchAiOpinion = async () => {
+      if (stockCode && visibleIndicators.showAiOpinion) {
+        try {
+          const response = await stockService.getOpinionForStock(stockCode, {
+            anal: false,
+          });
+          setAiOpinionData(response);
+        } catch (error) {
+          console.error('AI 의견 데이터 로드 실패:', error);
+        }
+      }
+    };
+
+    fetchAiOpinion();
+  }, [stockCode, visibleIndicators.showAiOpinion]);
 
   // 새로고침 처리
   const handleRefresh = async () => {
@@ -410,6 +432,7 @@ const ChartModal = ({
               { key: 'bb60', label: 'BB60', color: '#2962FF' },
               { key: 'bb240', label: 'BB240', color: '#E91E63' },
               { key: 'showDisclosure', label: '주요공시', color: '#6f42c1' }, // 보라색 계열
+              { key: 'showAiOpinion', label: 'AI의견', color: '#FF5722' }, // AI 의견 버튼 추가
             ].map(({ key, label, color }) => (
               <Button
                 key={key}
@@ -481,6 +504,7 @@ const ChartModal = ({
               data={currentData}
               visibleIndicators={visibleIndicators}
               mainDisclosureData={mainDisclosureData}
+              aiOpinionData={aiOpinionData} // AI 의견 데이터 전달
             />
           )}
         </div>
