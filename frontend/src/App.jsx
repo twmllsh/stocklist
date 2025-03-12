@@ -43,6 +43,37 @@ function App() {
     }
   }, [dispatch, user]);
 
+  useEffect(() => {
+    let startY;
+
+    const handleTouchStart = (e) => {
+      startY = e.touches[0].pageY;
+    };
+
+    const handleTouchMove = (e) => {
+      const y = e.touches[0].pageY;
+      const dy = y - startY;
+
+      // 위로 스크롤할 때는 정상 동작
+      if (dy < 0) return;
+
+      // 페이지가 맨 위에 있고, 아래로 당기는 경우에만 preventDefault
+      if (window.scrollY === 0 && dy > 0) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, {
+      passive: true,
+    });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
