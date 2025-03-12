@@ -1740,6 +1740,10 @@ class DBUpdater:
         
 
     def update_ai_opinion(test_cnt=None):
+        '''
+        일단 test_cnt 15개로 제한.  api 요금 문제.
+        '''
+        test_cnt = 15
         params = {"change_min":2,
                   "change_max":10,
                   "consen":20,
