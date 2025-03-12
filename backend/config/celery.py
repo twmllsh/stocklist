@@ -38,6 +38,12 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour="7,13", minute="10", day_of_week='mon-sat'),
     },
     
+    
+    'update_ai_opionion_for_stock': {
+        'task': 'api.tasks.scheduler_ai_opinion_for_stock',
+        'schedule': crontab(hour="9", minute="30", day_of_week='mon-fri'),
+    },
+    
     # 주식 티커 정보 업데이트 (평일 07:30)
     'update-ticker': {
         'task': 'api.tasks.scheduler_ticker',

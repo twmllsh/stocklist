@@ -15,9 +15,18 @@ def scheduler_ai_opinion():
    """ai 의견 저장.."""
    try:
        ai.get_korean_stock_status()
-       return "AI scheduler completed successfully"
+       return "AI Index scheduler completed successfully"
    except Exception as e:
-       return f"test scheduler failed: {str(e)}"
+       return f"AI Index scheduler failed: {str(e)}"
+   
+@shared_task
+def scheduler_ai_opinion_for_stock():
+   """종목별 ai 의견 저장.."""
+   try:
+       DBUpdater.update_ai_opinion()
+       return "AI for Stock scheduler completed successfully"
+   except Exception as e:
+       return f"AI for Stock scheduler failed: {str(e)}"
 
 @shared_task
 def scheduler_ticker():

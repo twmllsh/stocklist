@@ -27,6 +27,7 @@ from api.models import *
 from api.utils.sean_func import Text_mining, Sean_func
 from api.utils.mystock import Stock, ElseInfo
 from .message import My_discord
+from .ai import *
 import xmltodict
 
 mydiscord = My_discord()
@@ -1737,7 +1738,27 @@ class DBUpdater:
         
         return to_create, to_update
         
+
+    def update_ai_opinion(test_cnt=None):
+        params = {"change_min":2,
+                  "change_max":10,
+                  "consen":20,
+                  "turnarround":True,
+                  "good_buy":True,
+                  "newbra":True,
+                  "realtime":True,
+                  "array_exclude":True,
+                  "ab":True,
+                  "abv":True,
+        }
         
+        data : pd.DataFrame = Api.choice_for_api(**params)
+        if test_cnt:
+            data = data.sample(test_cnt)
+        result = asyncio.run(get_opinion_by_ticker_async_many(list(data['code'])))
+        return result
+    
+
         
         
     
