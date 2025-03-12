@@ -249,6 +249,11 @@ const ChartModal = ({
 
   // 매수가격 수정 핸들러
   const handlePriceEdit = () => {
+    console.log('수정 버튼 클릭됨, 현재 상태:', {
+      isEditingPrice: isEditingPrice,
+      currentBuyPrice: selectedStock?.buy_price,
+      stockCode,
+    });
     setIsEditingPrice(true);
     setBuyPrice(selectedStock?.buy_price || '');
   };
@@ -266,16 +271,32 @@ const ChartModal = ({
   const handlePriceSave = async () => {
     try {
       const numericPrice = buyPrice === '' ? 0 : parseFloat(buyPrice);
+      console.log('매수가격 수정 시도:', {
+        stockCode,
+        originalPrice: buyPrice,
+        numericPrice,
+      });
+
       if (buyPrice !== '' && isNaN(numericPrice)) {
+        console.error('유효하지 않은 가격:', buyPrice);
         alert('유효한 숫자를 입력해주세요.');
         return;
       }
-      await stockService.updateBuyPrice(stockCode, numericPrice);
+
+      console.log('매수가격 업데이트 요청:', {
+        ticker_code: stockCode,
+        buy_price: numericPrice,
+      });
+
+      const result = await stockService.updateBuyPrice(stockCode, numericPrice);
+      console.log('매수가격 업데이트 성공:', result);
+
       setIsEditingPrice(false);
       await dispatch(fetchFavorites());
       setLocalBuyPrice(numericPrice);
     } catch (error) {
       console.error('매수가격 업데이트 실패:', error);
+      alert('매수가격 업데이트에 실패했습니다.');
     }
   };
 
@@ -413,19 +434,57 @@ const ChartModal = ({
               )}
               {isFavorite && (
                 <div className="d-flex flex-column">
-                  <span className="text-muted">
-                    평균매수가: {getDisplayBuyPrice(localBuyPrice)}
-                  </span>
-                  {localBuyPrice > 0 &&
-                    getProfitDisplay(localBuyPrice, selectedStock?.현재가)}
-                  <Button
-                    size="sm"
-                    variant="outline-secondary"
-                    className="ms-1 py-0 mt-1"
-                    onClick={handlePriceEdit}
-                  >
-                    수정
-                  </Button>
+                  {isEditingPrice ? (
+                    <Form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        console.log('매수가격 저장 시도:', {
+                          stockCode,
+                          buyPrice,
+                          isEditingPrice,
+                        });
+                        handlePriceSave();
+                      }}
+                    >
+                      <Form.Control
+                        type="number"
+                        value={buyPrice}
+                        onChange={handlePriceChange}
+                        onBlur={() =>
+                          console.log('입력 필드 blur, 현재 값:', buyPrice)
+                        }
+                        size="sm"
+                        autoFocus
+                      />
+                      <Button
+                        size="sm"
+                        variant="success"
+                        type="submit"
+                        className="mt-1"
+                      >
+                        저장
+                      </Button>
+                    </Form>
+                  ) : (
+                    <>
+                      <span className="text-muted">
+                        평균매수가: {getDisplayBuyPrice(localBuyPrice)}
+                      </span>
+                      {localBuyPrice > 0 &&
+                        getProfitDisplay(localBuyPrice, selectedStock?.현재가)}
+                      <Button
+                        size="sm"
+                        variant="outline-secondary"
+                        className="ms-1 py-0 mt-1"
+                        onClick={() => {
+                          console.log('수정 버튼 클릭 이벤트 발생');
+                          handlePriceEdit();
+                        }}
+                      >
+                        수정
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

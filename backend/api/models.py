@@ -996,8 +996,14 @@ class AiOpinionForStock(models.Model):
     
     @classmethod
     def get_today_data(cls):
-        today = timezone.now().date()
-        qs = cls.objects.filter(created_at__date=today)
+        '''
+        가장 최근데이터임. 
+        '''
+        last_date = AiOpinionForStock.objects.values('created_at').order_by('-created_at').first()['created_at']
+        if not last_date:
+            today = timezone.now().date()
+            last_date = today
+        qs = cls.objects.filter(created_at__date=last_date)
         qs = qs.order_by('-created_at')
         # 서울 시간으로 변환
         for instance in qs:
