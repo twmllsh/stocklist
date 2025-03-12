@@ -34,7 +34,7 @@ export default function Filter({ onToggle }) {
   const [hasResults, setHasResults] = useState(false);
   const [searchInput, setSearchInput] = useState(''); // 검색어 입력 상태 추가
   const [opinion, setOpinion] = useState(''); // 추가
-  const [showOpinionDetail, setShowOpinionDetail] = useState(true); // 기본값을 true로 설정
+  const [showOpinionDetail, setShowOpinionDetail] = useState(false); // 기본값을 false로 설정
 
   const [filters, setFilters] = useState({
     change: true,
@@ -617,7 +617,7 @@ export default function Filter({ onToggle }) {
                 disabled={isBasicMember}
                 title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
               >
-                AI
+                오늘AI
               </Button>
             </div>
 
