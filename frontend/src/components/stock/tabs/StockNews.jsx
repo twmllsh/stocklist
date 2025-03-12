@@ -55,10 +55,21 @@ const StockNews = ({ stockCode }) => {
         return (
           <Card
             key={`${item.no}-${item.createdAt}-${index}`}
-            className="mb-3 shadow-sm"
+            className="mb-2 shadow-sm"
+            style={{
+              fontSize: '0.875rem', // 14px
+            }}
           >
-            <Card.Body>
-              <Card.Title>
+            <Card.Body className="py-2 px-3">
+              {' '}
+              {/* 패딩 축소 */}
+              <Card.Title
+                style={{
+                  fontSize: '0.9375rem', // 15px
+                  marginBottom: '0.5rem',
+                  fontWeight: '500',
+                }}
+              >
                 <a
                   href={newsUrl}
                   target="_blank"
@@ -68,7 +79,12 @@ const StockNews = ({ stockCode }) => {
                   {item.title}
                 </a>
               </Card.Title>
-              <div className="text-muted small d-flex justify-content-between align-items-center">
+              <div
+                className="text-muted d-flex justify-content-between align-items-center"
+                style={{ fontSize: '0.75rem' }}
+              >
+                {' '}
+                {/* 12px */}
                 <span>
                   {item.writerName} | {newsDate.toLocaleString()}
                 </span>
@@ -79,6 +95,7 @@ const StockNews = ({ stockCode }) => {
                       bg="secondary"
                       className="me-1"
                       title={code}
+                      style={{ fontSize: '0.6875rem' }} // 11px
                     >
                       {name}
                     </Badge>

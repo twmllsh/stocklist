@@ -86,7 +86,7 @@ export default function Login() {
               StockList
             </h1>
             <p className="text-muted" style={{ fontSize: '0.95rem' }}>
-              시장을 읽는 새로운 방법
+              주식 정보를 한 눈에! 📈 ver0.5
             </p>
           </div>
 

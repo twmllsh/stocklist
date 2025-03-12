@@ -13,10 +13,13 @@ const CandlestickChart = ({
     bb60: true,
     bb240: false,
     showDisclosure: true, // 주요공시를 기본값으로 true로 설정
+    showAiOpinion: true,
+    showPriceLevels: true, // 매물대 표시 옵션 추가
   },
   sharesInfo,
   mainDisclosureData,
   aiOpinionData,
+  selectedStock, // 매물대 정보를 포함한 종목 정보 추가
 }) => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
@@ -26,6 +29,7 @@ const CandlestickChart = ({
     ma: null,
     bbAreas: null,
     bbLines: null,
+    priceLevels: null,
   });
 
   // 차트 생성 및 설정
@@ -127,6 +131,7 @@ const CandlestickChart = ({
       ma: null,
       bbAreas: null,
       bbLines: null,
+      priceLevels: null,
     };
 
     // 볼린저밴드 영역 시리즈 - areaSeries 대신 baselineSeries 사용
@@ -912,6 +917,83 @@ const CandlestickChart = ({
       });
     });
   }, [data, visibleIndicators, mainDisclosureData, aiOpinionData]);
+
+  // 매물대 시리즈 생성 useEffect 수정
+  useEffect(() => {
+    if (!chartRef.current || !seriesRef.current?.candle) return;
+
+    // console.log('매물대 생성/업데이트:', {
+    //   종목명: selectedStock?.종목명,
+    //   매물대1: selectedStock?.매물대1,
+    //   매물대2: selectedStock?.매물대2,
+    //   표시여부: visibleIndicators.showPriceLevels,
+    // });
+
+    // 기존 매물대 라인 제거 (수정된 부분)
+    try {
+      if (seriesRef.current.priceLevels) {
+        if (seriesRef.current.priceLevels.level1) {
+          seriesRef.current.candle.removePriceLine(
+            seriesRef.current.priceLevels.level1
+          );
+        }
+        if (seriesRef.current.priceLevels.level2) {
+          seriesRef.current.candle.removePriceLine(
+            seriesRef.current.priceLevels.level2
+          );
+        }
+      }
+    } catch (error) {
+      console.error('매물대 라인 제거 오류:', error);
+    }
+
+    // 매물대 표시가 꺼져있으면 여기서 종료
+    if (!visibleIndicators.showPriceLevels) {
+      seriesRef.current.priceLevels = null;
+      return;
+    }
+
+    try {
+      const priceLevels = {
+        level1: null,
+        level2: null,
+      };
+
+      // 매물대1 생성
+      if (selectedStock?.매물대1) {
+        priceLevels.level1 = seriesRef.current.candle.createPriceLine({
+          price: parseFloat(selectedStock.매물대1),
+          color: 'rgba(41, 200, 33, 0.3)',
+          lineWidth: 10,
+          lineStyle: 0,
+          axisLabelVisible: true,
+          title: '매물대1',
+        });
+      }
+
+      // 매물대2 생성
+      if (selectedStock?.매물대2) {
+        priceLevels.level2 = seriesRef.current.candle.createPriceLine({
+          price: parseFloat(selectedStock.매물대2),
+          color: 'rgba(41, 200, 33, 0.2)',
+          lineWidth: 8,
+          lineStyle: 0,
+          axisLabelVisible: true,
+          title: '매물대2',
+        });
+      }
+
+      // 참조 저장
+      seriesRef.current.priceLevels = priceLevels;
+    } catch (error) {
+      console.error('매물대 생성 오류:', error);
+      seriesRef.current.priceLevels = null;
+    }
+  }, [
+    selectedStock?.매물대1,
+    selectedStock?.매물대2,
+    visibleIndicators.showPriceLevels,
+  ]);
 
   // 카테고리별 색상 지정
   const getBadgeColor = (category) => {

@@ -58,6 +58,7 @@ const ChartModal = ({
     bb240: true,
     showDisclosure: true, // 주요공시를 기본값으로 true로 설정
     showAiOpinion: true, // AI 의견 표시 여부 추가
+    showPriceLevels: true, // 매물대 표시 여부
   });
 
   // 주요공시 데이터 상태 추가
@@ -158,6 +159,16 @@ const ChartModal = ({
 
   // 지표 토글 시 상태 저장
   const toggleIndicator = (key) => {
+    // 매물대 토글 시 현재 값 로깅
+    if (key === 'showPriceLevels') {
+      // console.log('매물대 데이터:', {
+      //   종목명: selectedStock?.종목명,
+      //   매물대1: selectedStock?.매물대1,
+      //   매물대2: selectedStock?.매물대2,
+      //   현재가: selectedStock?.현재가,
+      // });
+    }
+
     setVisibleIndicators((prev) => {
       const newState = {
         ...prev,
@@ -505,6 +516,11 @@ const ChartModal = ({
               { key: 'bb240', label: 'BB240', color: '#E91E63' },
               { key: 'showDisclosure', label: '주요공시', color: '#6f42c1' }, // 보라색 계열
               { key: 'showAiOpinion', label: 'AI의견', color: '#FF5722' }, // AI 의견 버튼 추가
+              {
+                key: 'showPriceLevels',
+                label: '매물대',
+                color: 'rgba(38, 170, 36)', // rgba( )보라색 계열
+              },
             ].map(({ key, label, color }) => (
               <Button
                 key={key}
@@ -579,6 +595,7 @@ const ChartModal = ({
               aiOpinionData={
                 latestAiOpinion ? [latestAiOpinion] : aiOpinionData
               } // 새로운 분석 결과 전달
+              selectedStock={selectedStock} // selectedStock 추가
             />
           )}
         </div>
