@@ -333,6 +333,11 @@ const ChartModal = ({
     }
   };
 
+  // 접근 권한 체크 함수 분리
+  const canViewAI =
+    user?.membership === 'REGULAR' || user?.membership === 'SPECIAL';
+  const canRequestAI = user?.membership === 'SPECIAL';
+
   return (
     <Modal show={show} onHide={onHide} size="lg" centered>
       <Modal.Header closeButton>
@@ -360,8 +365,8 @@ const ChartModal = ({
                 {formatNumber(selectedStock.현재가)} (
                 {parseFloat(selectedStock.등락률).toFixed(1)}%)
               </span>
-              {/* AI 분석 버튼만 남기고 분석 결과 버튼 제거 */}
-              {user?.membership === 'SPECIAL' && (
+              {/* AI 분석 버튼은 특별회원만 */}
+              {canRequestAI && (
                 <Button
                   size="sm"
                   variant="outline-primary"
@@ -492,9 +497,9 @@ const ChartModal = ({
             <Nav.Item>
               <Nav.Link eventKey="consensus">컨센서스</Nav.Link>
             </Nav.Item>
-            {user?.membership === 'SPECIAL' && (
+            {canViewAI && (
               <Nav.Item>
-                <Nav.Link eventKey="ai">AI 분석</Nav.Link>
+                <Nav.Link eventKey="ai">AI 의견</Nav.Link>
               </Nav.Item>
             )}
             <Nav.Item>
@@ -532,7 +537,7 @@ const ChartModal = ({
                 <StockConsensus stockCode={stockCode} />
               )}
             </Tab.Pane>
-            {user?.membership === 'SPECIAL' && (
+            {canViewAI && (
               <Tab.Pane eventKey="ai" mountOnEnter unmountOnExit>
                 {activeTab === 'ai' && (
                   <StockAI

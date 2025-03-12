@@ -35,12 +35,16 @@ const StockAI = ({ stockCode, anal = false }) => {
     }
   }, [stockCode, anal]);
 
-  // 특별회원 체크는 상단으로 이동
-  if (user?.membership !== 'SPECIAL') {
+  // 회원 등급 체크 수정
+  if (user?.membership === 'ASSOCIATE') {
     return (
-      <Alert variant="warning">이 기능은 특별회원 전용 서비스입니다.</Alert>
+      <Alert variant="warning">
+        이 기능은 정회원 이상만 이용할 수 있습니다.
+      </Alert>
     );
   }
+
+  // 특별회원 체크 제거 (정회원도 볼 수 있음)
 
   if (loading) {
     return (
