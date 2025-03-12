@@ -565,55 +565,79 @@ export default function Filter({ onToggle }) {
             zIndex: 1020,
           }}
         >
-          <div className="d-flex align-items-center" style={{ gap: '1.5rem' }}>
-            <div className="d-flex align-items-center gap-2">
-              {/* 조건검색 버튼 */}
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            {/* 조건검색 버튼 */}
+            <div className="d-flex align-items-center">
               <Button
                 variant="success"
-                className="px-4"
+                size="sm"
+                className="py-1 px-3"
                 onClick={handleSearch}
                 disabled={isLoading || isBasicMember}
                 title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
               >
-                {isLoading ? '조건검색 중...' : '조건검색'}
+                {isLoading ? (
+                  <span className="d-flex align-items-center gap-1">
+                    <span className="spinner-border spinner-border-sm" />
+                    검색
+                  </span>
+                ) : (
+                  '검색'
+                )}
               </Button>
               {searchCount !== undefined && (
-                <Badge bg="secondary" style={{ fontSize: '0.9rem' }}>
-                  {searchCount}개
+                <Badge
+                  bg="secondary"
+                  className="ms-1"
+                  style={{ fontSize: '0.75rem' }}
+                >
+                  {searchCount}
                 </Badge>
               )}
             </div>
 
-            {/* 내종목 버튼 */}
-            <Button
-              variant="warning"
-              onClick={handleTestFavorites}
-              disabled={isBasicMember}
-              title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
-            >
-              내종목
-            </Button>
+            {/* 버튼 그룹 */}
+            <div className="d-flex gap-2">
+              <Button
+                variant="outline-warning"
+                size="sm"
+                className="py-1 px-2"
+                onClick={handleTestFavorites}
+                disabled={isBasicMember}
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+              >
+                내종목
+              </Button>
 
-            <Button
-              variant="info"
-              onClick={handleTodayAiClick}
-              disabled={isBasicMember}
-              title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
-            >
-              Today AI
-            </Button>
+              <Button
+                variant="outline-info"
+                size="sm"
+                className="py-1 px-2"
+                onClick={handleTodayAiClick}
+                disabled={isBasicMember}
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+              >
+                AI
+              </Button>
+            </div>
 
             {/* 검색창과 검색버튼 */}
-            <div className="input-group" style={{ width: '200px' }}>
+            <div
+              className="input-group input-group-sm"
+              style={{ width: '140px' }}
+            >
               <Form.Control
                 type="text"
-                placeholder="종목명 또는 코드"
+                size="sm"
+                placeholder="종목명/코드"
                 value={searchInput}
                 className="bg-transparent"
                 style={{
                   borderColor: 'var(--bs-border-color)',
                   color: 'var(--bs-body-color)',
                   backgroundColor: 'var(--bs-body-bg)',
+                  fontSize: '0.875rem',
+                  height: '31px',
                 }}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={(e) => {
@@ -625,19 +649,22 @@ export default function Filter({ onToggle }) {
               />
               <Button
                 variant="outline-secondary"
+                size="sm"
                 onClick={handleSearchByText}
                 disabled={isLoading || isBasicMember}
-                className="bg-transparent"
+                className="bg-transparent d-flex align-items-center"
+                style={{ height: '31px' }}
                 title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
               >
-                종목검색
+                검색
               </Button>
             </div>
           </div>
+
           <Button
             variant="link"
             onClick={handleToggle}
-            className="p-0"
+            className="p-0 ms-2"
             style={{ color: 'var(--bs-body-color)' }}
           >
             {isOpen ? '접기' : '펼치기'}
