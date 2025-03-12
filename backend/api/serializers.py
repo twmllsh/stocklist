@@ -61,10 +61,15 @@ class UpjongSerializer(serializers.ModelSerializer):
 
 class NewsSerializer(serializers.ModelSerializer):
     ticker = TickerSerializer(many=False, read_only=True)
+    ticker_names = serializers.SerializerMethodField()
     class Meta:
         model = News
         fields = '__all__'
-
+    def get_ticker_names(self, obj):
+        return {
+            ticker.code : ticker.name 
+            for ticker in obj.tickers.all()
+        }
 # AllDartSerializer 수정
 class AllDartSerializer(serializers.ModelSerializer):
     ticker = TickerSerializer(read_only=True)

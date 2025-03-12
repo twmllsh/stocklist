@@ -249,11 +249,11 @@ const ChartModal = ({
 
   // 매수가격 수정 핸들러
   const handlePriceEdit = () => {
-    console.log('수정 버튼 클릭됨, 현재 상태:', {
-      isEditingPrice: isEditingPrice,
-      currentBuyPrice: selectedStock?.buy_price,
-      stockCode,
-    });
+    // console.log('수정 버튼 클릭됨, 현재 상태:', {
+    //   isEditingPrice: isEditingPrice,
+    //   currentBuyPrice: selectedStock?.buy_price,
+    //   stockCode,
+    // });
     setIsEditingPrice(true);
     setBuyPrice(selectedStock?.buy_price || '');
   };
@@ -271,11 +271,11 @@ const ChartModal = ({
   const handlePriceSave = async () => {
     try {
       const numericPrice = buyPrice === '' ? 0 : parseFloat(buyPrice);
-      console.log('매수가격 수정 시도:', {
-        stockCode,
-        originalPrice: buyPrice,
-        numericPrice,
-      });
+      // console.log('매수가격 수정 시도:', {
+      //   stockCode,
+      //   originalPrice: buyPrice,
+      //   numericPrice,
+      // });
 
       if (buyPrice !== '' && isNaN(numericPrice)) {
         console.error('유효하지 않은 가격:', buyPrice);
@@ -283,13 +283,13 @@ const ChartModal = ({
         return;
       }
 
-      console.log('매수가격 업데이트 요청:', {
-        ticker_code: stockCode,
-        buy_price: numericPrice,
-      });
+      // console.log('매수가격 업데이트 요청:', {
+      //   ticker_code: stockCode,
+      //   buy_price: numericPrice,
+      // });
 
       const result = await stockService.updateBuyPrice(stockCode, numericPrice);
-      console.log('매수가격 업데이트 성공:', result);
+      // console.log('매수가격 업데이트 성공:', result);
 
       setIsEditingPrice(false);
       await dispatch(fetchFavorites());
@@ -438,11 +438,11 @@ const ChartModal = ({
                     <Form
                       onSubmit={(e) => {
                         e.preventDefault();
-                        console.log('매수가격 저장 시도:', {
-                          stockCode,
-                          buyPrice,
-                          isEditingPrice,
-                        });
+                        // console.log('매수가격 저장 시도:', {
+                        //   stockCode,
+                        //   buyPrice,
+                        //   isEditingPrice,
+                        // });
                         handlePriceSave();
                       }}
                     >
@@ -450,9 +450,9 @@ const ChartModal = ({
                         type="number"
                         value={buyPrice}
                         onChange={handlePriceChange}
-                        onBlur={() =>
-                          console.log('입력 필드 blur, 현재 값:', buyPrice)
-                        }
+                        // onBlur={() =>
+                        //   // console.log('입력 필드 blur, 현재 값:', buyPrice)
+                        // }
                         size="sm"
                         autoFocus
                       />
@@ -477,7 +477,7 @@ const ChartModal = ({
                         variant="outline-secondary"
                         className="ms-1 py-0 mt-1"
                         onClick={() => {
-                          console.log('수정 버튼 클릭 이벤트 발생');
+                          // console.log('수정 버튼 클릭 이벤트 발생');
                           handlePriceEdit();
                         }}
                       >

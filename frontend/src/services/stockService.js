@@ -15,7 +15,7 @@ export const stockService = {
       });
 
       const url = `/stocklist/?${queryString.toString()}`;
-      console.log('Filtered stock URL:', url);
+      // console.log('Filtered stock URL:', url);
       const response = await stockAxios.get(url);
       return response.data;
     } catch (error) {
@@ -183,18 +183,18 @@ export const stockService = {
 
   // 매수가격 업데이트 메서드 추가
   updateBuyPrice: async (ticker_code, buy_price) => {
-    console.log('API 요청 정보:', {
-      url: '/favorites/update_price/',
-      method: 'POST',
-      data: { ticker_code, buy_price },
-    });
+    // console.log('API 요청 정보:', {
+    //   url: '/favorites/update_price/',
+    //   method: 'POST',
+    //   data: { ticker_code, buy_price },
+    // });
 
     try {
       const response = await stockAxios.post('/favorites/update_price/', {
         ticker_code,
         buy_price,
       });
-      console.log('매수가격 업데이트 응답:', response);
+      // console.log('매수가격 업데이트 응답:', response);
       return response.data;
     } catch (error) {
       console.error('매수가격 업데이트 실패:', error);

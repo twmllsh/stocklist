@@ -13,20 +13,19 @@ const StockNews = ({ stockCode }) => {
         setLoading(true);
         setError(null);
         const data = await stockService.getStockNews(stockCode);
-        console.log('뉴스 데이터 응답:', {
-          전체데이터: data,
-          데이터타입: typeof data,
-          배열길이: data?.length,
-          첫번째항목: data?.[0],
-        });
+        // console.log('뉴스 데이터 응답:', {
+        //   전체데이터: data,
+        //   데이터타입: typeof data,
+        //   배열길이: data?.length,
+        //   첫번째항목: data?.[0],
+        // });
 
-        // 데이터 구조 자세히 확인
-        if (data?.[0]) {
-          console.log('첫 번째 뉴스 항목 상세:', {
-            키목록: Object.keys(data[0]),
-            값목록: Object.values(data[0]),
-          });
-        }
+        // if (data?.[0]) {
+        //   // console.log('첫 번째 뉴스 항목 상세:', {
+        //   //   키목록: Object.keys(data[0]),
+        //   //   값목록: Object.values(data[0]),
+        //   // });
+        // }
 
         setNews(data);
       } catch (err) {
@@ -38,7 +37,7 @@ const StockNews = ({ stockCode }) => {
     };
 
     if (stockCode) {
-      console.log('뉴스 데이터 요청 시작:', stockCode);
+      // console.log('뉴스 데이터 요청 시작:', stockCode);
       fetchNews();
     }
   }, [stockCode]);
@@ -54,7 +53,10 @@ const StockNews = ({ stockCode }) => {
         const newsDate = new Date(item.createdAt);
 
         return (
-          <Card key={`${item.no}-${stockCode}`} className="mb-3 shadow-sm">
+          <Card
+            key={`${item.no}-${item.createdAt}-${index}`}
+            className="mb-3 shadow-sm"
+          >
             <Card.Body>
               <Card.Title>
                 <a
@@ -66,20 +68,23 @@ const StockNews = ({ stockCode }) => {
                   {item.title}
                 </a>
               </Card.Title>
-              <Card.Text className="text-muted small">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>
-                    {item.writerName} | {newsDate.toLocaleString()}
-                  </span>
-                  <div>
-                    {item.tickers?.map((ticker, i) => (
-                      <Badge key={ticker} bg="secondary" className="me-1">
-                        {ticker}
-                      </Badge>
-                    ))}
-                  </div>
+              <div className="text-muted small d-flex justify-content-between align-items-center">
+                <span>
+                  {item.writerName} | {newsDate.toLocaleString()}
+                </span>
+                <div>
+                  {Object.entries(item.ticker_names).map(([code, name]) => (
+                    <Badge
+                      key={code}
+                      bg="secondary"
+                      className="me-1"
+                      title={code}
+                    >
+                      {name}
+                    </Badge>
+                  ))}
                 </div>
-              </Card.Text>
+              </div>
             </Card.Body>
           </Card>
         );
