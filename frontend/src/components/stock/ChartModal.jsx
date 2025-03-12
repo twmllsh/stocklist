@@ -189,14 +189,14 @@ const ChartModal = ({
     const fetchAiOpinion = async () => {
       if (stockCode && visibleIndicators.showAiOpinion) {
         try {
-          console.log('기존 AI 의견 요청:', {
-            ticker: stockCode,
-            anal: false,
-          });
+          // console.log('기존 AI 의견 요청:', {
+          //   ticker: stockCode,
+          //   anal: false,
+          // });
           const response = await stockService.getOpinionForStock(stockCode, {
             anal: false,
           });
-          console.log('기존 AI 의견 응답:', response);
+          // console.log('기존 AI 의견 응답:', response);
 
           if (Array.isArray(response)) {
             setAiOpinionData(response);
