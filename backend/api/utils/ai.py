@@ -329,7 +329,7 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     
     return result
 
-async def get_opinion_by_ticker_async_test(code_list):
+async def get_opinion_by_ticker_async_many(code_list):
     '''
     개별종목 분석의 비동기 버전 테스트
     '''

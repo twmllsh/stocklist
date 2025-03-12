@@ -1,6 +1,7 @@
 import pandas as pd
 from django.db import models
 from model_utils import FieldTracker
+from django.utils import timezone
 from django.db.models import F, Subquery, OuterRef, Q, Sum, Count
 from django.db import transaction
 from api.utils.mystock import ElseInfo
@@ -991,3 +992,14 @@ class AiOpinionForStock(models.Model):
     
     def __str__(self):
         return f"{self.ticker}{self.opinion} {self.created_at}"
+    
+    @classmethod
+    def get_today_data(cls):
+        today = timezone.now().date()
+        qs = cls.objects.filter(created_at__date=today)
+        return qs
+    
+    @classmethod
+    def get_data_by_ticker(cls, ticker):
+        qs = cls.objects.filter(ticker=ticker)
+        return qs

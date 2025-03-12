@@ -227,6 +227,22 @@ export const stockService = {
       throw error;
     }
   },
+  // 오늘 AI 의견 조회
+  getOpinionForStockToday: async () => {
+    try {
+      const response = await stockAxios.get('/aiopinionstocktoday/');
+      console.log('response', response);
+      return response.data || response;
+    } catch (error) {
+      console.error('AI Opinion today 요청 실패:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      throw error;
+    }
+  },
 
   // 주요공시 조회
   getStockMainDisclosure: async (code) => {

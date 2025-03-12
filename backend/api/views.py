@@ -453,6 +453,13 @@ class AiOpinonForStockViewSet(viewsets.ModelViewSet):
         
         return queryset
 
+class AiOpinionForStockTodayViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]  # 추가된 줄
+    serializer_class = AiOpinionForStockSerializer
+    
+    def get_queryset(self):
+        return AiOpinionForStock.get_today_data()
+    
 class DartInfoViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     
