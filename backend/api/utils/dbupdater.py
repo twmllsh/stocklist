@@ -2798,7 +2798,7 @@ class Api:
                        sun_gcv=None, coke_gcv=None, sun_ac=None, coke_up=None,
                        good_cash=None, w3=None,search=None,endprice=None,exp=None,
                        array_exclude=None, new_listing=None,rsi=None,favorites=None,
-                       buy_prices=False,
+                       buy_prices=False, today_ai=None,
                        **kwargs,
                        ):
         ''' api용 추천종목 선택하기. 
@@ -2854,7 +2854,15 @@ class Api:
             df_real['현재가'] = df_real['현재가'].astype(float)
             df_real['매수총잔량'] = 0
             df_real['매도총잔량'] = 0
-            
+        
+        elif today_ai:
+            change_min, change_max = -30, 30
+            df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
+            chartvalues = ChartValue.objects.select_related('ticker').all()
+            q = AiOpinionForStock.get_today_data()
+            today_tickers = [item.ticker for item in q]
+            chartvalues = chartvalues.filter(ticker__in=today_tickers)
+
         else:
             try:
                 df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
@@ -2969,6 +2977,7 @@ class Api:
         
         if new_listing: # 신규상장.  신규상장이 True 인것. 
             new_listing_q = Q(신규상장=True)
+            chartvalues = ChartValue.objects.select_related('ticker').all()
             chartvalues = chartvalues.filter(new_listing_q)
         else:
             chartvalues = chartvalues.filter(all_Q)
@@ -3054,6 +3063,8 @@ class Api:
         if search is not None: # 검색어가 있을때 그냥 리턴.
             return df
         if favorites: # favorite 일땐 그냥 리턴.
+            return df
+        if today_ai: # today_ai 일땐 그냥 리턴.
             return df
         if new_listing:
             return df

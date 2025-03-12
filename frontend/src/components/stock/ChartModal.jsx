@@ -66,6 +66,9 @@ const ChartModal = ({
   // AI 의견 데이터 상태 추가
   const [aiOpinionData, setAiOpinionData] = useState([]);
 
+  // AI 분석 데이터 상태 추가
+  const [latestAiOpinion, setLatestAiOpinion] = useState(null);
+
   // 체크버튼 상태 유지를 위한 ref 추가
   const buttonStateRef = useRef({
     indicators: null,
@@ -181,15 +184,25 @@ const ChartModal = ({
     fetchMainDisclosure();
   }, [stockCode, visibleIndicators.showDisclosure]);
 
-  // AI 의견 데이터 로드
+  // AI 의견 데이터 로드 수정
   useEffect(() => {
     const fetchAiOpinion = async () => {
       if (stockCode && visibleIndicators.showAiOpinion) {
         try {
+          console.log('기존 AI 의견 요청:', {
+            ticker: stockCode,
+            anal: false,
+          });
           const response = await stockService.getOpinionForStock(stockCode, {
             anal: false,
           });
-          setAiOpinionData(response);
+          console.log('기존 AI 의견 응답:', response);
+
+          if (Array.isArray(response)) {
+            setAiOpinionData(response);
+          } else if (response) {
+            setAiOpinionData([response]);
+          }
         } catch (error) {
           console.error('AI 의견 데이터 로드 실패:', error);
         }
@@ -334,19 +347,19 @@ const ChartModal = ({
   const requestNewAnalysis = async () => {
     try {
       setIsAnalyzing(true);
-      // console.log(
-      //   'AI 분석 요청 URL:',
-      //   `/aiopinionstock/?ticker=${stockCode}&anal=true`
-      // );
+      console.log('AI 의견 요청:', {
+        ticker: stockCode,
+        anal: true,
+      });
       const response = await stockService.getOpinionForStock(stockCode, {
         anal: true,
       });
-      console.log('AI 분석 응답:', response);
+      console.log('AI 의견 응답:', response);
 
-      // 응답이 성공적으로 왔을 때만 탭 전환
       if (response && !response.error) {
         setActiveTab('ai');
-        setAnalysisKey((prev) => prev + 1); // 컴포넌트 강제 리렌더링
+        setAnalysisKey((prev) => prev + 1);
+        setLatestAiOpinion(response);
       }
     } catch (error) {
       console.error('AI 분석 요청 실패:', error);
@@ -504,7 +517,9 @@ const ChartModal = ({
               data={currentData}
               visibleIndicators={visibleIndicators}
               mainDisclosureData={mainDisclosureData}
-              aiOpinionData={aiOpinionData} // AI 의견 데이터 전달
+              aiOpinionData={
+                latestAiOpinion ? [latestAiOpinion] : aiOpinionData
+              } // 새로운 분석 결과 전달
             />
           )}
         </div>

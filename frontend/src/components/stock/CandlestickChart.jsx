@@ -383,41 +383,51 @@ const CandlestickChart = ({
 
       let allMarkers = [];
 
-      // AI 의견 마커 추가
-      if (visibleIndicators.showAiOpinion && aiOpinionData?.length > 0) {
-        aiOpinionData.forEach((opinion) => {
+      // AI 의견 마커 추가 로직 수정
+      if (visibleIndicators.showAiOpinion && aiOpinionData) {
+        const opinions = Array.isArray(aiOpinionData[0])
+          ? aiOpinionData[0]
+          : aiOpinionData;
+
+        opinions.forEach((opinion) => {
           const opinionDate = new Date(opinion.created_at);
+          opinionDate.setHours(9, 0, 0, 0);
+
           const targetCandle = data.find((candle) => {
             const candleDate = new Date(candle.time * 1000);
-            return candleDate.toDateString() === opinionDate.toDateString();
+            return candleDate.getTime() === opinionDate.getTime();
           });
 
           if (targetCandle) {
-            // 마커 설정 단순화
+            const priceRange = targetCandle.high - targetCandle.low;
+            const offset = priceRange * 0.01;
+
             const markerConfig = {
               time: targetCandle.time,
-              size: 1, // 크기를 1로 줄임
-              text:
-                opinion.opinion === '매수'
-                  ? '▲'
-                  : opinion.opinion === '매도'
-                  ? '▼'
-                  : '●',
-              color:
-                opinion.opinion === '매수'
-                  ? '#ff4444'
-                  : opinion.opinion === '매도'
-                  ? '#2962FF'
-                  : '#FFB74D',
+              position: 'inBar', // inBar로 변경하여 항상 표시되도록
+              size: 1.2,
             };
 
-            // shape 속성 제거하고 위치만 설정
-            if (opinion.opinion === '매수') {
-              markerConfig.position = 'belowBar';
-              markerConfig.price = targetCandle.low * 0.9995;
-            } else {
-              markerConfig.position = 'aboveBar';
-              markerConfig.price = targetCandle.high * 1.0005;
+            // 매수/매도/보류에 따른 설정
+            switch (opinion.opinion) {
+              case '매수':
+                markerConfig.color = '#ff4444';
+                markerConfig.shape = 'arrowUp';
+                markerConfig.position = 'belowBar';
+                markerConfig.price = targetCandle.low - offset;
+                break;
+              case '매도':
+                markerConfig.color = '#2962FF';
+                markerConfig.shape = 'arrowDown';
+                markerConfig.position = 'aboveBar';
+                markerConfig.price = targetCandle.high + offset;
+                break;
+              default:
+                markerConfig.color = '#FFB74D';
+                markerConfig.shape = 'circle';
+                markerConfig.position = 'aboveBar';
+                markerConfig.price = targetCandle.high + offset;
+                break;
             }
 
             allMarkers.push(markerConfig);
@@ -425,34 +435,37 @@ const CandlestickChart = ({
         });
       }
 
-      // 주요공시 마커 추가
+      // 주요공시 마커 추가 수정
       if (visibleIndicators.showDisclosure && mainDisclosureData?.length > 0) {
         mainDisclosureData.forEach((item) => {
           const timestamp = Math.floor(new Date(item.날짜).getTime() / 1000);
-          if (
-            timestamp >= data[0].time &&
-            timestamp <= data[data.length - 1].time
-          ) {
+          const targetCandle = data.find((candle) => candle.time === timestamp);
+
+          if (targetCandle) {
+            const priceRange = targetCandle.high - targetCandle.low;
             allMarkers.push({
               time: timestamp,
               position: 'aboveBar',
               color: getBadgeColor(item.카테고리),
+              shape: 'square',
               text: item.카테고리.slice(0, 2),
               size: 1,
+              price: targetCandle.high + priceRange * 0.02, // 캔들 높이의 2% 위에 표시
             });
           }
         });
       }
 
-      // 마커 설정 변경
+      // 마커 설정 업데이트 (프레임 처리 개선)
       seriesRef.current.candle.setData(candleData);
-      console.log('설정할 마커:', allMarkers);
-      seriesRef.current.candle.setMarkers([]); // 기존 마커 제거
       if (allMarkers.length > 0) {
-        setTimeout(() => {
-          // 약간의 지연 후 마커 설정
-          seriesRef.current.candle.setMarkers(allMarkers);
-        }, 100);
+        // 마커 설정 지연
+        requestAnimationFrame(() => {
+          seriesRef.current.candle.setMarkers([]);
+          requestAnimationFrame(() => {
+            seriesRef.current.candle.setMarkers(allMarkers);
+          });
+        });
       }
 
       const volumeData = data.map((item) => ({
@@ -544,6 +557,7 @@ const CandlestickChart = ({
           },
         },
         leftPriceScale: {
+          autoScale: true,
           scaleMargins: {
             top: 0.2, // 위쪽 여백 20%
             bottom: 0.1, // 아래쪽 여백 10%
@@ -552,7 +566,7 @@ const CandlestickChart = ({
         },
       });
     } catch (error) {
-      console.error('Error updating chart data:', error);
+      console.error('차트 데이터 업데이트 에러:', error);
     }
   }, [
     data,

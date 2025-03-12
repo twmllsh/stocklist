@@ -205,6 +205,8 @@ class StocklistViewSet(viewsets.ViewSet):
         elif "search" in params:
             params = {'search': params['search']}
             result = Api.choice_for_api(**params)
+        elif "today_ai" in params:
+            pass
         else:
             result = Api.choice_for_api(**params)
         
