@@ -231,7 +231,7 @@ class NewsViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tickers__code=ticker)
         # 최근 데이터 10개만 가져오기
         # queryset = queryset.order_by('-createdAt')[:10]
-        queryset = queryset.order_by('-createdAt').distinct('title')[:20]
+        queryset = queryset.order_by('title', '-createdAt').distinct('title')[:20]
         return queryset
 class AllDartViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 추가된 줄
