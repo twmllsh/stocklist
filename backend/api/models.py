@@ -73,8 +73,11 @@ class Ticker(models.Model):
                 dic['카테고리'] = '3자배정유증'
                 dic['대략적인 내용'] = f"증자방식: {row['증자방식']} 발행가액: {row['발행가액']:,.0f}원 제3자배정대상자: {row['제3자배정대상자']} 신주비율: {row['신주비율']}%"
                 all_ls.append(dic)
-                
-        return all_ls
+        
+        # 날짜로 내림차순 정렬
+        sorted_ls = sorted(all_ls, key=lambda x: x['날짜'], reverse=True)
+        
+        return sorted_ls
     
         
     
