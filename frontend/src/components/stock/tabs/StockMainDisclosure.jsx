@@ -81,19 +81,55 @@ const StockMainDisclosure = ({ stockCode }) => {
 
   return (
     <ListGroup variant="flush">
-      {data.map((item, index) => (
-        <ListGroup.Item key={index} className="py-3">
-          <div className="d-flex justify-content-between align-items-start mb-1">
-            <div>
-              <Badge bg={getBadgeVariant(item.카테고리)} className="me-2">
-                {item.카테고리}
-              </Badge>
-              <small className="text-muted">{formatDate(item.날짜)}</small>
+      {data.map((item, index) => {
+        // // 각 항목의 상세 정보 로깅
+        // console.log('공시 항목 데이터:', {
+        //   index,
+        //   접수번호: item.rcept_no,
+        //   rcept_no: item.rcept_no,
+        //   카테고리: item.카테고리,
+        //   내용: item.대략적인_내용,
+        //   날짜: item.날짜,
+        //   전체데이터: item,
+        // });
+
+        return (
+          <ListGroup.Item
+            key={index}
+            className="py-3"
+            action
+            onClick={() => {
+              // link와 rcept_no 모두 확인
+              const rcept_no = item.rcept_no || item.link;
+              if (rcept_no) {
+                const dartUrl = `https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${rcept_no}`;
+                // console.log('클릭한 공시 상세:', {
+                //   접수번호: rcept_no,
+                //   URL: dartUrl,
+                //   제목: item.대략적인_내용,
+                //   카테고리: item.카테고리,
+                // });
+                window.open(dartUrl, '_blank');
+              } else {
+                console.log('접수번호 없음:', item);
+              }
+            }}
+            style={{
+              cursor: item.rcept_no || item.link ? 'pointer' : 'default',
+            }}
+          >
+            <div className="d-flex justify-content-between align-items-start mb-1">
+              <div>
+                <Badge bg={getBadgeVariant(item.카테고리)} className="me-2">
+                  {item.카테고리}
+                </Badge>
+                <small className="text-muted">{formatDate(item.날짜)}</small>
+              </div>
             </div>
-          </div>
-          <p className="mb-0 mt-2">{item.대략적인_내용}</p>
-        </ListGroup.Item>
-      ))}
+            <p className="mb-0 mt-2">{item.대략적인_내용}</p>
+          </ListGroup.Item>
+        );
+      })}
     </ListGroup>
   );
 };

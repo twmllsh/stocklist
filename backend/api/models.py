@@ -41,8 +41,12 @@ class Ticker(models.Model):
             for i, row in cont_df.iterrows():
                 dic = {}
                 dic['날짜'] = row['rcept_dt']
+                dic['rcept_no'] = row['rcept_no']
                 dic['카테고리'] = '계약'
-                dic['대략적인 내용'] = f"{row['계약내용']} ({row['계약상대방']}) 매출액대비: {row['매출액대비']:,.0f}%"        
+                매출액대비 = f"{row['매출액대비']:,.0f}%" if row['매출액대비'] is not None else ''
+                계약내용 = row['계약내용'] if row['계약내용'] is not None else ''
+                계약상대방 = row['계약상대방'] if row['계약상대방'] is not None else ''
+                dic['대략적인 내용'] = f"{계약내용} ({계약상대방}) 매출액대비: {매출액대비}"        
                 all_ls.append(dic)
         bonusissue = ticker.dartbonusissue_set.all()
         if bonusissue.count():
@@ -50,6 +54,7 @@ class Ticker(models.Model):
             for i, row in bonus_df.iterrows():
                 dic = {}
                 dic['날짜'] = row['rcept_dt']
+                dic['rcept_no'] = row['rcept_no']
                 dic['카테고리'] = '무상증자'
                 dic['대략적인 내용'] = f"주당배정주식수: {row['주당배정주식수']} 상장예정일: {row['상장예정일']}"
                 all_ls.append(dic)
@@ -60,6 +65,7 @@ class Ticker(models.Model):
             for i, row in bonus_df.iterrows():
                 dic = {}
                 dic['날짜'] = row['rcept_dt']
+                dic['rcept_no'] = row['rcept_no']
                 dic['카테고리'] = '전환사채'
                 dic['대략적인 내용'] = f"전환사채총액: {row['전환사채총액']:,.0f} 전환가액: {row['전환가액']:,.0f}원 표면이자율: {row['표면이자율']}% 만기이자율: {row['만기이자율']}%"
                 all_ls.append(dic)
@@ -70,6 +76,7 @@ class Ticker(models.Model):
             for i, row in rights_df.iterrows():
                 dic = {}
                 dic['날짜'] = row['rcept_dt']
+                dic['rcept_no'] = row['rcept_no']
                 dic['카테고리'] = '3자배정유증'
                 dic['대략적인 내용'] = f"증자방식: {row['증자방식']} 발행가액: {row['발행가액']:,.0f}원 제3자배정대상자: {row['제3자배정대상자']} 신주비율: {row['신주비율']}%"
                 all_ls.append(dic)

@@ -112,6 +112,7 @@ class AiOpinionForStockSerializer(serializers.ModelSerializer):
 
 class DartListSerializer(serializers.Serializer):
     날짜 = serializers.DateTimeField()
+    rcept_no = serializers.CharField()
     카테고리 = serializers.CharField()
     대략적인_내용 = serializers.CharField(source='대략적인 내용')  # 공백이 있는 필드명 처리
 

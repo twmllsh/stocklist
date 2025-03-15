@@ -242,6 +242,7 @@ class MyDart:
                     ticker = Ticker.objects.create(code=code, name=dic['name'])
                 else:
                     ticker = exist_tickers[code]
+                
                 if len(dic['name']) > 100:
                     dic['name'] = dic['name'][:100]
                 if len(dic['계약내용']) > 100:
