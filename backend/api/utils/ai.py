@@ -49,7 +49,7 @@ def get_korean_stock_status(ai_method="openai"):
     Response in json format.
 
     Response Example:
-    {"opinion": "매수", "reason": 의견에 대한 이유} ...
+    {"opinion": "매수 or 보류 or 매도", "reason": 의견에 대한 이유} ...
     """
     contents2 = f"""코스피 지수 (KS11): {ks.to_json()}
                     코스닥 지수 (KQ11): {kq.to_json()}
@@ -160,7 +160,7 @@ def get_opinion_by_ticker(code , ai_method="openai"):
     Response in json format.
 
     Response Example:
-    {"opinion": "매수", "reason": 의견에 대한 이유}...
+    {"opinion": "매수 or 보류 or 매도", "reason": 의견에 대한 이유}...
   """
     contents2 = f"""종목 OHLCV 데이터: {ohlcv.to_json()}
                     종목 OHLCV 30분봉 데이터: {ohlcv_30.to_json()}
@@ -298,7 +298,7 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     Response in json format.
 
     Response Example:
-    {"opinion": "매수", "reason": 의견에 대한 이유}...
+    {"opinion": "매수 or 보류 or 매도", "reason": 의견에 대한 이유}...
     """ 
     # 기존 프롬프트 내용
     contents2 = f"""종목 OHLCV 데이터: {ohlcv.to_json()}
