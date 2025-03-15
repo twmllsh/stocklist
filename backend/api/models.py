@@ -6,6 +6,8 @@ from django.db.models import F, Subquery, OuterRef, Q, Sum, Count
 from django.db import transaction
 from api.utils.mystock import ElseInfo
 from accounts.models import User
+from django.db.models.functions import TruncDate
+
 
 
 
@@ -1005,7 +1007,30 @@ class AiOpinionForStock(models.Model):
         return f"{self.ticker}{self.opinion} {self.created_at}"
     
     @classmethod
-    def get_today_data(cls):
+    def get_nth_latest_data(cls, n=1):
+        """
+        가장 최근 날짜로부터 n번째 날짜 반환
+        n=1: 가장 최근 날짜
+        n=2: 두 번째로 최근 날짜
+        """
+        dates = cls.objects.annotate(
+            date=TruncDate('created_at')
+        ).values('date').distinct().order_by('-date')
+        
+        if dates.exists() and len(dates) >= n:
+            latest_date = dates[n-1]['date']
+            qs = cls.objects.filter(created_at__date__gte=latest_date)
+            qs = qs.order_by('-created_at')
+            # 서울 시간으로 변환
+            for instance in qs:
+                instance.created_at = timezone.localtime(instance.created_at)
+            return qs
+            return latest_date
+        return None
+        
+    
+    @classmethod
+    def get_today_data(cls, n=1):
         '''
         가장 최근데이터임. 
         '''

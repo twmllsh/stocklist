@@ -653,7 +653,7 @@ export default function Filter({ onToggle }) {
                 disabled={isBasicMember}
                 title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
               >
-                오늘AI
+                최근4일간AI
               </Button>
             </div>
 

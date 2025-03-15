@@ -151,7 +151,10 @@ def get_opinion_by_ticker(code , ai_method="openai"):
     broker_df = pd.DataFrame(broker.values('date','broker_name','buy','sell'))
     broker_df = broker_df.fillna(0)
     
-    
+    # 120일 기준 매물대
+    price_level1 = ticker.chartvalue.매물대1 if ticker.chartvalue.매물대1 else None
+    price_level2 = ticker.chartvalue.매물대2 if ticker.chartvalue.매물대1 else None
+        
     contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 단타위주로 매매할 것이다. 주어진 데이터를 분석해서 지금이 투자를 할 적절한시기인지 아닌지 판단해줘. :
 
     Response in json format.
@@ -164,7 +167,10 @@ def get_opinion_by_ticker(code , ai_method="openai"):
                     종목 연간 컨센서스 정보: {consen_year.to_json()}
                     종목 분기 컨센서스 정보: {consen_quarter.to_json()}
                     최근 투자자 정보: {invest_df.to_json()}
-                    최근 외국계창구 현황: {broker_df.to_json()}"""
+                    최근 외국계창구 현황: {broker_df.to_json()}
+                    최근 6개월기준 첫번째 매물대: {price_level1}
+                    최근 6개월기준 두번째 매물대: {price_level2}
+                    """
                     
     response = client.chat.completions.create(
     model = model,
@@ -281,6 +287,11 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     } for b in broker])
     broker_df = broker_df.fillna(0)
 
+    # 120일 기준 매물대
+    price_level1 = ticker.chartvalue.매물대1 if ticker.chartvalue.매물대1 else None
+    price_level2 = ticker.chartvalue.매물대2 if ticker.chartvalue.매물대1 else None
+
+    
     # AI 분석 요청
     contents1 = """너는 한국주식 ​​스윙투자(단타)의 전문가야.주어진 데이터를 분석해서 지금이 투자를 할 적절한시기인지 아닌지 판단해줘. :
     
@@ -292,11 +303,12 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     # 기존 프롬프트 내용
     contents2 = f"""종목 OHLCV 데이터: {ohlcv.to_json()}
                     종목 OHLCV 30분봉 데이터: {ohlcv_30.to_json()}
-                   종목 연간 컨센서스 정보: {consen_year.to_json()}
-                   종목 분기 컨센서스 정보: {consen_quarter.to_json()}
-                   최근 투자자 정보: {invest_df.to_json()}
-                   최근 외국계창구 현황: {broker_df.to_json()}"""
-
+                    종목 연간 컨센서스 정보: {consen_year.to_json()}
+                    종목 분기 컨센서스 정보: {consen_quarter.to_json()}
+                    최근 투자자 정보: {invest_df.to_json()}
+                    최근 외국계창구 현황: {broker_df.to_json()}
+                    최근 6개월기준 첫번째 매물대: {price_level1}
+                    최근 6개월기준 두번째 매물대: {price_level2}"""
     response = await sync_to_async(client.chat.completions.create)(
         model=model,
         messages=[

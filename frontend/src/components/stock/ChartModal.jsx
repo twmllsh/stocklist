@@ -379,14 +379,14 @@ const ChartModal = ({
   const requestNewAnalysis = async () => {
     try {
       setIsAnalyzing(true);
-      console.log('AI 의견 요청:', {
-        ticker: stockCode,
-        anal: true,
-      });
+      // console.log('AI 의견 요청:', {
+      //   ticker: stockCode,
+      //   anal: true,
+      // });
       const response = await stockService.getOpinionForStock(stockCode, {
         anal: true,
       });
-      console.log('AI 의견 응답:', response);
+      // console.log('AI 의견 응답:', response);
 
       if (response && !response.error) {
         setActiveTab('ai');

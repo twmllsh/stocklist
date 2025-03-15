@@ -2888,7 +2888,8 @@ class Api:
             change_min, change_max = -30, 30
             df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
             chartvalues = ChartValue.objects.select_related('ticker').all()
-            q = AiOpinionForStock.get_today_data()
+            # q = AiOpinionForStock.get_today_data()
+            q = AiOpinionForStock.get_nth_latest_data(n=4)
             today_tickers = [item.ticker for item in q]
             chartvalues = chartvalues.filter(ticker__in=today_tickers)
 
