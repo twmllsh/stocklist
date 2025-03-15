@@ -20,6 +20,7 @@ const CandlestickChart = ({
   mainDisclosureData,
   aiOpinionData,
   selectedStock, // 매물대 정보를 포함한 종목 정보 추가
+  interval = 'day', // interval prop 추가 및 기본값 설정
 }) => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
@@ -433,31 +434,54 @@ const CandlestickChart = ({
       });
     }
 
-    // AI 의견 마커 추가 로직 수정
-    if (visibleIndicators.showAiOpinion && aiOpinionData?.length > 0) {
+    // AI 의견 마커 처리 함수 수정
+    const addAiOpinionMarkers = (candleData, markers) => {
+      if (!visibleIndicators.showAiOpinion || !aiOpinionData?.length) return;
+
+      const isMinuteChart = interval !== 'day'; // 분봉 차트 여부 확인
       const opinions = Array.isArray(aiOpinionData[0])
         ? aiOpinionData[0]
         : aiOpinionData;
 
       opinions.forEach((opinion) => {
         const opinionDate = new Date(opinion.created_at);
-        opinionDate.setHours(9, 0, 0, 0);
+        let targetCandle;
 
-        const targetCandle = candleData.find((candle) => {
-          const candleDate = new Date(candle.time * 1000);
-          candleDate.setHours(9, 0, 0, 0);
-          return candleDate.getTime() === opinionDate.getTime();
-        });
+        if (isMinuteChart) {
+          // 분봉 차트일 경우 정확한 시간으로 매칭
+          targetCandle = candleData.reduce((closest, candle) => {
+            const candleTime = new Date(candle.time * 1000);
+            const opinionTime = opinionDate;
+
+            // 현재 캔들이 의견 시간보다 이후이면 건너뛰기
+            if (candleTime > opinionTime) return closest;
+
+            // 가장 가까운 과거 캔들 찾기
+            if (!closest) return candle;
+
+            const closestTime = new Date(closest.time * 1000);
+            const currentDiff = Math.abs(opinionTime - candleTime);
+            const closestDiff = Math.abs(opinionTime - closestTime);
+
+            return currentDiff < closestDiff ? candle : closest;
+          }, null);
+        } else {
+          // 일봉 차트일 경우 날짜만 비교
+          opinionDate.setHours(9, 0, 0, 0);
+          targetCandle = candleData.find((candle) => {
+            const candleDate = new Date(candle.time * 1000);
+            candleDate.setHours(9, 0, 0, 0);
+            return candleDate.getTime() === opinionDate.getTime();
+          });
+        }
 
         if (targetCandle) {
           const priceRange = targetCandle.high - targetCandle.low;
           const offset = priceRange * 0.02;
-
-          // AI 의견에 따른 마커 설정 수정
           const markerConfig = {
             time: targetCandle.time,
-            size: 1.2,
             text: opinion.opinion,
+            size: 1.2,
           };
 
           switch (opinion.opinion) {
@@ -474,22 +498,22 @@ const CandlestickChart = ({
               markerConfig.price = targetCandle.high + offset;
               break;
             case '보류':
-              markerConfig.color = '#FFB74D'; // 노란색 계열
-              markerConfig.shape = 'circle'; // 동그라미
-              markerConfig.position = 'aboveBar';
-              markerConfig.price = targetCandle.high + offset;
-              break;
-            default:
               markerConfig.color = '#FFB74D';
               markerConfig.shape = 'circle';
               markerConfig.position = 'aboveBar';
               markerConfig.price = targetCandle.high + offset;
+              break;
           }
 
-          markers.push(markerConfig);
+          if (['매수', '매도', '보류'].includes(opinion.opinion)) {
+            markers.push(markerConfig);
+          }
         }
       });
-    }
+    };
+
+    // AI 의견 마커 추가 로직 수정
+    addAiOpinionMarkers(candleData, markers);
 
     // 초기 뷰포트 설정 수정
     if (candleData.length > 0) {
@@ -597,22 +621,45 @@ const CandlestickChart = ({
     }
 
     // 4. AI 의견 마커 처리
-    if (visibleIndicators.showAiOpinion && aiOpinionData?.length > 0) {
-      // console.log('Processing AI opinion markers:', aiOpinionData);
+    const addAiOpinionMarkers = (candleData, markers) => {
+      if (!visibleIndicators.showAiOpinion || !aiOpinionData?.length) return;
 
+      const isMinuteChart = interval !== 'day'; // 분봉 차트 여부 확인
       const opinions = Array.isArray(aiOpinionData[0])
         ? aiOpinionData[0]
         : aiOpinionData;
 
       opinions.forEach((opinion) => {
         const opinionDate = new Date(opinion.created_at);
-        opinionDate.setHours(9, 0, 0, 0);
+        let targetCandle;
 
-        const targetCandle = data.find((candle) => {
-          const candleDate = new Date(candle.time * 1000);
-          candleDate.setHours(9, 0, 0, 0);
-          return candleDate.getTime() === opinionDate.getTime();
-        });
+        if (isMinuteChart) {
+          // 분봉 차트일 경우 정확한 시간으로 매칭
+          targetCandle = candleData.reduce((closest, candle) => {
+            const candleTime = new Date(candle.time * 1000);
+            const opinionTime = opinionDate;
+
+            // 현재 캔들이 의견 시간보다 이후이면 건너뛰기
+            if (candleTime > opinionTime) return closest;
+
+            // 가장 가까운 과거 캔들 찾기
+            if (!closest) return candle;
+
+            const closestTime = new Date(closest.time * 1000);
+            const currentDiff = Math.abs(opinionTime - candleTime);
+            const closestDiff = Math.abs(opinionTime - closestTime);
+
+            return currentDiff < closestDiff ? candle : closest;
+          }, null);
+        } else {
+          // 일봉 차트일 경우 날짜만 비교
+          opinionDate.setHours(9, 0, 0, 0);
+          targetCandle = candleData.find((candle) => {
+            const candleDate = new Date(candle.time * 1000);
+            candleDate.setHours(9, 0, 0, 0);
+            return candleDate.getTime() === opinionDate.getTime();
+          });
+        }
 
         if (targetCandle) {
           const priceRange = targetCandle.high - targetCandle.low;
@@ -623,7 +670,6 @@ const CandlestickChart = ({
             size: 1.2,
           };
 
-          // AI 의견에 따른 마커 설정
           switch (opinion.opinion) {
             case '매수':
               markerConfig.color = '#FF5722';
@@ -638,20 +684,21 @@ const CandlestickChart = ({
               markerConfig.price = targetCandle.high + offset;
               break;
             case '보류':
-              markerConfig.color = '#FFB74D'; // 노란색 계열
-              markerConfig.shape = 'circle'; // 동그라미
+              markerConfig.color = '#FFB74D';
+              markerConfig.shape = 'circle';
               markerConfig.position = 'aboveBar';
               markerConfig.price = targetCandle.high + offset;
               break;
           }
 
-          // 유효한 의견인 경우에만 마커 추가
           if (['매수', '매도', '보류'].includes(opinion.opinion)) {
-            allMarkers.push(markerConfig);
+            markers.push(markerConfig);
           }
         }
       });
-    }
+    };
+
+    addAiOpinionMarkers(data, allMarkers);
 
     // 5. 마커 설정 및 차트 상태 복원
     // console.log('Final markers to be set:', allMarkers);
@@ -841,20 +888,45 @@ const CandlestickChart = ({
     }
 
     // AI 의견 마커 추가
-    if (visibleIndicators.showAiOpinion && aiOpinionData?.length > 0) {
+    const addAiOpinionMarkers = (candleData, markers) => {
+      if (!visibleIndicators.showAiOpinion || !aiOpinionData?.length) return;
+
+      const isMinuteChart = interval !== 'day'; // 분봉 차트 여부 확인
       const opinions = Array.isArray(aiOpinionData[0])
         ? aiOpinionData[0]
         : aiOpinionData;
 
       opinions.forEach((opinion) => {
         const opinionDate = new Date(opinion.created_at);
-        opinionDate.setHours(9, 0, 0, 0);
+        let targetCandle;
 
-        const targetCandle = candleData.find((candle) => {
-          const candleDate = new Date(candle.time * 1000);
-          candleDate.setHours(9, 0, 0, 0);
-          return candleDate.getTime() === opinionDate.getTime();
-        });
+        if (isMinuteChart) {
+          // 분봉 차트일 경우 정확한 시간으로 매칭
+          targetCandle = candleData.reduce((closest, candle) => {
+            const candleTime = new Date(candle.time * 1000);
+            const opinionTime = opinionDate;
+
+            // 현재 캔들이 의견 시간보다 이후이면 건너뛰기
+            if (candleTime > opinionTime) return closest;
+
+            // 가장 가까운 과거 캔들 찾기
+            if (!closest) return candle;
+
+            const closestTime = new Date(closest.time * 1000);
+            const currentDiff = Math.abs(opinionTime - candleTime);
+            const closestDiff = Math.abs(opinionTime - closestTime);
+
+            return currentDiff < closestDiff ? candle : closest;
+          }, null);
+        } else {
+          // 일봉 차트일 경우 날짜만 비교
+          opinionDate.setHours(9, 0, 0, 0);
+          targetCandle = candleData.find((candle) => {
+            const candleDate = new Date(candle.time * 1000);
+            candleDate.setHours(9, 0, 0, 0);
+            return candleDate.getTime() === opinionDate.getTime();
+          });
+        }
 
         if (targetCandle) {
           const priceRange = targetCandle.high - targetCandle.low;
@@ -865,7 +937,6 @@ const CandlestickChart = ({
             size: 1.2,
           };
 
-          // AI 의견에 따른 마커 설정
           switch (opinion.opinion) {
             case '매수':
               markerConfig.color = '#FF5722';
@@ -880,20 +951,21 @@ const CandlestickChart = ({
               markerConfig.price = targetCandle.high + offset;
               break;
             case '보류':
-              markerConfig.color = '#FFB74D'; // 노란색 계열
-              markerConfig.shape = 'circle'; // 동그라미
+              markerConfig.color = '#FFB74D';
+              markerConfig.shape = 'circle';
               markerConfig.position = 'aboveBar';
               markerConfig.price = targetCandle.high + offset;
               break;
           }
 
-          // 유효한 의견인 경우에만 마커 추가
           if (['매수', '매도', '보류'].includes(opinion.opinion)) {
-            allMarkers.push(markerConfig);
+            markers.push(markerConfig);
           }
         }
       });
-    }
+    };
+
+    addAiOpinionMarkers(candleData, allMarkers);
 
     // 7. 모든 데이터 업데이트를 한 번에 처리
     requestAnimationFrame(() => {

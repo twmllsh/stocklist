@@ -596,6 +596,7 @@ const ChartModal = ({
                 latestAiOpinion ? [latestAiOpinion] : aiOpinionData
               } // 새로운 분석 결과 전달
               selectedStock={selectedStock} // selectedStock 추가
+              interval={interval} // interval prop 전달
             />
           )}
         </div>
