@@ -21,12 +21,21 @@ def scheduler_ai_opinion():
    
 @shared_task
 def scheduler_ai_opinion_for_stock():
-   """종목별 ai 의견 저장.."""
+   """종목별 ai 의견 저장..매수신호일때 자동 매수. 총 예수금의 30프로정도 매수. """
    try:
-       DBUpdater.update_ai_opinion()
+       DBUpdater.update_ai_opinion(test_cnt=15)
        return "AI for Stock scheduler completed successfully"
    except Exception as e:
        return f"AI for Stock scheduler failed: {str(e)}"
+   
+@shared_task
+def scheduler_take_profit():
+   """종목별 수익실현, 15프로이상 수익시 50프로 매도.  """
+   try:
+       DBUpdater.take_profit()
+       return "수익율에 따라 매도 시도함. "
+   except Exception as e:
+       return f"수익율에 따라 매도 시도 실패! failed: {str(e)}"
 
 @shared_task
 def scheduler_ticker():

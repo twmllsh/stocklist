@@ -288,9 +288,14 @@ async def get_opinion_by_ticker_async(code, ai_method="openai"):
     broker_df = broker_df.fillna(0)
 
     # 120일 기준 매물대
-    price_level1 = ticker.chartvalue.매물대1 if ticker.chartvalue.매물대1 else None
-    price_level2 = ticker.chartvalue.매물대2 if ticker.chartvalue.매물대1 else None
+    # chartvalue = await sync_to_async(Ticker.objects.get)(code=code)
+    # price_level1 = await sync_to_async(getattr)(chartvalue, '매물대1')
+    # price_level2 = await sync_to_async(getattr)(chartvalue, '매물대2')
 
+    chart_value = await sync_to_async(lambda: ticker.chartvalue)()
+    # 매물대 값 접근
+    price_level1 = chart_value.매물대1 if hasattr(chart_value, '매물대1') else None
+    price_level2 = chart_value.매물대2 if hasattr(chart_value, '매물대2') else None
     
     # AI 분석 요청
     contents1 = """너는 한국주식 ​​스윙투자(단타)의 전문가야.주어진 데이터를 분석해서 지금이 투자를 할 적절한시기인지 아닌지 판단해줘. :

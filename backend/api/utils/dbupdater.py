@@ -1743,7 +1743,7 @@ class DBUpdater:
         '''
         일단 test_cnt 15개로 제한.  api 요금 문제.
         '''
-        test_cnt = 15
+        # test_cnt = 15
         params = {"change_min":2,
                   "change_max":10,
                   "consen":20,
@@ -1760,9 +1760,37 @@ class DBUpdater:
         if test_cnt:
             data = data.sample(test_cnt)
         result = asyncio.run(get_opinion_by_ticker_async_many(list(data['code'])))
+        # print(result)
+        #  [{'opinion': '보류',
+        # 'reason': '최근 주가가 급등하고 높은 변동성에 있어 단기 투자에는 다소 불안정한 상황입니다. 또한, 거래량도 상당히 변동성이 강한 상태이며 투자자들의 매매 동향이 일정하지 않습니다. 종목의 실적이 개선되지 않고 있으며, 예상 수익도 부정적이어서 추가적인 상승을 기대하기는 어려운 상황입니다. 따라서 현재로서는 관망이 필요합니다.',
+        # 'ticker': <Ticker: Ticker[원익홀딩스(030530)]>,
+        # 'ai_method': 'openai',
+        # 'close': 4805},]
+        
+        ## 분석후 자동매수 추가하기. 
+        if len(result):
+            from .mykis import KIS
+            kis = KIS()
+            for item in result:
+                name = item['ticker'].name
+                code = item['ticker'].code
+                opinion = item['opinion']
+                reason = item['reason']
+                close = item['close']
+                ai_method = item['ai_method']
+                if opinion == '매수' and close >= 5000: # 매수신호이고 5000이상일때 주문하기. 
+                    kis.buy_stock(code)
+                    print('매수', name, code, close, ai_method)
         return result
     
 
+    def take_profit():
+        '''
+        수익실현하기. 20분마다 실행. 
+        '''
+        from .mykis import KIS
+        kis = KIS()
+        kis.take_profit()
         
         
     

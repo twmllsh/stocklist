@@ -44,6 +44,12 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour="9", minute="30", day_of_week='mon-fri'),
     },
     
+    
+    'update_scheduler_take_profit': {
+        'task': 'api.tasks.scheduler_take_profit',
+        'schedule': crontab(hour="9-15", minute="*/20", day_of_week='mon-fri'),
+    },
+    
     # 주식 티커 정보 업데이트 (평일 07:30)
     'update-ticker': {
         'task': 'api.tasks.scheduler_ticker',
