@@ -94,12 +94,12 @@ class KIS:
     
     def get_mystock_codes(self):
         self.get_balace()
-        self.mystock = self.mystock[['상품번호','평가손익율','평가손익금액']].to_dict('records')
+        self.mystock = self.mystock[['상품번호','상품명','평가손익율','평가손익금액']].to_dict('records')
         self.mystock_cnt =  len(self.mystock)
         return self.mystock    
     
     def sell_stock(self, stock_code, percent= 100):
-        self.get_balace()
+        
         
         보유수량 = self.mystock.loc[self.mystock['상품번호'] == stock_code, '주문가능수량'].values[0]
         보유수량 = int(보유수량)
@@ -117,12 +117,13 @@ class KIS:
 )
         if resp['rt_cd'] == '0':
             print(f'{stock_code} {QUANTITY}주 매도 완료')
+            self.mystock = self.get_mystock_codes()
         else:
             print(f'{stock_code} {QUANTITY}주 매도 실패')
             print(resp['msg1'])
     
     def buy_stock(self, stock_code):
-        self.get_balace()
+        
         예수금 = int(self.mybalance['예수금총금액'].values[0])
         price = self.broker.fetch_price(symbol=stock_code)
         curr_price = price['output']['stck_prpr']
@@ -143,6 +144,8 @@ class KIS:
             )
             if resp['rt_cd'] == '0':
                 print(f'{stock_code} {QUANTITY}주 매수 완료')
+                self.mystock = self.get_mystock_codes()
+                
             else:
                 print(f'{stock_code} {QUANTITY}주 매수 실패')
                 print(resp['msg1']) 
@@ -151,9 +154,11 @@ class KIS:
         '''
         수익실현 자동 매도
         '''
-        mystock = self.get_mystock_codes()
-        for stock in mystock:
+        
+        for stock in self.mystock:
             if float(stock['평가손익율']) >= 15:
                 self.sell_stock(stock['상품번호'], percent=50)
+                print(f"{stock['상품명']} 15% 이상 수익실현 성공")
+                self.mystock = self.get_mystock_codes()
             else:
-                continue
+                print(f"{stock['상품명']} 현재 {stock['평가손익율']}% 수익실현 실패")
