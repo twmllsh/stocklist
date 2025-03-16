@@ -94,15 +94,20 @@ class KIS:
     
     def get_mystock_codes(self):
         self.get_balace()
-        self.mystock = self.mystock[['상품번호','상품명','평가손익율','평가손익금액']].to_dict('records')
+        self.mystock = self.mystock[['상품번호','상품명','평가손익율','평가손익금액','주문가능수량']].to_dict('records')
         self.mystock_cnt =  len(self.mystock)
         return self.mystock    
     
     def sell_stock(self, stock_code, percent= 100):
+        the_list = [item for item in self.mystock if item['상품번호'] == stock_code]
+        if not the_list:
+            print('해당 종목을 보유하고 있지 않습니다.')
+            return
+        the_dict = the_list[0]
         
-        보유수량 = self.mystock.loc[self.mystock['상품번호'] == stock_code, '주문가능수량'].values[0]
-        보유수량 = int(보유수량)
+        보유수량 = int(the_dict['주문가능수량'])
         if 보유수량 == 0:
+            print('주문가능수량이 없습니다.')
             return
         QUANTITY = int(보유수량 * percent / 100)
         if QUANTITY == 0:
@@ -119,7 +124,7 @@ class KIS:
             self.mystock = self.get_mystock_codes()
         else:
             print(f'{stock_code} {QUANTITY}주 매도 실패')
-            print(resp['msg1'])
+            print("요청 실패 메세지", resp['msg1'])
     
     def buy_stock(self, stock_code):
         
