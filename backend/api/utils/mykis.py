@@ -100,7 +100,6 @@ class KIS:
     
     def sell_stock(self, stock_code, percent= 100):
         
-        
         보유수량 = self.mystock.loc[self.mystock['상품번호'] == stock_code, '주문가능수량'].values[0]
         보유수량 = int(보유수량)
         if 보유수량 == 0:
@@ -126,7 +125,7 @@ class KIS:
         
         예수금 = int(self.mybalance['예수금총금액'].values[0])
         price = self.broker.fetch_price(symbol=stock_code)
-        curr_price = price['output']['stck_prpr']
+        curr_price = int(price['output']['stck_prpr'])
         if curr_price >= 예수금:
             print('예수금이 부족합니다.')
             return
