@@ -209,6 +209,9 @@ SHELL_PLUS_IMPORTS = [
     "import os",
     "import time",   
     "from api.utils.dart import MyDart",
+    "from api.utils.dbupdater import Api",
+    
+    
     # 'your_app.models',  # 특정 앱의 모델 임포트
     # 'your_app.views',   # 특정 앱의 뷰 임포트
     # 'your_app.other_module',  # 추가 모듈 임포트

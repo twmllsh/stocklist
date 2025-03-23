@@ -3203,6 +3203,379 @@ class Api:
         print(f"{len(df)}개의 데이터가 조회되었습니다.")
         return df
     
+    
+    def choice_for_api2(newbra=None,turnarround=None,good_buy=None,consen=None, 
+                       realtime=None,change_min=None, change_max=None, 
+                       ac=None, array=None, goodwave=None,  ab=None, abv=None, 
+                       sun_gcv=None, coke_gcv=None, sun_ac=None, coke_up=None,
+                       good_cash=None, w3=None,search=None,endprice=None,exp=None,
+                       array_exclude=None, new_listing=None,rsi=None,favorites=None,
+                       buy_prices=False, today_ai=None,
+                       **kwargs,
+                       ):
+        ''' api용 추천종목 선택하기. 
+        값을 받아오는 param : consen , sun_ac, sun_ac_value, bb_ac : coke_up_value
+        change_min, change_max, sun_ac, coke_up, new_bra, turnarround, sun_gcv, coke_gcv
+        
+        실제 요청값들.
+        ab: 1 abv:  1 array :  1 change_max :  8 change_min :  3 
+        coke_gcv :  1 coke_up :  50 consen :  50 good_buy :  1 
+        newbra :  1 realtime :  1 sun_ac :  50 sun_gcv :  1 turnarround :  1
+         
+        적자 = -10000, 턴어라운드 = -1000
+        
+        df_real : 종목명, 현재가, 등락률, 거래량
+        
+        # exp 값으로 가져오기 good_cash도 값으로 가져오기. 
+        # new_listing은 2구룹으로 
+        # realtime, endprice 추가해서 그룹 2무시하기. 그룹1을 항상 적용하게 하기.
+        # 1-2, 1-3 만 적용하게 됨.
+        
+        '''
+        if kwargs:
+            print("===========불필요한 데이터 요청됨 ===============")
+            print(kwargs)
+            print("=========================================")
+
+        if change_min is None:
+            change_min = -30
+        if change_max is None:
+            change_max = 30
+        ############################  df_real  ##############################     
+        if search is not None:
+            search = search.strip()
+            ## 일단 약간 지연데이터로 처리
+            search_q = Q(ticker__code__contains=search) | Q(ticker__name__contains=search)
+            chartvalues = ChartValue.objects.select_related('ticker').filter(search_q)
+            searched_names = chartvalues.values_list('ticker__name',flat=True)
+            df_real = Api.get_df_real_from_fdr() 
+            df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
+            df_real['현재가'] = pd.to_numeric(df_real['현재가'], errors='coerce')
+            df_real['매수총잔량'] = 0
+            df_real['매도총잔량'] = 0
+        elif favorites:
+            user = User.objects.get(username=favorites) # user가져옴.
+            tickers = [ticker.ticker for ticker in user.favorites.all()]
+            buy_prices = {item.ticker.code:item.buy_price for item in user.favorites.all()}    
+            print(buy_prices, 'buy_prices', type(buy_prices)) 
+            # {code:buy_price, code:buy_price, ...}
+            if buy_prices:
+                chartvalues = ChartValue.objects.filter(ticker__in=buy_prices.keys())
+            else:
+                return pd.DataFrame()
+                
+            searched_names = chartvalues.values_list('ticker__name',flat=True)
+            change_min, change_max = -30, 30
+            df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
+            df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
+            if len(df_real) == 0:
+                df_real = Api.get_df_real_from_fdr() 
+                df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
+                df_real['현재가'] = df_real['현재가'].astype(float)
+                df_real['매수총잔량'] = 0
+                df_real['매도총잔량'] = 0
+        
+        elif today_ai:
+            '''
+            today_ai 도 숫자로 값을 받음. 
+            '''
+            change_min, change_max = -30, 30
+            df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
+            chartvalues = ChartValue.objects.select_related('ticker').all()
+            # q = AiOpinionForStock.get_today_data()
+            q = AiOpinionForStock.get_nth_latest_data(n=int(today_ai))
+            today_tickers = [item.ticker for item in q]
+            chartvalues = chartvalues.filter(ticker__in=today_tickers)
+
+        elif new_listing:
+            change_min, change_max = -30, 30
+            chartvalues = ChartValue.objects.select_related('ticker').all()
+            df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
+
+        else:
+            try:
+                df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
+            except:
+                df_real = Api.get_df_real_from_db(change_min=change_min, change_max=change_max)
+            chartvalues = ChartValue.objects.select_related('ticker').all()
+            
+        
+            
+        
+        # 모든 필드를 필터링하여 chart_fields 생성
+        chart_fields = [field.name for field in ChartValue._meta.get_fields()]
+
+        # 조건에 따라 필터링 (예: 필드 이름이 '필드1', '필드2' 포함)
+        # filtered_fields = [field for field in chart_fields if field in need_fields]
+        filtered_fields = [field for field in chart_fields]
+
+        # chartvalues에서 데이터 수집
+        data = [
+            {
+                **{field: getattr(value, field) for field in filtered_fields},  # 필터링된 필드 값
+                'code': value.ticker.code,  # ticker의 code 추가
+                'name': value.ticker.name    # ticker의 name 추가
+            }
+            for value in chartvalues
+        ]
+
+        '''
+        ['종목명', '현재가', '등락률', '거래량', '매수총잔량', '매도총잔량', 'id', 'ticker', 'date',
+       'cur_close', 'cur_open', 'pre_close', 'pre_open', 'growth_y1',
+       'growth_y2', 'growth_q', 'good_buy', 'chart_d_bb60_upper20',
+       'chart_d_bb60_upper10', 'chart_d_bb60_upper', 'chart_d_bb60_width',
+       'chart_d_bb240_upper20', 'chart_d_bb240_upper10', 'chart_d_bb240_upper',
+       'chart_d_bb240_width', 'chart_d_sun_width', 'chart_d_sun_max',
+       'chart_d_new_phase', 'chart_d_ab', 'chart_d_ab_v', 'chart_d_good_array',
+       'chart_d_bad_array', 'cur_vol', 'pre_vol', 'chart_d_vol20', 'vol20',
+       'reasons', 'reasons_30', 'chart_30_bb60_upper20',
+       'chart_30_bb60_upper10', 'chart_30_bb60_upper', 'chart_30_bb60_width',
+       'chart_30_bb240_upper20', 'chart_30_bb240_upper10',
+       'chart_30_bb240_upper', 'chart_30_bb240_width', 'chart_30_sun_width',
+       'chart_30_sun_max', 'chart_30_new_phase', 'chart_30_ab',
+       'chart_30_ab_v', 'chart_30_good_array', 'chart_30_bad_array',
+       'chart_30_vol20', 'chart_5_bb60_upper20', 'chart_5_bb60_upper10',
+       'chart_5_bb60_upper', 'chart_5_bb60_width', 'chart_5_bb240_upper20',
+       'chart_5_bb240_upper10', 'chart_5_bb240_upper', 'chart_5_bb240_width',
+       'chart_5_sun_width', 'chart_5_sun_max', 'chart_5_new_phase',
+       'chart_5_ab', 'chart_5_ab_v', 'chart_5_good_array', 'chart_5_bad_array',
+       'chart_5_vol20', '유보율', '부채비율', '액면가', 'cash_value', 'EPS', '상장주식수',
+       '유동주식수', '매물대1', '매물대2', '신규상장', 'code', 'name', '시가'],
+        '''
+        
+        df_stats = pd.DataFrame(data) ## filter된 데이터 필요한 필드만 받아오기.
+
+        df = pd.merge(df_real, df_stats, left_on='종목명', right_on='name', how='inner')
+        print('합친데이터 개수 :::: ', len(df))
+        # 시가 추정.
+        df['시가'] = df['현재가'] / ( 1 + df['등락률'] /100)
+
+
+        ## df 가지고 장중인지 아닌지 확인하기. 
+        time_rate = StockFunc.get_progress_percentage() # 시간에 따른 비율.  실시간이 아니면 1로 특히 휴일인경우 처리해야한다. ## 수정필요함.
+        time_rate = time_rate if time_rate is not None else 1
+        print("time_rate :::: ", time_rate)
+        if sum(df['현재가'] == df['cur_close']) == len(df): # 데이터 전체를 보고 장중이 아닌경우는 장마감기준으로 처리하기. 
+            print('장중이 아님.')
+            전일종가 = 'pre_close'
+            전일거래량 = 'pre_vol'
+            time_rate = 1
+        else:
+            전일종가 = 'cur_close'
+            전일거래량 = 'cur_vol'
+            
+            # pre_close 가 전일종가임. 
+            # df['pre_vol'] 이 전일 거래량임. 
+            # df['pre_vol'] 이 전일 거래량임. 
+
+
+        try:
+            df['buy_price'] = df['code'].map(buy_prices)
+        except:
+           pass
+           
+           
+        if today_ai:
+            return df
+        
+        
+        
+        if favorites:
+            if buy_prices:
+                df = df['code'].isin(buy_prices.keys())
+                return df
+            else:
+                return pd.DataFrame()
+            
+        
+        
+        # group1 cond = 
+        row_cond = pd.Series([False] * len(df))
+        if newbra:
+            new_bra_cond = df['chart_d_new_phase'] == True
+            row_cond = row_cond | new_bra_cond
+        if turnarround:
+            turnarround_cond = df['growth_y1'] == -1000
+            row_cond = row_cond | turnarround_cond
+        if good_buy:
+            good_buy_cond = df['good_buy'] > 0
+            row_cond = row_cond | good_buy_cond
+        if consen:
+            consen_cond = df['growth_y1'] >= consen
+            row_cond = row_cond | consen_cond
+        
+        if rsi:
+            rsi_cond = df['reasons'].str.contains('rsi')
+            df = df.loc[rsi_cond]
+        if array:
+            array_cond = df['chart_d_good_array'] == True
+            df = df.loc[array_cond]
+        if array_exclude:
+            array_exclude_cond = df['chart_d_bad_array'] == False
+            df = df.loc[array_exclude_cond]
+        
+        if goodwave:
+            goodwave_cond = df['reasons'].str.contains('is_w20_3w')
+            df = df.loc[goodwave_cond]
+        
+        if ab:
+            ab_cond = df['chart_d_ab'] == True
+            df = df.loc[ab_cond]
+        if abv:
+            abv_cond = df['chart_d_ab_v'] == True
+            df = df.loc[abv_cond]
+        
+        if coke_up:
+            coke_cond = df['chart_d_bb240_width'] <= coke_up
+            up_cond = (df['시가'] < df['chart_d_bb240_upper']) & (df['chart_d_bb240_upper'] < df['현재가'])    
+            df = df.loc[coke_cond & up_cond]
+        
+        if sun_ac:
+            sun_cond = df['chart_d_sun_width'] <= sun_ac    
+            up_cond = (df['시가'] < df['chart_d_sun_max']) & (df['chart_d_sun_max'] < df['현재가'])
+            df = df.loc[sun_cond & up_cond]
+        
+        if sun_gcv:
+            sun_gcv_cond = df['reasons'].str.contains('sun_gcv')
+            gcv_cond = df['reasons'].str.contains('w3|3w')
+            df = df.loc[sun_gcv_cond & gcv_cond]
+        
+        if coke_gcv:
+            coke_gcv_cond = df['reasons'].str.contains('coke_gcv')
+            gcv_cond = df['reasons'].str.contains('w3|3w')
+            df = df.loc[coke_gcv_cond & gcv_cond]   
+        
+        if good_cash:
+            good_cash_cond = df['유보율'] >= good_cash
+            df = df.loc[good_cash_cond]
+        
+        if w3:
+            w3_cond = df['reasons'].str.contains('w3|3w')
+            df = df.loc[w3_cond]
+        
+        if ac:
+            '''
+            시간 염두해둔 ac
+            '''
+            cond_ac_vol1 = df['거래량'] >= df[전일거래량]  * 2 * time_rate
+            cond_ac_vol2 = df['거래량'] >= df['cur_vol'] * 2 * time_rate
+            cond_ac_vol3 = df['거래량'] >= df['vol20'] * 2 * time_rate
+            cond_ac_vol = cond_ac_vol1 | cond_ac_vol2 | cond_ac_vol3
+            cond_ac = cond_ac_vol & (df['등락률'] >=3) & (df['등락률']<=30 )
+            df = df.loc[cond_ac]
+            
+        if exp:
+            '''exp 값으로 받아오기.'''
+            exp_cond10 = df['chart_d_bb240_upper10'] >= exp
+            exp_cond20 = df['chart_d_bb240_upper20'] >= exp
+            df = df.loc[exp_cond10 & exp_cond20]
+        
+        if new_listing:
+            new_listing_cond = df['신규상장'] == True
+            df = df.loc[new_listing_cond]
+            # return df
+        
+        if search is not None:
+            cond1 = df['종목명'].str.contains(search)
+            cond2 = df['code'].str.contains(search)
+            df = df.loc[cond1 | cond2]
+            return df
+        
+        
+        if endprice:
+            # 거래량 줄은 조건
+            low_volume_cond =(df['거래량'] >= df['vol20'] * time_rate) & (df['거래량'] >= df['cur_vol']* time_rate)
+            # 단봉조건 
+            short_candle_cond = (df['등락률'] >= -2) & (df['등락률'] <= 3) # 단봉조건은 종목마다 기준이 다를수 있음. 
+            
+            w20_3w_cond = df['reasons'].str.contains('is_w20_3w')
+            gcv_cond = df['reasons'].str.contains('sun_gcv|coke_gcv')
+            
+            good_status_cond = w20_3w_cond | gcv_cond
+            df = df.loc[low_volume_cond & short_candle_cond & good_status_cond]
+
+        if realtime:
+            cond5_1 = (df['시가'] <= df['chart_5_bb240_upper']) & (df['현재가'] > df['chart_5_bb240_upper'])
+            cond5_2 = (df[전일종가] <= df['chart_5_bb240_upper']) & (df['현재가'] > df['chart_5_bb240_upper'])
+            # 30 돌파조건. 
+            cond30_1 = (df['시가'] <= df['chart_30_bb240_upper']) & (df['현재가'] > df['chart_30_bb240_upper'])
+            cond30_2 = (df[전일종가] <= df['chart_30_bb240_upper']) & (df['현재가'] > df['chart_30_bb240_upper'])
+            # 일 돌파조건.  ### 요게 장중일때와 아닐때가 달라. ..........
+            try:
+                condd_1 = (df['시가'] <= df['chart_d_bb240_upper']) & (df['현재가'] > df['chart_d_bb240_upper'])
+            except:
+                condd_1 = False
+            try:
+                condd_2 = (df[전일종가] <= df['chart_d_bb240_upper']) & (df['현재가'] > df['chart_d_bb240_upper'])
+            except:
+                condd_2 = False
+            #realtime 조건.
+            df = df.loc[(cond5_1 | cond5_2) | (cond30_1 | cond30_2) | (condd_1 | condd_2)]
+
+
+            w20_3w_cond = df['reasons'].str.contains('is_w20_3w')
+            gcv_cond = df['reasons'].str.contains('sun_gcv|coke_gcv')
+            w3_cond = df['reasons'].str.contains('w3|3w')
+            common_cond = w20_3w_cond | gcv_cond | w3_cond
+            df = df.loc[common_cond]
+            
+        
+        return df
+    
+        
+        # ['is_sun_ac','is_w20_3w','is_coke_ac','is_coke_gcv240','is_coke_gcv60',
+        #  'is_new_phase','is_w3_ac','is_rsi','is_multi_through']
+        
+   
+        
+        
+        ## 필요한 데이터만 추출
+        if len(chartvalues) == 0:
+            return pd.DataFrame()
+        print('필터된 데이터 개수 :::: ', chartvalues.count())
+        ## bb240_upper20 활용해서 추세 찾을수 있을듯. 
+        need_fields = [ 'date','cur_open','cur_close','pre_close','pre_vol','cur_vol','vol20', 
+                       'chart_5_vol20','chart_30_vol20','chart_d_vol20',
+                       'growth_y1','growth_y2','EPS','growth_q','good_buy',
+                        '매물대1','매물대2','상장주식수','유동주식수','유보율','부채비율','액면가',
+                        'chart_5_bb240_upper', 'chart_30_bb240_upper', 'chart_d_bb240_upper', 'chart_d_bb240_width',
+                        'chart_d_bb60_upper', 'chart_d_bb60_width',
+                        'chart_d_sun_width','chart_d_sun_max','chart_d_bb240_upper10','chart_d_bb240_upper20',
+                        ]
+        
+        chart_fields = [field.name for field in ChartValue._meta.get_fields()
+                        if field.name in need_fields]
+        
+        data = []
+        for value in chartvalues:
+            record = {field :getattr(value, field) for field in chart_fields}
+            record['code'] = value.ticker.code
+            record['name'] = value.ticker.name
+            data.append(record)
+        
+        df_stats = pd.DataFrame(data) ## filter된 데이터 필요한 필드만 받아오기.
+        ################################################################################
+        
+        ################## 공통 데이터 df 로 만들기. ##################
+        ## 합치기 공집합
+        df = pd.merge(df_real, df_stats, left_on='종목명', right_on='name', how='inner')
+        print('합친데이터 개수 :::: ', len(df))
+        # 시가 추정.
+        df['시가'] = df['현재가'] / ( 1 + df['등락률'] /100)
+        
+
+        ############ realtime 에서 이조건도 넣어야할까? 아직 안넣음. 고민해보자! ##############
+        # sun_width_d_q = Q(chart_d_sun_width__lte=30)
+        # sun_width_30_q = Q(chart_30_sun_width__lte=15)
+        # sun_width_5_q = Q(chart_5_sun_width__lte=7)
+        # bb240_width_d_q = chartvalues.filter(chart_d_bb240_width__lte=50)
+        # bb240_width_30_q = chartvalues.filter(chart_30_bb240_width__lte=20)
+        # bb240_width_5 = chartvalues.filter(chart_5_bb240_width__lte=14)
+
+        ## 추가로 조건 생성 .... cur_close 와 pre_close 가 상황에 따라 달라짐. 
+        # 5 돌파조건. 
+        
+    
 
 if __name__ == "__main__":
     DBUpdater.update_ticker()
