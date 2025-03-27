@@ -3792,9 +3792,11 @@ class Api:
             consen_cond = df['growth_y1'] >= consen
             row_cond = row_cond | consen_cond
             print('consen 적용.')
+            
+            
         if good_cash:
             good_cash_cond = df['유보율'] >= int(good_cash)
-            row_cond = row_cond | good_cash_cond
+            df = df.loc[good_cash_cond]
             print('good_cash 적용.')
         
         if rsi:

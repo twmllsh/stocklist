@@ -19,6 +19,38 @@ import { stockService } from '../../services/stockService'; // 상단에 추가
 import { selectUser } from '../../store/slices/authSlice';
 import StockAiToday from './StockAiToday'; // 상단에 추가
 
+// 초기 필터 상태를 상수로 정의
+const INITIAL_FILTERS = {
+  change: true,
+  change_min: 2, // 최소값
+  change_max: 10, // 최대값
+  consen: true,
+  consen_value: 20,
+  turnarround: true,
+  good_buy: true,
+  newbra: true,
+  realtime: true,
+  endprice: false,
+  sun_ac: false,
+  sun_ac_value: 30,
+  coke_up: false,
+  coke_up_value: 55,
+  sun_gcv: false,
+  coke_gcv: false,
+  array: false,
+  array_exclude: true,
+  ab: true,
+  abv: true,
+  goodwave: false,
+  ac: false,
+  new_listing: false,
+  rsi: false,
+  exp: false, // EXP를 boolean으로 변경
+  exp_value: 0.1, // 별도 값으로 관리
+  good_cash: true, // 유보율 버튼 추가
+  good_cash_value: 500, // 유보율 기본값 설정
+};
+
 export default function Filter({ onToggle }) {
   const user = useSelector(selectUser);
   const isBasicMember = user?.membership === 'ASSOCIATE';
@@ -51,36 +83,14 @@ export default function Filter({ onToggle }) {
     return null;
   };
 
-  const [filters, setFilters] = useState({
-    change: true,
-    change_min: 2, // 최소값
-    change_max: 10, // 최대값
-    consen: true,
-    consen_value: 20,
-    turnarround: true,
-    good_buy: true,
-    newbra: true,
-    realtime: true,
-    endprice: false,
-    sun_ac: false,
-    sun_ac_value: 30,
-    coke_up: false,
-    coke_up_value: 55,
-    sun_gcv: false,
-    coke_gcv: false,
-    array: false,
-    array_exclude: true,
-    ab: true,
-    abv: true,
-    goodwave: false,
-    ac: false,
-    new_listing: false,
-    rsi: false,
-    exp: false, // EXP를 boolean으로 변경
-    exp_value: 0.1, // 별도 값으로 관리
-    good_cash: true, // 유보율 버튼 추가
-    good_cash_value: 500, // 유보율 기본값 설정
-  });
+  // 초기 필터 상태 참조를 위해 상수 사용
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+
+  // 필터 초기화 함수
+  const handleResetFilters = () => {
+    setFilters(INITIAL_FILTERS);
+    setSearchInput(''); // 검색어도 초기화
+  };
 
   // 필터 설명 추가
   const filterDescriptions = {
@@ -259,26 +269,9 @@ export default function Filter({ onToggle }) {
             if (btn !== name) newFilters[btn] = false;
           });
 
-          // 그룹 3, 4 버튼들 비활성화
-          [
-            'sun_ac',
-            'coke_up',
-            'sun_gcv',
-            'coke_gcv',
-            'array',
-            'array_exclude',
-            'ab',
-            'abv',
-            'goodwave',
-            'ac',
-            'rsi',
-          ].forEach((btn) => {
-            newFilters[btn] = false;
-          });
+          // 그룹 3, 4 버튼들 비활성화 코드 제거함
+          // 모든 버튼이 독립적으로 토글되도록 변경
         }
-
-        // 그룹 3, 4 버튼들은 독립적으로 토글 가능하도록 추가 로직 필요 없음
-        // 단, 그룹 5 버튼이 활성화된 상태에서는 그룹 3, 4 버튼이 비활성화됨
       } else {
         // 버튼이 비활성화되는 경우
         // 그룹 5 버튼들이 모두 비활성화되었는지 확인
@@ -287,10 +280,8 @@ export default function Filter({ onToggle }) {
         );
 
         if (isAllGroup5Inactive && previousStateRef.current.group3and4) {
-          // 이전 상태 복원
-          const { group2, group3, group4 } =
-            previousStateRef.current.group3and4;
-          Object.assign(newFilters, group2, group3, group4);
+          // 이전 상태 복원 코드 제거
+          // 모든 버튼이 독립적으로 유지되도록 변경
         }
       }
 
@@ -334,12 +325,12 @@ export default function Filter({ onToggle }) {
         }
       });
 
-      // 최종 요청 URL 로깅
+      //  요청 URL 로깅
       const queryString = new URLSearchParams(searchFilters).toString();
       // process.env 대신 import.meta.env 사용
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
       const fullUrl = `${apiBaseUrl}/api/stocklist/?${queryString}`;
-      // console.log('검색 요청 URL:', fullUrl);
+      console.log('검색 요청 URL:', fullUrl);
       // console.log('검색 파라미터:', searchFilters);
 
       await dispatch(fetchFilteredStocks(searchFilters));
@@ -485,21 +476,8 @@ export default function Filter({ onToggle }) {
   const renderButton = (btn, index) => {
     // index 매개변수 추가
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isDisabled =
-      (filters.new_listing || filters.exp) &&
-      [
-        'sun_ac',
-        'coke_up',
-        'sun_gcv',
-        'coke_gcv',
-        'array',
-        'array_exclude',
-        'ab',
-        'abv',
-        'goodwave',
-        'ac',
-        'rsi',
-      ].includes(btn.name);
+    // 버튼 비활성화 조건 제거
+    const isDisabled = false;
 
     // float 타입 처리 수정
     if (btn.hasValue && btn.valueType === 'float') {
@@ -519,20 +497,23 @@ export default function Filter({ onToggle }) {
             </Button>
           </OverlayTrigger>
           {filters[btn.name] && (
-            <Form.Control
-              size="sm"
-              type="number"
-              step="0.01"
-              value={filters[`${btn.name}_value`]}
-              onChange={(e) =>
-                handleFilterChange(
-                  `${btn.name}_value`,
-                  parseFloat(e.target.value)
-                )
-              }
-              style={{ width: '60px', height: '31px' }}
-              className="ms-1"
-            />
+            <div className="d-flex align-items-center">
+              <Form.Control
+                size="sm"
+                type="number"
+                step="0.01"
+                value={filters[`${btn.name}_value`]}
+                onChange={(e) =>
+                  handleFilterChange(
+                    `${btn.name}_value`,
+                    parseFloat(e.target.value)
+                  )
+                }
+                style={{ width: '60px', height: '31px' }}
+                className="ms-1"
+              />
+              <small className="ms-1 text-muted">이상</small>
+            </div>
           )}
         </div>
       );
@@ -548,9 +529,8 @@ export default function Filter({ onToggle }) {
             name={btn.name}
             label={btn.label}
             active={filters[btn.name]}
-            onClick={() => !isDisabled && handleFilterChange(btn.name)}
-            variant={isDisabled ? 'secondary' : 'success'}
-            style={{ opacity: isDisabled ? 0.5 : 1 }}
+            onClick={() => handleFilterChange(btn.name)}
+            variant="success"
           />
         ) : (
           // 데스크톱에서만 OverlayTrigger 사용
@@ -565,9 +545,8 @@ export default function Filter({ onToggle }) {
                 name={btn.name}
                 label={btn.label}
                 active={filters[btn.name]}
-                onClick={() => !isDisabled && handleFilterChange(btn.name)}
-                variant={isDisabled ? 'secondary' : 'success'}
-                style={{ opacity: isDisabled ? 0.5 : 1 }}
+                onClick={() => handleFilterChange(btn.name)}
+                variant="success"
               />
             </div>
           </OverlayTrigger>
@@ -598,15 +577,25 @@ export default function Filter({ onToggle }) {
               />
             </div>
           ) : (
-            <Form.Control
-              type="number"
-              size="sm"
-              style={{ width: '70px' }}
-              value={filters[`${btn.name}_value`] || ''}
-              onChange={(e) =>
-                handleFilterChange(`${btn.name}_value`, e.target.value)
-              }
-            />
+            <div className="d-flex align-items-center">
+              <Form.Control
+                type="number"
+                size="sm"
+                style={{ width: '70px' }}
+                value={filters[`${btn.name}_value`] || ''}
+                onChange={(e) =>
+                  handleFilterChange(`${btn.name}_value`, e.target.value)
+                }
+              />
+              <small className="ms-1 text-muted">
+                {/* 버튼 종류에 따라 단위 텍스트 추가 */}
+                {btn.name === 'consen' || btn.name === 'good_cash'
+                  ? '% 이상'
+                  : btn.name === 'sun_ac' || btn.name === 'coke_up'
+                  ? '% 이하'
+                  : ''}
+              </small>
+            </div>
           ))}
       </div>
     );
@@ -673,7 +662,27 @@ export default function Filter({ onToggle }) {
           {buttonGroups.map((group, groupIdx) => (
             <div key={`group-${groupIdx}`}>
               <div className="mb-3">
-                <h6 className="mb-2">{group.title}</h6>
+                <div className="d-flex align-items-center mb-2">
+                  <h6 className="mb-0 me-auto">{group.title}</h6>
+                  {/* 첫 번째 그룹에 초기화 버튼 추가 */}
+                  {groupIdx === 0 && (
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      className="ms-2 py-0 px-2"
+                      onClick={handleResetFilters}
+                      disabled={isBasicMember}
+                      title={
+                        isBasicMember
+                          ? '정회원 이상 전용 기능입니다'
+                          : '필터 초기화'
+                      }
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      초기화
+                    </Button>
+                  )}
+                </div>
                 <div className="d-flex flex-wrap gap-2">
                   {group.buttons.map((btn, btnIdx) =>
                     renderButton(btn, `${groupIdx}-${btnIdx}`)
@@ -735,6 +744,8 @@ export default function Filter({ onToggle }) {
                 검색
               </Button>
             </div>
+
+            {/* 초기화 버튼 제거 - 상단으로 이동 */}
 
             {/* 버튼 그룹 */}
             <div className="d-flex gap-2">
