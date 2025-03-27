@@ -15,16 +15,12 @@ import pandas as pd
 # https://janu8ry.tistory.com/9?category=957746  #embed 참고
 # embed 색상참고.
 ## https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=1&ie=utf8&query=%EC%83%89%EC%83%81+%ED%8C%94%EB%A0%88%ED%8A%B8
-DISCORD_WH_CONTRACT="https://discord.com/api/webhooks/1345757362257920000/kz-AUAg0QMOuRN39cdMVVHpa22xIovsZpGihKaNVkKdF8QHKHYI2xHXyruGi18Kv7wF5"
-DISCORD_WH_RIGHTS="https://discord.com/api/webhooks/1345757753062461491/lnNl565RzKwVICyY8_gyiYRDzxUzikCp_FG5_LY-o8T4pQgvUMy7bG91pqO33GzQmRqP"
-DISCORD_WH_BONUS="https://discord.com/api/webhooks/1345757954673999964/l2QVHmvcMljm4pZ9XDJuqbMCe-Bsw8ZgjLII_vRAabsLE7cmcm50524VWPfS1fuvGe5-"
-DISCORD_WH_CONVERTIBLE="https://discord.com/api/webhooks/1345758095028256800/1bVDMzGuJli-uWrnU0kf2Vnu48TeYLnVoQmWQeIhMHZMBzNkUlAl-vwjBy0lKpIyx9mD"
-DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1340700574521491599/-6u9EVaPRAHYmDXlVjOes49-vK2TcudUMUvxmfsxWFVjUnGtxC3hOoN04JTyI7h-w1Af"
-# DISCORD_WH_CONTRACT = os.getenv('DISCORD_WH_CONTRACT', default=DISCORD_WH_CONTRACT)
-# DISCORD_WH_RIGHTS = os.getenv('DISCORD_WH_RIGHTS', default=DISCORD_WH_RIGHTS)
-# DISCORD_WH_BONUS = os.getenv('DISCORD_WH_BONUS', default=DISCORD_WH_BONUS)
-# DISCORD_WH_CONVERTIBLE = os.getenv('DISCORD_WH_CONVERTIBLE', default=DISCORD_WH_CONVERTIBLE)
-# DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', default=DISCORD_WEBHOOK_URL)
+
+DISCORD_WH_CONTRACT = os.getenv('DISCORD_WH_CONTRACT')
+DISCORD_WH_RIGHTS = os.getenv('DISCORD_WH_RIGHTS')
+DISCORD_WH_BONUS = os.getenv('DISCORD_WH_BONUS')
+DISCORD_WH_CONVERTIBLE = os.getenv('DISCORD_WH_CONVERTIBLE')
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
 
 class My_discord:
 
