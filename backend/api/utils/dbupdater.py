@@ -785,7 +785,7 @@ class DBUpdater:
             ## data download
             
             split_data = Sean_func._split_data(ticker_qs, split_cnt) ## split_cnt 번 나눠서 작업
-            
+            print(split_data)
             for splited_data in split_data:
                 new_datas = asyncio.run(GetData._get_info_all_async(splited_data))
                 total_cnt += len(new_datas)
@@ -1909,12 +1909,12 @@ class GetData:
 
             거래정지 = pd.read_html(StringIO(거래정지_resp), encoding="cp949")[
                 0
-            ].drop나()
+            ].dropna()
             거래정지 = 거래정지.filter(regex=r"^(?!.*Unname.*)")
 
             관리종목 = pd.read_html(StringIO(관리종목_resp), encoding="cp949")[
                 0
-            ].drop나()
+            ].dropna()
             관리종목 = 관리종목.filter(regex=r"^(?!.*Unname.*)")
 
             stop_ls = list(관리종목["종목명"]) + list(
@@ -1994,7 +1994,7 @@ class GetData:
             if isinstance(result, dict):
                 dic.update(result)
         dic = {
-            k: v if not (type(v) == float and pd.is나(v)) else None
+            k: v if not (type(v) == float and pd.isna(v)) else None
             for k, v in dic.items()
         }  ## np.나 값이 있다면 None으로 대체하기.
         dic["code"] = code
