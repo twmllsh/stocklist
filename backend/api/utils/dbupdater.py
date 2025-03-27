@@ -426,12 +426,20 @@ class DBUpdater:
                     print(to_create)
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} : update_ticker finished!!"  
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                print('디스코드 메세지 전송 실패')
+                
             
         except Exception as e:
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} {e}: update_ticker xxxxxx !!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                print('디스코드 메세지 전송 실패')
+                
         return datas
 
     def update_ohlcv(장중=None, codes:list = None, all_fdr=False, start_date = None, end_date = None):
@@ -685,12 +693,19 @@ class DBUpdater:
             concat_df = concat_df[concat_df['Date'] == concat_df['Date'].max()]
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} : update_ohlcv finished!!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                print('디스코드 메세지 전송 실패 update_ohlcv')
             return concat_df
         except Exception as e:
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} {e} : update_ohlcv xxxxxx !!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                print('디스코드 메세지 전송 실패 update_ohlcv')
+                
         
     def update_basic_info(test_cnt: int = None, update_codes=None):
 
@@ -1054,11 +1069,19 @@ class DBUpdater:
             # print("bulk_job complete!")
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} : {total_cnt}개종목 update_basic_info finished!!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
+            
         except Exception as e:
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} {e}: update_basic_info xxxxxx !!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
+            
              
     def update_investor():
         # if StockFunc.is_holiday():
@@ -1200,11 +1223,19 @@ class DBUpdater:
             
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} : update_investor finished!!"       
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
+            
         except Exception as e:
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} {e}: update_investor xxxxxx !!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
+            
             
         #### 코드 날짜로 데이터 가져오기
         # col = ['date','open','high','low','close','volume']
@@ -1303,12 +1334,20 @@ class DBUpdater:
                     print(e, dic)
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} : update_issue finished!!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
+            
             return latest_dict_list
         except Exception as e:
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} {e}: update_issue xxxxxx !!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
+            
         
     def update_theme_upjong():
         """
@@ -1464,11 +1503,19 @@ class DBUpdater:
                     upjong.tickers.set(upjong_code_obj_set)
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} : update_theme_upjong finished!!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
+            
         except Exception as e:
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} {e}: update_theme_upjong xxxxxx !!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
+            
 
     def update_stockplus_news():
         '''
@@ -1514,14 +1561,20 @@ class DBUpdater:
         except Exception as e:
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
             msg_text = f"{start_time} ~ {end_time} {e}: update_stockplus_news xxxxxx !!"
-            asyncio.run(mydiscord.send_message(msg_text))
+            try:
+                asyncio.run(mydiscord.send_message(msg_text))
+            except:
+                pass
             
     def anal_all_stock(anal=True, test=False):
         
         # if StockFunc.is_holiday() and not test:
         #     return
 
-        asyncio.run(mydiscord.send_message(f"anal ChartValue start!!!"))
+        try:
+            asyncio.run(mydiscord.send_message(f"anal ChartValue start!!!"))
+        except:
+            pass
         
         start_time = pd.Timestamp.now(tz='Asia/Seoul').strftime('%Y-%m-%d %H:%M')
         today = pd.Timestamp.now(tz='Asia/Seoul')
@@ -1700,7 +1753,10 @@ class DBUpdater:
                             
                     except Exception as e:
                         anal_err_count += 1
-                        asyncio.run(mydiscord.send_message(f"{stock.ticker.name} 분석오류!  {e}"))
+                        try:
+                            asyncio.run(mydiscord.send_message(f"{stock.ticker.name} 분석오류!  {e}"))
+                        except:
+                            pass
                         continue
 
                     
@@ -1734,7 +1790,11 @@ class DBUpdater:
             
         end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
         msg_text = f"{start_time} ~ {end_time} : anal ChartValue finished!! 분석오류:{anal_err_count} 객체오류:{stock_err_count}"
-        asyncio.run(mydiscord.send_message(msg_text))
+        try:
+            asyncio.run(mydiscord.send_message(msg_text))
+        except:
+            pass
+        
         
         return to_create, to_update
         
