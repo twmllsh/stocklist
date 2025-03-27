@@ -2072,8 +2072,9 @@ class GetData:
                         "매도거래량": "sell",
                     }
                 )
-                result_df = result_df.replace({np.나: None})
-
+                # result_df = result_df.replace({np.na: None})
+                result_df.replace({np.nan: None}, inplace=True)
+                
                 trader_infodict = {}
                 trader_infodict["date"] = today
                 trader_infodict["traderinfo"] = result_df.to_dict("index")
@@ -2154,14 +2155,13 @@ class GetData:
             x = x.rename(columns={"IFRS": renamed_index_name})
             x = x.set_index(renamed_index_name)
             x.index = [re.sub(r"\(원\)|\(|\)", "", idx) for idx in x.index]
-            x = x.drop나(axis=1, how="all")
+            x = x.dropna(axis=1, how="all")
             # x = x.fill나(value=None)  ## 나 값을 None으로 ( 데이터베이스 저장시 필요함.)
             # x = x.where(pd.not나(x), None)
             x = x.loc[:, ~x.columns.duplicated(keep='last')]  ## 2023/06 과 2023/12 의 데이터 있을때 연도경우 2023 데이터가 2개 생성되서 중복있다면 마지막데이터만 남기기. 
             for col in x.columns:
                 x[col] = pd.to_numeric(x[col], errors="coerce")
-
-            x = x.replace({np.나: None})
+            x = x.replace({np.nan: None})
             return x
 
         ######################################################################

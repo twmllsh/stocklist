@@ -210,6 +210,7 @@ SHELL_PLUS_IMPORTS = [
     "import time",   
     "from api.utils.dart import MyDart",
     "from api.utils.dbupdater import Api",
+    "from api.utils.dbupdater import GetData",
     
     
     # 'your_app.models',  # 특정 앱의 모델 임포트
