@@ -196,14 +196,20 @@ const FilteredList = () => {
         <Row className="g-1">
           {/* {console.log('Rendering stocks:', sortedStocks)} */}
           {sortedStocks.length > 0 ? (
-            sortedStocks.map((stock) => (
-              <Col key={stock.code} xs={12} md={6} lg={4}>
-                <StockCard
-                  stock={stock}
-                  onClick={() => handleCardClick(stock.code)}
-                />
-              </Col>
-            ))
+            sortedStocks.map((stock, index) => {
+              // 고유한 키 생성 로직 개선
+              const stockKey = stock.code
+                ? `stock-${stock.code}`
+                : `stock-item-${index}`;
+              return (
+                <Col key={stockKey} xs={12} md={6} lg={4}>
+                  <StockCard
+                    stock={stock}
+                    onClick={() => handleCardClick(stock.code)}
+                  />
+                </Col>
+              );
+            })
           ) : (
             <Col xs={12}>
               <div className="text-center py-2 text-muted">

@@ -62,7 +62,10 @@ export default function Filter({ onToggle }) {
     ac: false,
     new_listing: false,
     rsi: false,
-    exp: false,
+    exp: false, // EXP를 boolean으로 변경
+    exp_value: 0.1, // 별도 값으로 관리
+    good_cash: true, // 유보율 버튼 추가
+    good_cash_value: 500, // 유보율 기본값 설정
   });
 
   // 필터 설명 추가
@@ -97,6 +100,7 @@ export default function Filter({ onToggle }) {
         { name: 'good_buy', label: '투자자' },
         { name: 'turnarround', label: 'TA' },
         { name: 'consen', label: 'CONSEN', hasValue: true },
+        { name: 'good_cash', label: '유보율', hasValue: true }, // 유보율 버튼 추가
       ],
       collapsible: false,
     },
@@ -134,13 +138,19 @@ export default function Filter({ onToggle }) {
         { name: 'goodwave', label: 'GOODWAVE' },
         { name: 'ac', label: 'AC' },
         { name: 'rsi', label: 'RSI' }, // RSI 버튼을 그룹 4로 이동
+        { name: 'new_listing', label: '신규상장' }, // 신규상장 버튼을 그룹 4로 이동
       ],
     },
     {
       title: 'etc..',
       buttons: [
-        { name: 'new_listing', label: '신규상장' },
-        { name: 'exp', label: 'EXP' },
+        // 신규상장 버튼 제거
+        {
+          name: 'exp',
+          label: 'EXP',
+          hasValue: true, // 값을 받는 형식으로 변경
+          valueType: 'float', // float 타입으로 설정
+        },
       ],
     },
   ];
@@ -297,6 +307,10 @@ export default function Filter({ onToggle }) {
             searchFilters[key] = filters.sun_ac_value;
           } else if (key === 'coke_up') {
             searchFilters[key] = filters.coke_up_value;
+          } else if (key === 'good_cash') {
+            searchFilters[key] = filters.good_cash_value;
+          } else if (key === 'exp') {
+            searchFilters[key] = filters.exp_value;
           } else {
             searchFilters[key] = true;
           }
@@ -305,9 +319,12 @@ export default function Filter({ onToggle }) {
 
       // 최종 요청 URL 로깅
       const queryString = new URLSearchParams(searchFilters).toString();
-      // console.log('최종 요청 URL:', `/stocklist/?${queryString}`);
-
+      // process.env 대신 import.meta.env 사용
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      const fullUrl = `${apiBaseUrl}/api/stocklist/?${queryString}`;
+      // console.log('검색 요청 URL:', fullUrl);
       // console.log('검색 파라미터:', searchFilters);
+
       await dispatch(fetchFilteredStocks(searchFilters));
     } catch (error) {
       console.error('Search error:', error);
@@ -317,28 +334,59 @@ export default function Filter({ onToggle }) {
   // 즐겨찾기 조회 핸들러 수정
   const handleTestFavorites = async () => {
     try {
-      // console.log('[Filter] 즐겨찾기 검색 시작');
+      setIsLoading(true);
+
       const favoritesFilter = {
         favorites: 'true',
       };
 
-      // console.log('즐겨찾기 요청 URL: /stocklist/?favorites=true');
-      // console.log('즐겨찾기 요청 파라미터:', favoritesFilter);
+      // process.env 대신 import.meta.env 사용
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      const fullUrl = `${apiBaseUrl}/api/stocklist/?favorites=true`;
+      // console.log('내종목 요청 URL:', fullUrl);
+      // console.log('내종목 요청 파라미터:', favoritesFilter);
 
       const result = await dispatch(
         fetchFilteredStocks(favoritesFilter)
       ).unwrap();
+
+      // 응답 데이터 디버깅 및 검사
       // console.log('즐겨찾기 응답 데이터:', result);
+
+      if (Array.isArray(result)) {
+        // 응답이 배열인지 확인
+        result.forEach((item, index) => {
+          if (item.code === true) {
+            // 잘못된 code 값이 있으면 고유 식별자로 수정
+            console.warn(
+              `즐겨찾기 항목 #${index}에 잘못된 코드 값이 있습니다. 수정합니다.`
+            );
+            item.code = `favorite-${index}`;
+          }
+        });
+      }
+
+      setIsLoading(false);
     } catch (error) {
+      setIsLoading(false);
       console.error('[Filter] 즐겨찾기 요청 실패:', error);
     }
   };
 
   // Today AI 버튼 클릭 핸들러 단순화
-  const handleTodayAiClick = async () => {
+  const handleTodayAiClick = async (days = 4) => {
     try {
+      const params = { today_ai: days };
+      const queryString = new URLSearchParams(params).toString();
+
+      // process.env 대신 import.meta.env 사용
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      const fullUrl = `${apiBaseUrl}/api/stocklist/?${queryString}`;
+      // console.log(`오늘AI(${days}일) 요청 URL:`, fullUrl);
+      // console.log('AI 요청 파라미터:', params);
+
       // 단순히 필터링된 주식 목록만 요청
-      await dispatch(fetchFilteredStocks({ today_ai: true }));
+      await dispatch(fetchFilteredStocks(params));
     } catch (error) {
       console.error('Today AI 데이터 로드 실패:', error);
     }
@@ -383,7 +431,14 @@ export default function Filter({ onToggle }) {
         search: searchInput.trim(), // 검색 시에는 다른 필터 제외하고 search만 전송
       };
 
-      // console.log('종목검색 요청 데이터:', updatedFilters);
+      // process.env 대신 import.meta.env 사용
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      const fullUrl = `${apiBaseUrl}/api/stocklist/?search=${encodeURIComponent(
+        searchInput.trim()
+      )}`;
+      // console.log('종목검색 요청 URL:', fullUrl);
+      // console.log('종목검색 요청 파라미터:', updatedFilters);
+
       await dispatch(fetchFilteredStocks(updatedFilters));
     } catch (error) {
       console.error('Search by text failed:', error);
@@ -428,6 +483,43 @@ export default function Filter({ onToggle }) {
         'ac',
         'rsi',
       ].includes(btn.name);
+
+    // float 타입 처리 수정
+    if (btn.hasValue && btn.valueType === 'float') {
+      return (
+        <div key={index} className="d-inline-flex align-items-center me-2 mb-2">
+          <OverlayTrigger
+            placement="top"
+            overlay={<Tooltip>{filterDescriptions[btn.name]}</Tooltip>}
+          >
+            <Button
+              variant={filters[btn.name] ? 'success' : `outline-success`}
+              size="sm"
+              onClick={() => handleFilterChange(btn.name, !filters[btn.name])}
+              className="me-1"
+            >
+              {btn.label}
+            </Button>
+          </OverlayTrigger>
+          {filters[btn.name] && (
+            <Form.Control
+              size="sm"
+              type="number"
+              step="0.01"
+              value={filters[`${btn.name}_value`]}
+              onChange={(e) =>
+                handleFilterChange(
+                  `${btn.name}_value`,
+                  parseFloat(e.target.value)
+                )
+              }
+              style={{ width: '60px', height: '31px' }}
+              className="ms-1"
+            />
+          )}
+        </div>
+      );
+    }
 
     return (
       <div className="d-flex align-items-center" key={`${btn.name}-${index}`}>
@@ -649,11 +741,22 @@ export default function Filter({ onToggle }) {
                 variant="outline-info"
                 size="sm"
                 className="py-1 px-2"
-                onClick={handleTodayAiClick}
+                onClick={() => handleTodayAiClick(4)}
                 disabled={isBasicMember}
                 title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
               >
                 최근4일간AI
+              </Button>
+
+              <Button
+                variant="outline-info"
+                size="sm"
+                className="py-1 px-2"
+                onClick={() => handleTodayAiClick(1)}
+                disabled={isBasicMember}
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+              >
+                오늘AI
               </Button>
             </div>
 

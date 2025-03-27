@@ -175,48 +175,96 @@ class Ohlcv1ViewSet(viewsets.ViewSet):
         return JsonResponse(df_dict, safe=False, json_dumps_params={'ensure_ascii': False})    
 
 class StocklistViewSet(viewsets.ViewSet):
-    permission_classes = [AllowAny]  # 추가된 줄
+    permission_classes = [AllowAny]
     def list(self, request):
-        
-        # 모든 쿼리 파라미터를 가져옴
-        all_params = request.query_params
+        try:
+            # 모든 쿼리 파라미터를 가져옴
+            all_params = request.query_params
 
-        # 파라미터별 처리
-        params ={}
-        for param, value in all_params.items():
-            if param == 'search':
-                params[param] = str(value)
-                continue
-            if value.isdecimal():
-                params[param] = int(value)    
+            # 파라미터별 처리
+            params = {}
+            for param, value in all_params.items():
+                if param == 'search':
+                    params[param] = str(value)
+                    continue
+                if value.isdecimal():
+                    params[param] = int(value)    
+                else:
+                    params[param] = value
+            
+            from .utils.dbupdater import Api
+            print('params: ', params)
+            
+            # favorites 파라미터 처리
+            if "favorites" in params:
+                # 로그인 상태 확인
+                if not request.user.is_authenticated:
+                    return JsonResponse(
+                        {'error': '로그인이 필요합니다'}, 
+                        status=401,
+                        json_dumps_params={'ensure_ascii': False}
+                    )
+                
+                username = request.user.username
+                params = {'favorites': username}
+                print("params::", params)
+                result = Api.choice_for_api(**params)
+            elif "search" in params:
+                params = {'search': params['search']}
+                result = Api.choice_for_api(**params)
+            elif "today_ai" in params:
+                params = {'today_ai': params['today_ai']}  # 값 그대로 전달
+                result = Api.choice_for_api(**params)
             else:
-                params[param] = value
-        
-        
-        from .utils.dbupdater import Api
-        print('params: ' , params)
-        ## favorites 가 들어있으면 파람 모두 무시. 재생산. 
-        ## search 가 들어있어도 파라 모두 무시. 재생산. 
-        if "favorites" in params:
-            username = request.user.username
-            params = {'favorites': username}
-            print("params::", params)
-            result = Api.choice_for_api(**params)
-        elif "search" in params:
-            params = {'search': params['search']}
-            result = Api.choice_for_api(**params)
-        elif "today_ai" in params:
-            params = {'today_ai': True}
-            result = Api.choice_for_api(**params)
-        else:
-            result = Api.choice_for_api(**params)
-        
-        # Handle NaN values
-        result = result.fillna('N/A')
-        
-        result_dict = result.to_dict(orient='records')
-        # return JsonResponse({'result': result_dict}, json_dumps_params={'ensure_ascii': False})
-        return JsonResponse( result_dict, safe=False, json_dumps_params={'ensure_ascii': False})
+                result = Api.choice_for_api(**params)
+            
+            # 결과 유효성 검사
+            if result is None:
+                return JsonResponse([], safe=False)
+            
+            # DataFrame이 아닌 경우 처리
+            if not isinstance(result, pd.DataFrame):
+                # Series나 다른 객체인 경우, DataFrame으로 변환 시도
+                if hasattr(result, 'to_frame'):
+                    result = result.to_frame()
+                    if len(result.columns) == 1:
+                        # 단일 컬럼인 경우 컬럼명 추가
+                        result = result.reset_index()
+                else:
+                    # 변환 불가능한 경우 빈 DataFrame 반환
+                    result = pd.DataFrame()
+            
+            # Handle NaN values
+            result = result.fillna('N/A')
+            result_dict = result.to_dict(orient='records')
+            
+            # 티커 객체 직렬화 처리
+            for item in result_dict:
+                # ticker 객체가 포함된 경우, 문자열 속성으로 변환
+                if 'ticker' in item and hasattr(item['ticker'], 'code'):
+                    item['ticker_code'] = item['ticker'].code
+                    item['ticker_name'] = item['ticker'].name
+                    del item['ticker']  # ticker 객체 제거
+                    
+                # 다른 비직렬화 객체가 있는지 확인하고 처리
+                for key, value in list(item.items()):  # list로 감싸서 순회 중 수정 가능하게
+                    if not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+                        # 기본 자료형이 아닌 경우 변환 또는 제거
+                        try:
+                            item[key] = str(value)  # 문자열 변환 시도
+                        except:
+                            del item[key]  # 변환 실패 시 제거
+                
+            return JsonResponse(result_dict, safe=False, json_dumps_params={'ensure_ascii': False})
+        except Exception as e:
+            import traceback
+            print(f"StocklistViewSet 오류: {e}")
+            print(traceback.format_exc())
+            return JsonResponse(
+                {'error': f'서버 오류가 발생했습니다: {str(e)}'}, 
+                status=500,
+                json_dumps_params={'ensure_ascii': False}
+            )
         
         
 class NewsViewSet(viewsets.ModelViewSet):
@@ -235,7 +283,7 @@ class NewsViewSet(viewsets.ModelViewSet):
         return queryset
 class AllDartViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 추가된 줄
-    queryset = AllDart.objects.all()
+    queryset = AllDart.objects.all() 
     serializer_class = AllDartSerializer
 
     def get_queryset(self):

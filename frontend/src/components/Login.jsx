@@ -2,7 +2,7 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   try {
     const response = await authService.login({ username, password });
-    console.log('Raw login response:', response);
+    // console.log('Raw login response:', response);
 
     if (!response?.user?.username) {
       throw new Error('Invalid response format');
@@ -14,7 +14,7 @@ const handleSubmit = async (e) => {
       user: response.user, // user 객체 그대로 전달
     };
 
-    console.log('Dispatching to Redux:', userData);
+    // console.log('Dispatching to Redux:', userData);
     dispatch(setCredentials(userData));
 
     // 토큰 저장
