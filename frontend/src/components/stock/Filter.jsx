@@ -330,7 +330,7 @@ export default function Filter({ onToggle }) {
       // process.env 대신 import.meta.env 사용
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
       const fullUrl = `${apiBaseUrl}/api/stocklist/?${queryString}`;
-      console.log('검색 요청 URL:', fullUrl);
+      // console.log('검색 요청 URL:', fullUrl);
       // console.log('검색 파라미터:', searchFilters);
 
       await dispatch(fetchFilteredStocks(searchFilters));
