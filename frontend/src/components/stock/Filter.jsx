@@ -37,6 +37,20 @@ export default function Filter({ onToggle }) {
   const [showOpinionDetail, setShowOpinionDetail] = useState(false); // 기본값을 false로 설정
   const [autoCollapse, setAutoCollapse] = useState(true); // 자동접힘 옵션 상태 추가
 
+  // 준회원 알림 메시지 컴포넌트 정의
+  const BasicMemberAlert = () => {
+    if (isBasicMember) {
+      return (
+        <Alert variant="warning" className="mb-3">
+          <p className="mb-0">
+            정회원 이상 서비스를 이용할 수 있습니다. 관리자에게 문의하세요.
+          </p>
+        </Alert>
+      );
+    }
+    return null;
+  };
+
   const [filters, setFilters] = useState({
     change: true,
     change_min: 2, // 최소값
@@ -262,6 +276,9 @@ export default function Filter({ onToggle }) {
             newFilters[btn] = false;
           });
         }
+
+        // 그룹 3, 4 버튼들은 독립적으로 토글 가능하도록 추가 로직 필요 없음
+        // 단, 그룹 5 버튼이 활성화된 상태에서는 그룹 3, 4 버튼이 비활성화됨
       } else {
         // 버튼이 비활성화되는 경우
         // 그룹 5 버튼들이 모두 비활성화되었는지 확인
@@ -595,20 +612,6 @@ export default function Filter({ onToggle }) {
     );
   };
 
-  // 준회원 알림 메시지 컴포넌트
-  const BasicMemberAlert = () => {
-    if (isBasicMember) {
-      return (
-        <Alert variant="warning" className="mb-3">
-          <p className="mb-0">
-            정회원 이상 서비스를 이용할 수 있습니다. 관리자에게 문의하세요.
-          </p>
-        </Alert>
-      );
-    }
-    return null;
-  };
-
   return (
     <Container
       fluid
@@ -694,72 +697,6 @@ export default function Filter({ onToggle }) {
           }}
         >
           <div className="d-flex flex-wrap align-items-center gap-2">
-            {/* 조건검색 버튼 */}
-            <div className="d-flex align-items-center">
-              <Button
-                variant="success"
-                size="sm"
-                className="py-1 px-3"
-                onClick={handleSearch}
-                disabled={isLoading || isBasicMember}
-                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
-              >
-                {isLoading ? (
-                  <span className="d-flex align-items-center gap-1">
-                    <span className="spinner-border spinner-border-sm" />
-                    검색
-                  </span>
-                ) : (
-                  '검색'
-                )}
-              </Button>
-              {searchCount !== undefined && (
-                <Badge
-                  bg="secondary"
-                  className="ms-1"
-                  style={{ fontSize: '0.75rem' }}
-                >
-                  {searchCount}
-                </Badge>
-              )}
-            </div>
-
-            {/* 버튼 그룹 */}
-            <div className="d-flex gap-2">
-              <Button
-                variant="outline-warning"
-                size="sm"
-                className="py-1 px-2"
-                onClick={handleTestFavorites}
-                disabled={isBasicMember}
-                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
-              >
-                내종목
-              </Button>
-
-              <Button
-                variant="outline-info"
-                size="sm"
-                className="py-1 px-2"
-                onClick={() => handleTodayAiClick(4)}
-                disabled={isBasicMember}
-                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
-              >
-                최근4일간AI
-              </Button>
-
-              <Button
-                variant="outline-info"
-                size="sm"
-                className="py-1 px-2"
-                onClick={() => handleTodayAiClick(1)}
-                disabled={isBasicMember}
-                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
-              >
-                오늘AI
-              </Button>
-            </div>
-
             {/* 검색창과 검색버튼 */}
             <div
               className="input-group input-group-sm"
@@ -798,6 +735,72 @@ export default function Filter({ onToggle }) {
                 검색
               </Button>
             </div>
+
+            {/* 버튼 그룹 */}
+            <div className="d-flex gap-2">
+              <Button
+                variant="outline-warning"
+                size="sm"
+                className="py-1 px-2"
+                onClick={handleTestFavorites}
+                disabled={isBasicMember}
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+              >
+                내종목
+              </Button>
+
+              <Button
+                variant="outline-info"
+                size="sm"
+                className="py-1 px-2"
+                onClick={() => handleTodayAiClick(4)}
+                disabled={isBasicMember}
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+              >
+                최근4일간AI
+              </Button>
+
+              <Button
+                variant="outline-info"
+                size="sm"
+                className="py-1 px-2"
+                onClick={() => handleTodayAiClick(1)}
+                disabled={isBasicMember}
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+              >
+                오늘AI
+              </Button>
+            </div>
+
+            {/* 조건검색 버튼 */}
+            <div className="d-flex align-items-center">
+              <Button
+                variant="success"
+                size="sm"
+                className="py-1 px-3"
+                onClick={handleSearch}
+                disabled={isLoading || isBasicMember}
+                title={isBasicMember ? '정회원 이상 전용 기능입니다' : ''}
+              >
+                {isLoading ? (
+                  <span className="d-flex align-items-center gap-1">
+                    <span className="spinner-border spinner-border-sm" />
+                    검색
+                  </span>
+                ) : (
+                  '검색'
+                )}
+              </Button>
+              {searchCount !== undefined && (
+                <Badge
+                  bg="secondary"
+                  className="ms-1"
+                  style={{ fontSize: '0.75rem' }}
+                >
+                  {searchCount}
+                </Badge>
+              )}
+            </div>
           </div>
 
           <Button
@@ -820,51 +823,7 @@ export default function Filter({ onToggle }) {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           }}
         >
-          <div className="d-flex flex-column">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="d-flex align-items-center gap-2">
-                <strong className="text-primary fs-5">
-                  지수로 보는 AI 투자의견:
-                </strong>
-                <span className="fs-5 fw-bold" style={{ color: '#dc3545' }}>
-                  {opinion?.opinion || '로딩중...'}
-                </span>
-              </div>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={() => setShowOpinionDetail(!showOpinionDetail)}
-                style={{ minWidth: '80px' }}
-              >
-                {showOpinionDetail ? '접기 ▼' : '펼치기 ▲'}
-              </Button>
-            </div>
-
-            <div
-              style={{
-                maxHeight: showOpinionDetail ? '500px' : '0',
-                opacity: showOpinionDetail ? 1 : 0,
-                overflow: 'hidden',
-                transition: 'all 0.3s ease-in-out',
-                marginTop: showOpinionDetail ? '1rem' : '0',
-              }}
-            >
-              <div>
-                <strong className="text-primary d-block mb-2">
-                  분석에 대한 설명:
-                </strong>
-                <p className="mb-3" style={{ lineHeight: '1.6' }}>
-                  {opinion?.reason || '로딩중...'}
-                </p>
-              </div>
-              <div className="text-muted d-flex gap-2 align-items-center">
-                <strong>분석엔진:</strong>
-                <span className="badge bg-secondary">
-                  {opinion?.ai_method?.toUpperCase() || '로딩중...'}
-                </span>
-              </div>
-            </div>
-          </div>
+          {/* ...existing code... */}
         </div>
       </Form>
     </Container>
