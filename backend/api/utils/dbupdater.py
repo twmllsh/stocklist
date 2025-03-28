@@ -3729,8 +3729,17 @@ class Api:
             search_q = Q(ticker__code__contains=search) | Q(ticker__name__contains=search)
             chartvalues = ChartValue.objects.select_related('ticker').filter(search_q)
             searched_names = chartvalues.values_list('ticker__name',flat=True)
-            df_real = Api.get_df_real_from_fdr() 
+            # df_real = Api.get_df_real_from_fdr() 
+            df_real = GetData.get_realtime_data(change_min=change_min, change_max=change_max)
             df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
+            
+            if len(df_real) == 0:
+                df_real = Api.get_df_real_from_fdr() 
+                df_real = df_real.loc[df_real['종목명'].isin(searched_names)]
+                df_real['현재가'] = df_real['현재가'].astype(float)
+                df_real['매수총잔량'] = 0
+                df_real['매도총잔량'] = 0
+
             df_real['현재가'] = pd.to_numeric(df_real['현재가'], errors='coerce')
             df_real['매수총잔량'] = 0
             df_real['매도총잔량'] = 0
