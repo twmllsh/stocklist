@@ -1,5 +1,10 @@
 import stockAxios from './config/stockAxios';
 
+// // AI 의견 가져오기 함수 추가
+// const getAIOpinions = () => {
+//   return stockAxios.get('/ai-opinion/');
+// };
+
 export const stockService = {
   getFilteredStocks: async (filters) => {
     try {

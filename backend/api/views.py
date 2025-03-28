@@ -511,7 +511,7 @@ class AiOpinionForStockTodayViewSet(viewsets.ModelViewSet):
     serializer_class = AiOpinionForStockSerializer
     
     def get_queryset(self):
-        return AiOpinionForStock.get_today_data()
+        return AiOpinionForStock.get_today_data(n=3)
     
 class DartInfoViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]

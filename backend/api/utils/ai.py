@@ -42,21 +42,29 @@ def get_korean_stock_status(ai_method="openai"):
     # kq = fdr.DataReader('KQ11',start=start, end=end) # KOSDAQ 지수 (KRX)
     kodex_레버리지_d = GetData._get_ohlcv_from_fdr(code='122630')
     kodex_레버리지30 = GetData._get_ohlcv_from_daum(code='122630', data_type='30분봉', limit=300)
-    ticker = Ticker.objects.get(code='122630')
-    investor_data =  pd.DataFrame(ticker.investortrading_set.values())
+    KODEX_200선물인버스2X = GetData._get_ohlcv_from_fdr(code='252670')
+    KODEX_200선물인버스2X30 = GetData._get_ohlcv_from_daum(code='252670', data_type='30분봉', limit=300)
+    kodex_ticker = Ticker.objects.get(code='122630')
+    KODEX_200선물인버스2X_ticker = Ticker.objects.get(code='252670')
+    
+    kodex_레버리지_investor_data =  pd.DataFrame(kodex_ticker.investortrading_set.values())
+    KODEX_200선물인버스2X_investor_data =  pd.DataFrame(KODEX_200선물인버스2X_ticker.investortrading_set.values())
     
     # ks200 = fdr.DataReader('KS200',start=start, end=end) # KOSPI 200 (KRX)
     vix = fdr.DataReader("VIX", start=start, end=end)
     usd_krw = fdr.DataReader('USD/KRW',start=start, end=end) # 달러 원화
     # 외국계추정합 최근 동향 추가.
-    contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 주어진 여러 지표데이터를 분석하고 현재 종목에 단타로 투자를할 적절한 시기인지 아닌지 판단해줘:
+    contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 주어진 여러 지표데이터를 분석하고 현재 kodex_레버리지를 투자를할 적절한 시기인지 아닌지 판단해줘:
     Response in json format.
     Response Example:
-    {"opinion": "매수 or 보류 or 매도", "reason": 의견에 대한 이유} ...
+    {"opinion": "매수 or 관망 or 매도", "reason": 의견에 대한 이유} ...
     """
     contents2 = f"""kodex_레버리지 일봉: {kodex_레버리지_d.to_json()}
                     kodex_레버리지 30분봉 데이터: {kodex_레버리지30.to_json()}
-                    kodex_레버리지 최근투자자: {investor_data.to_json()}
+                    kodex_레버리지 최근투자자: {kodex_레버리지_investor_data.to_json()}
+                    KODEX_200선물인버스2X 일봉: {KODEX_200선물인버스2X.to_json()}
+                    KODEX_200선물인버스2X 30분봉 데이터: {KODEX_200선물인버스2X30.to_json()}
+                    KODEX_200선물인버스2X 최근투자자: {KODEX_200선물인버스2X_investor_data.to_json()}
                     변동성지수 (VIX): {vix.to_json()}
                     달러 원화 환율 (USD_KRW): {usd_krw.to_json()}"""
                     

@@ -6,9 +6,9 @@ import {
   Container,
   OverlayTrigger,
   Tooltip,
-  Alert, // Alert import 추가
+  Alert,
+  Badge, // Badge 추가
 } from 'react-bootstrap';
-// import { useState, useEffect, useCallback } from 'react';
 import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -18,6 +18,7 @@ import {
 import { stockService } from '../../services/stockService'; // 상단에 추가
 import { selectUser } from '../../store/slices/authSlice';
 import StockAiToday from './StockAiToday'; // 상단에 추가
+import AIOpinion from './AIOpinion'; // AIOpinion 컴포넌트 import 추가
 
 // 초기 필터 상태를 상수로 정의
 const INITIAL_FILTERS = {
@@ -693,6 +694,11 @@ export default function Filter({ onToggle }) {
               {/* 첫 번째 그룹 다음에 구분선 추가 */}
             </div>
           ))}
+
+          {/* AIOpinion 컴포넌트 추가 */}
+          <div className="mt-3">
+            <AIOpinion />
+          </div>
         </div>
 
         <div
@@ -822,19 +828,6 @@ export default function Filter({ onToggle }) {
           >
             {isOpen ? '접기' : '펼치기'}
           </Button>
-        </div>
-
-        {/* Opinion 섹션 수정 */}
-        <div
-          className="px-4 py-3 mt-2"
-          style={{
-            borderTop: '2px solid var(--bs-primary)',
-            backgroundColor: 'var(--bs-body-bg)',
-            borderRadius: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          }}
-        >
-          {/* ...existing code... */}
         </div>
       </Form>
     </Container>
