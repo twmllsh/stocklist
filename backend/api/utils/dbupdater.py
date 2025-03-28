@@ -1594,7 +1594,7 @@ class DBUpdater:
             except:
                 pass
             
-    def anal_all_stock(anal=True, test=False):
+    def anal_all_stock(anal=True, test=False, update_codes:list = None):
         
         # if StockFunc.is_holiday() and not test:
         #     return
@@ -1687,6 +1687,9 @@ class DBUpdater:
             # 몇개만 랜덤으로 테스트할때. 
             test_cnt = 10
             codes = random.sample(codes, test_cnt)
+        if update_codes is not None:
+            codes = [item for item in codes if item['code'] in update_codes]
+        
         for item in codes:
             try:
                 stock = Stock(item['code'], anal=anal)
