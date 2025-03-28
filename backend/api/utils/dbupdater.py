@@ -460,14 +460,19 @@ class DBUpdater:
             start_date = pd.Timestamp.now().date() - pd.Timedelta(days=700)
 
             ## 데이터 모두 먼저 지우기
-            Ohlcv.objects.all().delete()
-            with connection.cursor() as cursor:
-                cursor.execute("ALTER SEQUENCE api_ohlcv_id_seq RESTART WITH 1;")
-            print('ohlcv id 초기화 성공!!!!!!!!')
+            if codes is not None:
+                Ohlcv.objects.filter(ticker__code__in=codes).delete()
+            else:
+                Ohlcv.objects.all().delete()
+                with connection.cursor() as cursor:
+                    cursor.execute("ALTER SEQUENCE api_ohlcv_id_seq RESTART WITH 1;")
+                print('ohlcv id 초기화 성공!!!!!!!!')
             
             to_create_add = []
             ticker_list = []
             for code, ticker_obj in exist_ticker_dict.items():
+                if codes is not None and code not in codes:
+                    continue
                 if ticker_obj:
                     data = fdr.DataReader(code, start=start_date)
                     seconds = 1
@@ -1091,6 +1096,27 @@ class DBUpdater:
         print("update_investor running.......")
         print("====================================")
 
+        def get_etf_data(str_date=None):
+            '''
+            레버리지와 인버스 데이터
+            '''
+            if str_date is None:
+                return
+            new_data = []
+            for code, name in [("122630",'kodex 레버리지'), ("252670",'KODEX 200선물인버스2X')]:
+                df = pystock.get_etf_trading_volume_and_value(str_date, str_date, code)
+                df['code'] = code
+                df['종목명'] = name
+                df['날짜'] = str_date
+                df.index.name = '투자자'
+                df = df.reset_index()
+                df.columns = [''.join(col[::-1]) for col in df.columns]
+                new_data.append(df)
+            result_new_df = pd.concat(new_data)
+            result_new_df['날짜'] = pd.to_datetime(result_new_df['날짜'])
+            return result_new_df
+        
+        
         def csv_data_generator(file_path):
             with open(file_path, mode="r", encoding="utf-8") as file:
                 reader = csv.DictReader(file)
@@ -1158,7 +1184,6 @@ class DBUpdater:
         
         start_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
         try:
-        
             data = InvestorTrading.objects.last()
             if not data:
                 print(
@@ -1205,6 +1230,9 @@ class DBUpdater:
                     result = asyncio.run(GetData._get_investor_all_async(str_dates))
                     dates_downloaded = result["날짜"].unique()
 
+                    etf = get_etf_data(str_dates)
+                    result = pd.concat([result, etf])
+                    
                     records = result.to_dict("records")
                     print(f"dates downloaded {dates_downloaded}")
                     # 저장하기.
@@ -1875,12 +1903,12 @@ class GetData:
             return data
 
         # ## 레버리지, 인버스 추가.
-        # dic = {
-        #     "cd": ["A122630", "A252670"],
-        #     "nm": ["KODEX 레버리지", "KODEX 200선물인버스2X"],
-        #     "gb": ["ETF", "ETF"],
-        # }
-        # all_ls.append(pd.DataFrame(dic))
+        dic = {
+            "cd": ["A122630", "A252670"],
+            "nm": ["KODEX 레버리지", "KODEX 200선물인버스2X"],
+            "gb": ["ETF", "ETF"],
+        }
+        all_ls.append(pd.DataFrame(dic))
 
         urls = [
             f"http://comp.fnguide.com/SVO2/common/lookup_data.asp?mkt_gb={mkt_gb}&comp_gb=1"
@@ -2216,8 +2244,8 @@ class GetData:
             x = x.set_index(renamed_index_name)
             x.index = [re.sub(r"\(원\)|\(|\)", "", idx) for idx in x.index]
             x = x.dropna(axis=1, how="all")
-            # x = x.fill나(value=None)  ## 나 값을 None으로 ( 데이터베이스 저장시 필요함.)
-            # x = x.where(pd.not나(x), None)
+            # x = x.fillna(value=None)  ## na 값을 None으로 ( 데이터베이스 저장시 필요함.)
+            # x = x.where(pd.notna(x), None)
             x = x.loc[:, ~x.columns.duplicated(keep='last')]  ## 2023/06 과 2023/12 의 데이터 있을때 연도경우 2023 데이터가 2개 생성되서 중복있다면 마지막데이터만 남기기. 
             for col in x.columns:
                 x[col] = pd.to_numeric(x[col], errors="coerce")
@@ -2326,7 +2354,6 @@ class GetData:
             )
             result_df["투자자"] = investor
             result_df["날짜"] = str_date
-            result_df = result_df.reset_index()
         return result_df
 
     async def _get_investor_all_async(date: List = None):

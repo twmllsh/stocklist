@@ -41,6 +41,7 @@ def get_korean_stock_status(ai_method="openai"):
     ks = fdr.DataReader('KS11',start=start, end=end) # KOSPI 지수 (KRX)
     kq = fdr.DataReader('KQ11',start=start, end=end) # KOSDAQ 지수 (KRX)
     kodex_레버리지30 = GetData._get_ohlcv_from_daum(code='122630', data_type='30분봉', limit=200)
+    
     # ks200 = fdr.DataReader('KS200',start=start, end=end) # KOSPI 200 (KRX)
     vix = fdr.DataReader("VIX", start=start, end=end)
     usd_krw = fdr.DataReader('USD/KRW',start=start, end=end) # 달러 원화
