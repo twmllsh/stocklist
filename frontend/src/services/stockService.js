@@ -211,18 +211,18 @@ export const stockService = {
       throw error;
     }
   },
-  // AI 의견 조회
+  // AI 의견 조회 - 수정된 버전과 디버깅 추가
   getOpinion: async () => {
     try {
+      // 명확한 디버깅 메시지 추가
+      console.log('AiOpinionViewSet에 API 요청 시작 (/aiopinion/)');
       const response = await stockAxios.get('/aiopinion/');
+      console.log('AiOpinion API 응답:', response);
+
+      // 응답 데이터 처리
       return response.data || response;
     } catch (error) {
-      console.error('AI Opinion 요청 실패:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
+      console.error('AI Opinion API 요청 실패:', error);
       throw error;
     }
   },

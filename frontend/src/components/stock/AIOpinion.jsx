@@ -39,11 +39,27 @@ const AIOpinion = () => {
     const fetchAIOpinions = async () => {
       try {
         setLoading(true);
-        // 기존에 정의된 getOpinionForStockToday 함수 사용
-        const response = await stockService.getOpinionForStockToday();
+        // getOpinionForStockToday 대신 getOpinion 사용
+        const response = await stockService.getOpinion();
 
-        // 응답이 배열이 아니면 배열로 변환 (단일 객체인 경우)
-        const opinionsList = Array.isArray(response) ? response : [response];
+        // 응답 구조에 따라 데이터 처리 방법 수정
+        let opinionsList = [];
+
+        if (Array.isArray(response)) {
+          opinionsList = response;
+        } else if (response && typeof response === 'object') {
+          // 배열이 아닌 객체인 경우
+          if (Array.isArray(response.results)) {
+            opinionsList = response.results;
+          } else if (
+            Object.keys(response).some(
+              (key) => key === 'opinion' || key === 'reason'
+            )
+          ) {
+            // 단일 객체인 경우
+            opinionsList = [response];
+          }
+        }
 
         setOpinions(opinionsList);
         setLoading(false);

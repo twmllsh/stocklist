@@ -12,7 +12,11 @@ import aiohttp
 from asgiref.sync import sync_to_async
 from .mystock import GetData
 
+'''
+레버리지 분석시 추가적으로 필요한 경제지표데이터 :
+**거시경제 지표:** 금리, 환율, 경제 성장률 등 
 
+'''
 def get_korean_stock_status(ai_method="openai"):
     '''
     한국 주식 지수 분석. 
