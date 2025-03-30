@@ -7,8 +7,9 @@ WORKDIR /app
 # package.json 복사 전에 디렉토리가 존재하는지 확인
 COPY package*.json ./
 
-# 전역 설치 제거하고 로컬 의존성만 설치
+# 의존성 설치 및 vite 전역 설치 추가
 RUN npm install
+RUN npm install -g vite
 
 # 애플리케이션 코드 복사
 COPY . .
