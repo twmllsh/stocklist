@@ -2784,7 +2784,7 @@ class GetData:
         #             return pd.DataFrame()
 
         data = requests.get(url=url, headers=headers, params=params)
-        if data.status == 200:
+        if data.status_code == 200:
             data = data.json()
         else:
             return pd.DataFrame()
