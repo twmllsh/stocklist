@@ -29,6 +29,7 @@ from api.utils.mystock import Stock, ElseInfo
 from .message import My_discord
 from .ai import *
 import xmltodict
+import traceback
 
 mydiscord = My_discord()
 
@@ -1261,8 +1262,9 @@ class DBUpdater:
                 pass
             
         except Exception as e:
+            tb = traceback.format_exc()
             end_time = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')
-            msg_text = f"{start_time} ~ {end_time} {e}: update_investor xxxxxx !!"
+            msg_text = f"{start_time} ~ {end_time} {e} {tb}: update_investor xxxxxx !!"
             try:
                 asyncio.run(mydiscord.send_message(msg_text))
             except:
