@@ -1241,6 +1241,9 @@ class DBUpdater:
                     records = result.to_dict("records")
                     print(f"dates downloaded {dates_downloaded}")
                     # 저장하기.
+                    print("==========================")
+                    print(records)
+                    print("==========================")
                     records_to_db(records=records)
                     print('5초후 다음작업..')
                     time.sleep(5)
@@ -2391,13 +2394,15 @@ class GetData:
             ]
             result = await asyncio.gather(*tasks)
             result_df = pd.concat(result)
-            result_df = result_df.reset_index(drop=True)
+            result_df = result_df.reset_index()
             if len(result_df):
                 result_df = result_df.rename(columns={"티커": "code"})
                 result_df["날짜"] = pd.to_datetime(result_df["날짜"])
             else:
                 pass
-        except:
+        except Exception as e:
+            tb = traceback.format_exc()
+            print(f"get_investor_all_async err: {tb}")
             # logger.error(f"{date} 데이터가 존재하지 않습니다.")
             return pd.DataFrame()
         return result_df
