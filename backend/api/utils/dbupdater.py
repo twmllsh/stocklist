@@ -1229,6 +1229,10 @@ class DBUpdater:
                 for str_dates in split_list(split_str_dates, 20): # 20 개씩 나눠서 작업. 
                     print(str_dates , '작업중..')
                     result = asyncio.run(GetData._get_investor_all_async(str_dates))
+                    if not 'code' in result.columns:
+                        if 'index' in result.columns:
+                            result = result.rename(columns={'index':'code'})
+
                     dates_downloaded = result["날짜"].unique()
                     try:
                         etf = get_etf_data(str_dates)
@@ -1241,8 +1245,8 @@ class DBUpdater:
                     records = result.to_dict("records")
                     print(f"dates downloaded {dates_downloaded}")
                     # 저장하기.
-                    print("==========================")
-                    print(records)
+                    print("============첫데이터만 출력 ==============")
+                    print(records[0])
                     print("==========================")
                     records_to_db(records=records)
                     print('5초후 다음작업..')
