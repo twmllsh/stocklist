@@ -1229,8 +1229,12 @@ class DBUpdater:
                     print(str_dates , '작업중..')
                     result = asyncio.run(GetData._get_investor_all_async(str_dates))
                     dates_downloaded = result["날짜"].unique()
-
-                    etf = get_etf_data(str_dates)
+                    try:
+                        etf = get_etf_data(str_dates)
+                    except Exception as e:
+                        print('get_etf_data error', e)
+                        etf = pd.DataFrame()
+                    
                     result = pd.concat([result, etf])
                     
                     records = result.to_dict("records")
