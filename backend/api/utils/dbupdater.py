@@ -1246,7 +1246,7 @@ class DBUpdater:
                     print(f"dates downloaded {dates_downloaded}")
                     # 저장하기.
                     print("============첫데이터만 출력 ==============")
-                    print(records[0])
+                    print(type(records))
                     print("==========================")
                     records_to_db(records=records)
                     print('5초후 다음작업..')
