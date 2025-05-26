@@ -94,6 +94,12 @@ app.conf.beat_schedule = {
         'schedule': crontab(hour=22, minute=0, day_of_week='sat'),
     },
     
+    # 공매도정보 업데이트 (장날 매일 8시 50분)
+    'update-short': {
+        'task': 'api.tasks.scheduler_update_short',
+        'schedule': crontab(hour=8, minute=40, day_of_week='mon-fri'),
+    },
+    
     # # DB 백업 (일요일 01:00)
     # 'backup-db': {
     #     'task': 'api.tasks.scheduler_db_backup',

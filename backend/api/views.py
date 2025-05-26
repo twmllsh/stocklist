@@ -125,6 +125,7 @@ class BrokerTradingViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(ticker_id=ticker, date__gte=pre_month)
         else:
             queryset = queryset.filter(date=last_date)
+        queryset = queryset.order_by('date')
         return queryset
     
     

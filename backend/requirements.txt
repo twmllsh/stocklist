@@ -29,3 +29,5 @@ python-dotenv==1.0.1
 openai
 mojito2
 # google-generativeai
+jupyter
+ipykernel

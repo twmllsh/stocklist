@@ -1606,7 +1606,226 @@ class DBUpdater:
                 asyncio.run(mydiscord.send_message(msg_text))
             except:
                 pass
+    
+    def get_short_interest(date:str):
+        '''
+        공공데이터 활용신청
+        https://www.data.go.kr/tcs/dss/selectApiDataDetailView.do?publicDataPk=15059612 
+        '''
+        url = url = 'http://apis.data.go.kr/1160100/service/GetStocLendBorrInfoService/getStLendAndBorrItemRank'
+        serviceKey = "0xVMOC4h7KRSMYpWC3tf7sYu6OyBQhEkVvJUJeBKPjT0sCTCyFfHWJsDDtGqg1taTxPoZhKfDALnSowbE+lb9g=="
+        params ={
+            'serviceKey' : serviceKey, 
+            'numOfRows' : '3000', 
+            'pageNo' : '1', 
+            'resultType' : 'json', 
+            'basDt' : date,
+            }
+        col = {
+        "결과코드":"resultCode",
+        "결과메시지":"resultMsg",
+        "한 페이지 결과 수":"numOfRows",
+        "페이지 번호":"pageNo",
+        "전체 결과 수":"totalCount",
+        "기준일자":"basDt",
+        "ISIN코드":"isinCd",
+        "대차증권구분코드":"lnbScrtDcd",
+        "대차증권구분코드명":"lnbScrtDcdNm",
+        "ISIN코드명":"isinCdNm",
+        "대차체결주식수":"lnbCclStckCnt",
+        "리콜상환주식수":"rcalRdptStckCnt",
+        "상환주식수":"rdptStckCnt",
+        "대차잔여주식수":"lnbRmanStckCnt",
+        "대차잔액":"lnbBal",
+        }
+        col = {v : k for k, v in col.items()}
+        resp = requests.get(url, params=params)
+        js = resp.json()
+        data = js['response']['body']['items']['item']
+        df = pd.DataFrame(data)
+        df = df.rename(columns=col)
+        if len(df) > 0:
+            ## 정수화 작업 필요.  후처리
+            for col in ['대차체결주식수', '리콜상환주식수', '상환주식수', '대차잔여주식수', '대차잔액']:
+                df[col] = pd.to_numeric(df[col])
+            # df['대차체결주식수'] = pd.to_numeric(df['대차체결주식수'])
+            # df['리콜상환주식수'] = pd.to_numeric(df['리콜상환주식수'])
+            # df['상환주식수'] = pd.to_numeric(df['상환주식수'])
+            # df['대차잔여주식수'] = pd.to_numeric(df['대차잔여주식수'])
+            # df['대차잔액'] = pd.to_numeric(df['대차잔액'])
+            df['기준일자'] = pd.to_datetime(df['기준일자'])
+            # df = df.set_index('기준일자')
+            df = df.set_index('기준일자').rename_axis('Date')
+        
+            #["ISIN코드","대차증권구분코드","대차증권구분코드명","ISIN코드명","대차체결주식수","리콜상환주식수","상환주식수","대차잔여주식수","대차잔액"]
+            col = ["ISIN코드","ISIN코드명","대차체결주식수","리콜상환주식수","상환주식수","대차잔여주식수","대차잔액"]
+            df = df[col]
+            df = df.reset_index()
+            df.rename(columns={
+                "ISIN코드": "code",
+                "ISIN코드명": "name",
+                }, inplace=True)
+        return df
+    
+    
+    def get_short(the_date:str):
+        
+        kospi = pystock.get_shorting_volume_by_ticker(the_date)
+        kosdaq = pystock.get_shorting_volume_by_ticker(the_date, 'KOSDAQ')
+        data = pd.concat([kospi, kosdaq])
+        data = data.reset_index()
+        data['Date'] = pd.to_datetime(the_date).date()
+        data = data.rename(columns={"티커":"code"})
+        return data
+    
+    
+    def update_short_interest():
+        """
+        공공데이터 활용신청
+        https://www.data.go.kr/tcs/dss/selectApiDataDetailView.do?publicDataPk=15059612 
+        0. serviceKey 를 환경변수로 넣고 가져온다. 
+        0. 데이터가 없다면 21일전데이터부터 차례로 마지막 거래일 전날짜까지 받는다. 
+        1. 최종데이터 날짜를 가져온다.(없다면 -21일) 거래일 전일보다 작다면 최종데이터날짜 다음부터 ~ 거래일 전일까지 데이터를 받는다. 
+        
+        1. get_short_interest로 데이터 마지막 거래일 전날짜로 데이터를 받는다. 
+        2. 기존 ticker 가 있는 데이터만 추출. 
+        3. 데이터 저장. 
+        
+        """
+        time.sleep(1)
+        # 거래일기준 최근날짜
+        temp_ticker = Ticker.objects.get(code='005930')
+        last_date = temp_ticker.ohlcv_set.distinct('Date').order_by('-Date')[1].Date
+        
+        long_time_date = pd.Timestamp.now() - pd.Timedelta(days=21)
+        long_time_date = long_time_date.date()
             
+        # short데이터기준 최근날짜.
+        last_short_data = ShortInterest.objects.last()
+        if last_short_data:
+            start_date = last_short_data.date + pd.Timedelta(days=1)
+        else:
+            start_date = long_time_date
+            
+        # last_date 데이터를 받을수 있는 날짜
+        # start_date 새로 받아야하는 데이터 날짜.
+        if start_date >= last_date:
+            print('더이상 받을 데이터가 없습니다.')
+            return
+        
+        date_range = pd.date_range(start_date, last_date, freq='B')
+        
+        for date in date_range:
+            str_date = date.strftime('%Y%m%d')
+            print(f"{str_date} 데이터 받기 시작..")
+            
+            data = DBUpdater.get_short_interest(str_date)
+            # short_data = data.copy()
+            if data.empty:
+                print(f"{str_date} 데이터가 없습니다.")
+                continue
+            # data2 = DBUpdater.get_short(str_date)
+            
+            # data = pd.merge(data1, data2, on='code', how='inner')
+            # ticker 가 있는 데이터만 추출.
+            codes = Ticker.objects.values_list('code', flat=True)
+            data = data[data['code'].isin(codes)]
+            
+            create_short_interest = []
+            for item in data.to_dict('records'):
+                
+                short_interest = ShortInterest(
+                    ticker=Ticker.objects.get(code=item['code']),
+                    Date=item['Date'],
+                    대차체결주식수=item['대차체결주식수'],
+                    리콜상환주식수=item['리콜상환주식수'],
+                    상환주식수=item['상환주식수'],
+                    대차잔여주식수=item['대차잔여주식수'],
+                    대차잔액=item['대차잔액'],
+                    # 공매도=item['공매도'],
+                    # 매수=item['매수'],
+                    # 비중=item['비중'],
+                )
+                create_short_interest.append(short_interest)
+            
+            ShortInterest.objects.bulk_create(create_short_interest)   
+            print(f"{str_date} 데이터 저장 완료.") 
+  
+        
+        # 전체데이터 저장하기. 
+        print('데이터 저장 완료.')
+        
+        # 오래된데이터 삭제
+        del_result = ShortInterest.objects.filter(Date__lt=long_time_date).delete()
+        if del_result[0] > 0:
+            print(f"오래된 데이터 {del_result[0]}개 삭제 완료.")
+        else:
+            print("삭제할 오래된 데이터가 없습니다.")
+        
+    def update_short():
+ 
+        # 거래일기준 최근날짜
+        temp_ticker = Ticker.objects.get(code='005930')
+        last_date = temp_ticker.ohlcv_set.distinct('Date').order_by('-Date')[1].Date
+        
+        long_time_date = pd.Timestamp.now() - pd.Timedelta(days=21)
+        long_time_date = long_time_date.date()
+            
+        # short데이터기준 최근날짜.
+        last_short_data = Short.objects.last()
+        if last_short_data:
+            start_date = last_short_data.date + pd.Timedelta(days=1)
+        else:
+            start_date = long_time_date
+            
+        # last_date 데이터를 받을수 있는 날짜
+        # start_date 새로 받아야하는 데이터 날짜.
+        if start_date >= last_date:
+            print('더이상 받을 데이터가 없습니다.')
+            return
+        
+        date_range = pd.date_range(start_date, last_date, freq='B')
+        
+        for date in date_range:
+            str_date = date.strftime('%Y%m%d')
+            print(f"{str_date} 데이터 받기 시작..")
+            
+            data = DBUpdater.get_short(str_date)
+            time.sleep(1)
+            if data.empty:
+                print(f"{str_date} 데이터가 없습니다.")
+                continue
+            
+            # ticker 가 있는 데이터만 추출.
+            codes = Ticker.objects.values_list('code', flat=True)
+            data = data[data['code'].isin(codes)]
+            
+            create_short = []
+            for item in data.to_dict('records'):
+                
+                short = Short(
+                    ticker=Ticker.objects.get(code=item['code']),
+                    Date=item['Date'],
+                    공매도=item['공매도'],
+                    매수=item['매수'],
+                    비중=item['비중'],
+                )
+                create_short.append(short)
+            
+            Short.objects.bulk_create(create_short)   
+            print(f"{str_date} short 데이터 저장 완료.") 
+  
+        
+        # 전체데이터 저장하기. 
+        print('short 데이터 저장 전체 완료.')
+        
+        # 오래된데이터 삭제
+        del_result = ShortInterest.objects.filter(Date__lt=long_time_date).delete()
+        if del_result[0] > 0:
+            print(f"오래된 데이터 {del_result[0]}개 삭제 완료.")
+        else:
+            print("삭제할 오래된 데이터가 없습니다.")
+        
     def anal_all_stock(anal=True, test=False, update_codes:list = None):
         
         # if StockFunc.is_holiday() and not test:

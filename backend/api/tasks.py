@@ -132,6 +132,16 @@ def scheduler_update_theme_upjong():
         return f"Theme/Upjong update failed: {str(e)}"
 
 @shared_task
+def scheduler_update_short():
+    """공매도, 대차정보 업데이트 (  )"""
+    try:
+        DBUpdater.update_short()
+        DBUpdater.update_short_interest()
+        return "short, short_interst data updated successfully"
+    except Exception as e:
+        return f"short, short_interst update failed: {str(e)}"
+    
+@shared_task
 def scheduler_db_backup():
     """데이터베이스 백업 (일요일 01:00)"""
     try:

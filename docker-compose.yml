@@ -35,6 +35,7 @@ services:
       context: ./backend
     ports:
       - '8000:8000'
+      - '8888:8888'
     env_file:
       - .env
     environment:

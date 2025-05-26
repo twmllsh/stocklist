@@ -1053,3 +1053,41 @@ class AiOpinionForStock(models.Model):
         for instance in qs:
             instance.created_at = timezone.localtime(instance.created_at)
         return qs
+
+class Short(models.Model):
+    ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE, related_name='short_set')
+    Date = models.DateField()
+    공매도 = models.BigIntegerField(null=True)
+    매수 = models.BigIntegerField(null=True)
+    비중 = models.FloatField(null=True)
+    
+    def __str__(self):
+        return f"Short {self.ticker.name} {self.Date} 공매도:{self.공매도} 비중:{self.비중}"
+    
+    @classmethod
+    def get_data_by_ticker(cls, ticker):
+        qs = cls.objects.filter(ticker=ticker)
+        qs = qs.order_by('-Date')
+        # # 서울 시간으로 변환
+        # for instance in qs:
+        #     instance.created_at = timezone.localtime(instance.created_at)
+        return qs
+class ShortInterest(models.Model):
+    ticker = models.ForeignKey(Ticker, on_delete=models.CASCADE, related_name='short_interest_set')
+    Date = models.DateField()
+    대차체결주식수 = models.BigIntegerField(null=True)
+    리콜상환주식수 = models.BigIntegerField(null=True)
+    상환주식수 = models.BigIntegerField(null=True)
+    대차잔여주식수 = models.BigIntegerField(null=True)
+    대차잔액 = models.BigIntegerField(null=True)
+
+    def __str__(self):
+        return f"ShortInterest {self.ticker.name} {self.Date} 대차잔액:{self.대차잔액}"
+    @classmethod
+    def get_data_by_ticker(cls, ticker):
+        qs = cls.objects.filter(ticker=ticker)
+        qs = qs.order_by('-Date')
+        # # 서울 시간으로 변환
+        # for instance in qs:
+        #     instance.created_at = timezone.localtime(instance.created_at)
+        return qs

@@ -212,6 +212,7 @@ SHELL_PLUS_IMPORTS = [
     "from api.utils.dbupdater import Api",
     "from api.utils.dbupdater import GetData",
     "from api.utils.mykis import KIS",
+    "from api.utils.dbupdater import DBUpdater",
     
     # 'your_app.models',  # 특정 앱의 모델 임포트
     # 'your_app.views',   # 특정 앱의 뷰 임포트
