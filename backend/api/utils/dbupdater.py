@@ -1701,9 +1701,8 @@ class DBUpdater:
         long_time_date = long_time_date.date()
             
         # short데이터기준 최근날짜.
-        last_short_data = ShortInterest.objects.last()
-        if last_short_data:
-            start_date = last_short_data.date + pd.Timedelta(days=1)
+        if ShortInterest.objects.last():
+            start_date = ShortInterest.objects.last().Date + pd.Timedelta(days=1)
         else:
             start_date = long_time_date
             
@@ -1772,9 +1771,8 @@ class DBUpdater:
         long_time_date = long_time_date.date()
             
         # short데이터기준 최근날짜.
-        last_short_data = Short.objects.last()
-        if last_short_data:
-            start_date = last_short_data.date + pd.Timedelta(days=1)
+        if Short.objects.last():
+            start_date = Short.objects.last().Date + pd.Timedelta(days=1)
         else:
             start_date = long_time_date
             
@@ -2745,7 +2743,7 @@ class GetData:
         result = pd.DataFrame(new_all_ls)
         return result
 
-    async def _get_group_list_acync(group="theme"):
+    async def _get_group_list_async(group="theme"):
         """
         theme 또는 upjong 별로 관련 url 가져오기
         """
@@ -2783,7 +2781,7 @@ class GetData:
         """
         r = await asyncio.to_thread(functools.partial(requests.get, url_theme))
         # r = requests.get(url_theme)
-        if r.status == 200:
+        if r.status_code == 200:
             print(f"{name}_succeed!")
         try:
             soup = BeautifulSoup(r.text, "html5lib")
@@ -2822,8 +2820,8 @@ class GetData:
         """
 
         tasks1 = [
-            GetData._get_group_list_acync("theme"),
-            GetData._get_group_list_acync("upjong"),
+            GetData._get_group_list_async("theme"),
+            GetData._get_group_list_async("upjong"),
         ]
         result1 = await asyncio.gather(*tasks1)
         theme_ls, upjong_ls = result1
