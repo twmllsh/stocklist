@@ -33,3 +33,6 @@ openai
 mojito2
 # google-generativeai
 ipykernel
+
+# 경고 해결을 위한 setuptools 버전 고정
+setuptools<81.0.0

@@ -291,7 +291,7 @@ class ShortViewSet(viewsets.ModelViewSet):
         queryset = Short.objects.all()
         ticker = self.request.query_params.get('ticker', None)
         if ticker is not None:
-            queryset = queryset.filter(tickers__code=ticker)
+            queryset = queryset.filter(ticker=ticker)
         # 최근 데이터 10개만 가져오기
         # queryset = queryset.order_by('-createdAt')[:10]
         queryset = queryset.order_by('-Date')
@@ -306,7 +306,7 @@ class ShortInterestViewSet(viewsets.ModelViewSet):
         queryset = ShortInterest.objects.all()
         ticker = self.request.query_params.get('ticker', None)
         if ticker is not None:
-            queryset = queryset.filter(tickers__code=ticker)
+            queryset = queryset.filter(ticker=ticker)
         # 최근 데이터 10개만 가져오기
         # queryset = queryset.order_by('-createdAt')[:10]
         queryset = queryset.order_by('-Date')
