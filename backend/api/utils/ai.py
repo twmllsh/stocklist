@@ -166,16 +166,24 @@ def get_opinion_by_ticker(code , ai_method="openai"):
     broker_df = pd.DataFrame(broker.values('date','broker_name','buy','sell'))
     broker_df = broker_df.fillna(0)
     
+    short = ticker.short_set.all()
+    short_df = pd.DataFrame(short.values("Date", "공매도", '매수','비중'))
+    
+    shortinterest = ticker.short_interest_set.all()
+    short_interest_df = pd.DataFrame(shortinterest.values('Date', '대차체결주식수', '리콜상환주식수', '상환주식수', '대차잔여주식수'))
+    
     # 120일 기준 매물대
     price_level1 = ticker.chartvalue.매물대1 if ticker.chartvalue.매물대1 else None
     price_level2 = ticker.chartvalue.매물대2 if ticker.chartvalue.매물대1 else None
+    
+
         
     contents1 = """당신은 한국주식 ​​스윙투자의 전문가입니다. 단타위주로 매매할 것이다. 주어진 데이터를 분석해서 지금이 투자를 할 적절한시기인지 아닌지 판단해줘. :
 
     Response in json format.
 
     Response Example:
-    {"opinion": "매수 or 보류 or 매도", "reason": 의견에 대한 이유}...
+    {"opinion": "매수 or 홀딩 or 관망 or 매도", "reason": 의견에 대한 이유}...
   """
     contents2 = f"""종목 OHLCV 데이터: {ohlcv.to_json()}
                     종목 OHLCV 30분봉 데이터: {ohlcv_30.to_json()}
@@ -185,6 +193,8 @@ def get_opinion_by_ticker(code , ai_method="openai"):
                     최근 외국계창구 현황: {broker_df.to_json()}
                     최근 6개월기준 첫번째 매물대: {price_level1}
                     최근 6개월기준 두번째 매물대: {price_level2}
+                    최근 공매도정보 : {short_df.to_json()}
+                    최근 대차잔고정보 : {short_interest_df.to_json()}
                     """
                     
     response = client.chat.completions.create(
