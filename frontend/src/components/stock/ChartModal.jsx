@@ -1,5 +1,14 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Modal, ButtonGroup, Button, Nav, Tab, Form } from 'react-bootstrap'; // Form 추가
+import {
+  Modal,
+  ButtonGroup,
+  Button,
+  Nav,
+  Tab,
+  Form,
+  OverlayTrigger,
+  Tooltip,
+} from 'react-bootstrap'; // OverlayTrigger, Tooltip 추가
 import { useSelector, useDispatch } from 'react-redux';
 import { selectStocks } from '../../store/slices/stockSlice';
 import { stockService } from '../../services/stockService'; // 추가: stockService import
@@ -606,33 +615,125 @@ const ChartModal = ({
         <Tab.Container activeKey={activeTab} onSelect={handleTabSelect}>
           <Nav variant="tabs" className="mt-3">
             <Nav.Item>
-              <Nav.Link eventKey="investor">투자자</Nav.Link>
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id="tooltip-investor">
+                    여러 투자자들의 거래가 있는것이 관심도가 큰것이며
+                    쌍끌이매수가 많을수록 좋다.
+                  </Tooltip>
+                }
+              >
+                <Nav.Link eventKey="investor">투자자</Nav.Link>
+              </OverlayTrigger>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="broker">거래원</Nav.Link>
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id="tooltip-broker">
+                    외국계추정합을 우선적으로 체크하고 어떤 외국계창구가
+                    관여하는지 확인하면 좋다.
+                  </Tooltip>
+                }
+              >
+                <Nav.Link eventKey="broker">거래원</Nav.Link>
+              </OverlayTrigger>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="consensus">컨센서스</Nav.Link>
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id="tooltip-consensus">
+                    애널리스트들의 매출, 영업이익, 당기순이익을 추정한 값으로
+                    미래 예상치가 현재보다 클때 주가상승의 동력이 될수 있다.
+                    (파란표시)
+                  </Tooltip>
+                }
+              >
+                <Nav.Link eventKey="consensus">컨센서스</Nav.Link>
+              </OverlayTrigger>
             </Nav.Item>
             {canViewAI && (
               <Nav.Item>
-                <Nav.Link eventKey="ai">AI 의견</Nav.Link>
+                <OverlayTrigger
+                  placement="top"
+                  overlay={
+                    <Tooltip id="tooltip-ai">
+                      AI 의견은 종목에 대한 AI의 분석과 예측을 제공합니다. 매일
+                      특정시간에 추천되는 종목을 일부만 추출하여 ai에게 데이터를
+                      주고 의견을 받는다. 참고용으로만 봐야한다.
+                    </Tooltip>
+                  }
+                >
+                  <Nav.Link eventKey="ai">AI 의견</Nav.Link>
+                </OverlayTrigger>
               </Nav.Item>
             )}
             <Nav.Item>
-              <Nav.Link eventKey="disclosure">공시</Nav.Link>
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id="tooltip-disclosure">
+                    공시정보를 확인할 수 있습니다. 공시정보는 기업의 중요한
+                    결정이나 사건에 대한 공식적인 발표로, 투자 결정을 내리는 데
+                    중요한 역할을 합니다.
+                  </Tooltip>
+                }
+              >
+                <Nav.Link eventKey="disclosure">공시</Nav.Link>
+              </OverlayTrigger>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="mainDisclosure">주요공시</Nav.Link>
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id="tooltip-mainDisclosure">
+                    공시중에 공급계약, 전환사채, 유상증자, 무상증자 등 공시만을
+                    추출하며, 데이터가 있다면 차트에 표기될수 있다.
+                  </Tooltip>
+                }
+              >
+                <Nav.Link eventKey="mainDisclosure">주요공시</Nav.Link>
+              </OverlayTrigger>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="loanShort">대차정보/공매도</Nav.Link>
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id="tooltip-loanShort">
+                    최근 한달간 대차잔고와 공매도 흐름을 알수 있으며,
+                    평균거래량과 비교하여 공매도가 이 주식에 미치는 영향도를
+                    가늠할 수 있다.
+                  </Tooltip>
+                }
+              >
+                <Nav.Link eventKey="loanShort">대차정보/공매도</Nav.Link>
+              </OverlayTrigger>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="issue">이슈</Nav.Link>
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id="tooltip-issue">
+                    이 종목과 관련된 이슈의 내용을 확인할 수 있다.
+                  </Tooltip>
+                }
+              >
+                <Nav.Link eventKey="issue">이슈</Nav.Link>
+              </OverlayTrigger>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="news">뉴스</Nav.Link>
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id="tooltip-news">
+                    이 종목과 관련된 뉴스를 확인할 수 있다.
+                  </Tooltip>
+                }
+              >
+                <Nav.Link eventKey="news">뉴스</Nav.Link>
+              </OverlayTrigger>
             </Nav.Item>
           </Nav>
           <Tab.Content className="p-3">
