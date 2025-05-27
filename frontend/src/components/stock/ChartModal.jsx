@@ -13,6 +13,7 @@ import StockInvestor from './tabs/StockInvestor';
 import StockBroker from './tabs/StockBroker'; // 새로운 import 추가
 import StockDisclosure from './tabs/StockDisclosure'; // 새로운 import 추가
 import StockMainDisclosure from './tabs/StockMainDisclosure'; // 새로운 import 추가
+import StockLoanShort from './tabs/StockLoanShort'; // 새로운 컴포넌트 import 추가
 import { AiFillStar, AiOutlineStar } from 'react-icons/ai'; // 별 아이콘 추가
 import {
   selectFavorites,
@@ -625,6 +626,9 @@ const ChartModal = ({
               <Nav.Link eventKey="mainDisclosure">주요공시</Nav.Link>
             </Nav.Item>
             <Nav.Item>
+              <Nav.Link eventKey="loanShort">대차정보/공매도</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
               <Nav.Link eventKey="issue">이슈</Nav.Link>
             </Nav.Item>
             <Nav.Item>
@@ -677,6 +681,15 @@ const ChartModal = ({
                 <StockMainDisclosure
                   key={`mainDisclosure-${stockCode}-${activeTab}`}
                   stockCode={stockCode}
+                />
+              )}
+            </Tab.Pane>
+            <Tab.Pane eventKey="loanShort" mountOnEnter unmountOnExit>
+              {activeTab === 'loanShort' && (
+                <StockLoanShort
+                  key={`loanShort-${stockCode}-${activeTab}`}
+                  stockCode={stockCode}
+                  ohlcvData={currentData} // OHLCV 데이터 전달
                 />
               )}
             </Tab.Pane>

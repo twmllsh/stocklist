@@ -47,7 +47,7 @@ export default function StockList() {
     <div className="d-flex flex-column min-vh-100">
       <Navbar bg="light" variant="light" className="border-bottom" fixed="top">
         <Container fluid>
-          <Navbar.Brand>StockList v0.7</Navbar.Brand>
+          <Navbar.Brand>StockList v0.8</Navbar.Brand>
           <div className="d-flex align-items-center">
             <span className="text-dark me-3">
               {user?.username}님 ({getMembershipLabel(user?.membership)})

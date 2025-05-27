@@ -125,6 +125,46 @@ export const stockService = {
       throw error;
     }
   },
+  // 종목 대차정보 조회
+  getStockShortInterest: async (code) => {
+    try {
+      // console.log(`대차정보 API 요청: /shortinterest/?ticker=${code}`);
+      const response = await stockAxios.get('/shortinterest/', {
+        params: { ticker: code },
+      });
+      // console.log('대차정보 API 응답 상태:', response.status);
+      // console.log('대차정보 API 응답 데이터 타입:', typeof response.data);
+      // console.log(
+      //   '대차정보 API 응답 데이터 길이:',
+      //   Array.isArray(response.data) ? response.data.length : 'N/A'
+      // );
+      // response.data가 있으면 사용하고, 없으면 response 자체를 반환
+      return Array.isArray(response.data) ? response.data : response;
+    } catch (error) {
+      console.error('대차정보 데이터 요청 실패:', error);
+      throw error;
+    }
+  },
+  // 종목 공매도 조회
+  getStockShort: async (code) => {
+    try {
+      // console.log(`공매도 API 요청: /short/?ticker=${code}`);
+      const response = await stockAxios.get('/short/', {
+        params: { ticker: code },
+      });
+      // console.log('공매도 API 응답 상태:', response.status);
+      // console.log('공매도 API 응답 데이터 타입:', typeof response.data);
+      // console.log(
+      //   '공매도 API 응답 데이터 길이:',
+      //   Array.isArray(response.data) ? response.data.length : 'N/A'
+      // );
+      // response.data가 있으면 사용하고, 없으면 response 자체를 반환
+      return Array.isArray(response.data) ? response.data : response;
+    } catch (error) {
+      console.error('공매도 데이터 요청 실패:', error);
+      throw error;
+    }
+  },
   // 즐겨찾기 추가/제거
   toggleFavorite: async (code) => {
     // console.log('즐겨찾기 요청 시작:', code);
@@ -215,9 +255,9 @@ export const stockService = {
   getOpinion: async () => {
     try {
       // 명확한 디버깅 메시지 추가
-      console.log('AiOpinionViewSet에 API 요청 시작 (/aiopinion/)');
+      // console.log('AiOpinionViewSet에 API 요청 시작 (/aiopinion/)');
       const response = await stockAxios.get('/aiopinion/');
-      console.log('AiOpinion API 응답:', response);
+      // console.log('AiOpinion API 응답:', response);
 
       // 응답 데이터 처리
       return response.data || response;
