@@ -11,6 +11,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler, // Filler 플러그인 추가
 } from 'chart.js';
 
 ChartJS.register(
@@ -20,7 +21,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler // Filler 플러그인 등록
 );
 
 const StockBroker = ({ stockCode }) => {
@@ -63,8 +65,10 @@ const StockBroker = ({ stockCode }) => {
     // 거래원별로 데이터 그룹화
     const brokerGroups = {};
 
-    // 모든 날짜를 수집하고 정렬
-    const allDates = [...new Set(data.map((item) => item.date))].sort();
+    // 내림차순 정렬(최신 날짜가 왼쪽)
+    const allDates = [...new Set(data.map((item) => item.date))].sort(
+      (a, b) => new Date(b) - new Date(a)
+    );
 
     // 각 거래원별 데이터 초기화
     data.forEach((item) => {
@@ -129,6 +133,7 @@ const StockBroker = ({ stockCode }) => {
     },
     scales: {
       x: {
+        reverse: true, // X축 방향 반전 활성화 (날짜가 반전되어 있으므로)
         grid: {
           display: false,
         },
@@ -151,21 +156,28 @@ const StockBroker = ({ stockCode }) => {
 
   return (
     <div className="d-flex flex-column gap-4">
-      {/* 차트 섹션 */}
-      {Object.entries(brokerGroups).map(([brokerName, brokerData]) => (
-        <div key={brokerName} style={{ marginBottom: '2rem' }}>
-          <h6 className="text-center mb-3">{brokerName}</h6>
-          <div style={{ height: '300px', position: 'relative' }}>
-            <Line data={createChartData(brokerData)} options={options} />
+      {/* 차트 섹션 - 외국계추정합을 맨 위로 올리는 로직 추가 */}
+      {Object.entries(brokerGroups)
+        .sort(([brokerNameA], [brokerNameB]) => {
+          // "외국계추정합"을 맨 앞으로 정렬
+          if (brokerNameA === '외국계추정합') return -1;
+          if (brokerNameB === '외국계추정합') return 1;
+          return brokerNameA.localeCompare(brokerNameB); // 나머지는 알파벳 순
+        })
+        .map(([brokerName, brokerData]) => (
+          <div key={brokerName} style={{ marginBottom: '2rem' }}>
+            <h6 className="text-center mb-3">{brokerName}</h6>
+            <div style={{ height: '300px', position: 'relative' }}>
+              <Line data={createChartData(brokerData)} options={options} />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
 
       {/* 테이블 섹션 */}
       <div className="table-responsive">
         {sortedDates.map((date) => (
           <div key={date} className="mb-4">
-            <h6 className="mb-3">{date}</h6>
+            <h6 className="mb3">{date}</h6>
             <Table striped bordered hover size="sm">
               <thead>
                 <tr>
