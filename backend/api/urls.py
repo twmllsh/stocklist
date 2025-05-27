@@ -15,6 +15,8 @@ router.register(r'chartvalue', ChartValueViewSet)  # 'yourmodel' URL에 ViewSet 
 # router.register(r'realtime', RealtimeStockViewSet)  # 'yourmodel' URL에 ViewSet 연결  /api/realtime
 router.register(r'stocklist', StocklistViewSet, basename='stocklist')
 router.register(r'news', NewsViewSet)
+router.register(r'short', ShortViewSet, basename='short')
+router.register(r'shortinterest', ShortInterestViewSet, basename='shortinterest')
 router.register(r'aiopinion', AiOpinionViewSet, basename='aiopinion')
 router.register(r'aiopinionstock', AiOpinonForStockViewSet, basename='aiopinionforstock')
 router.register(r'aiopinionstocktoday', AiOpinionForStockTodayViewSet, basename='aiopinionforstocktoday')

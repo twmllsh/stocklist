@@ -218,3 +218,10 @@ SHELL_PLUS_IMPORTS = [
     # 'your_app.views',   # 특정 앱의 뷰 임포트
     # 'your_app.other_module',  # 추가 모듈 임포트
 ]
+
+NOTEBOOK_ARGUMENTS = [
+    '--ip=0.0.0.0', 
+    '--allow-root',
+    '--no-browser',
+    'port=8888',
+]

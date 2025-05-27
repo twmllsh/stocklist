@@ -43,6 +43,7 @@ services:
       DJANGO_DEBUG: ${DJANGO_DEBUG}
       PYTHONUNBUFFERED: ${PYTHONUNBUFFERED} # Python 로그 버퍼링 비활성화
       ALLOWED_HOSTS: 'localhost,127.0.0.1,backend,*' # 모든 호스트 허용
+      NOTEBOOK_ARGUMENTS: '--ip=0.0.0.0 --port=8888 --no-browser --allow-root'
     volumes:
       - ./backend:/app
       - static_volume:/app/static

@@ -272,7 +272,7 @@ class NewsViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 추가된 줄
     queryset = News.objects.all()
     serializer_class = NewsSerializer
-
+    
     def get_queryset(self):
         queryset = News.objects.all()
         ticker = self.request.query_params.get('ticker', None)
@@ -282,6 +282,37 @@ class NewsViewSet(viewsets.ModelViewSet):
         # queryset = queryset.order_by('-createdAt')[:10]
         queryset = queryset.order_by('title', '-createdAt').distinct('title')[:20]
         return queryset
+class ShortViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]  # 추가된 줄
+    queryset = Short.objects.all()
+    serializer_class = ShortSerializer
+    
+    def get_queryset(self):
+        queryset = Short.objects.all()
+        ticker = self.request.query_params.get('ticker', None)
+        if ticker is not None:
+            queryset = queryset.filter(tickers__code=ticker)
+        # 최근 데이터 10개만 가져오기
+        # queryset = queryset.order_by('-createdAt')[:10]
+        queryset = queryset.order_by('-Date')
+        return queryset
+
+class ShortInterestViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]  # 추가된 줄
+    queryset = ShortInterest.objects.all()
+    serializer_class = ShortInterestSerializer
+
+    def get_queryset(self):
+        queryset = ShortInterest.objects.all()
+        ticker = self.request.query_params.get('ticker', None)
+        if ticker is not None:
+            queryset = queryset.filter(tickers__code=ticker)
+        # 최근 데이터 10개만 가져오기
+        # queryset = queryset.order_by('-createdAt')[:10]
+        queryset = queryset.order_by('-Date')
+        return queryset
+
+
 class AllDartViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]  # 추가된 줄
     queryset = AllDart.objects.all() 

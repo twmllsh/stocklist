@@ -58,6 +58,14 @@ class UpjongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Upjong
         fields = '__all__'
+class ShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Short
+        fields = '__all__'
+class ShortInterestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShortInterest
+        fields = '__all__'
 
 class NewsSerializer(serializers.ModelSerializer):
     ticker = TickerSerializer(many=False, read_only=True)
