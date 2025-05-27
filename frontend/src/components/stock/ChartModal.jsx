@@ -791,6 +791,7 @@ const ChartModal = ({
                   key={`loanShort-${stockCode}-${activeTab}`}
                   stockCode={stockCode}
                   ohlcvData={currentData} // OHLCV 데이터 전달
+                  activeTab={activeTab} // activeTab prop 추가
                 />
               )}
             </Tab.Pane>

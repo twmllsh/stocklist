@@ -28,23 +28,36 @@ ChartJS.register(
   Filler // Filler 플러그인 등록 추가
 );
 
-const StockLoanShort = ({ stockCode, ohlcvData }) => {
+// ChartModal에서 activeTab prop을 받도록 수정
+const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
   const user = useSelector(selectUser);
   const [loanData, setLoanData] = useState(null);
   const [shortData, setShortData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 거래량 20일 이동평균 계산 - 디버깅 로그 확장
+  // 거래량 20일 이동평균 계산 - 디버깅 로그 개선
   const volumeMA20Data = useMemo(() => {
-    if (!ohlcvData || !Array.isArray(ohlcvData) || ohlcvData.length === 0) {
-      console.log('OHLCV 데이터가 없습니다.');
+    // 조건을 세분화하여 더 정확한 로깅 제공
+    if (!ohlcvData) {
+      // 실제 문제가 발생한 경우만 콘솔에 출력 (탭 전환 시 초기 렌더링일 가능성)
+      if (stockCode && activeTab === 'loanShort') {
+        console.log(
+          `종목코드 ${stockCode}의 OHLCV 데이터가 전달되지 않았습니다.`
+        );
+      }
       return null;
     }
 
-    // 전체 데이터 로깅
-    // console.log('OHLCV 데이터 샘플(첫 항목):', ohlcvData[0]);
-    // console.log('OHLCV 데이터 길이:', ohlcvData.length);
+    if (!Array.isArray(ohlcvData)) {
+      console.error(`OHLCV 데이터가 배열 형태가 아닙니다:`, typeof ohlcvData);
+      return null;
+    }
+
+    if (ohlcvData.length === 0) {
+      console.log(`OHLCV 데이터 배열이 비어 있습니다.`);
+      return null;
+    }
 
     // 볼륨 데이터 필드 확인 및 추출
     let volumeFieldName = null;
@@ -153,7 +166,7 @@ const StockLoanShort = ({ stockCode, ohlcvData }) => {
     }
 
     return ma20;
-  }, [ohlcvData]);
+  }, [ohlcvData, stockCode, activeTab]); // activeTab 의존성 추가
 
   useEffect(() => {
     const fetchData = async () => {
