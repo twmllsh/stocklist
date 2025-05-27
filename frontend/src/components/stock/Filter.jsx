@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchFilteredStocks,
   selectSearchCount,
+  selectFilteredStocks, // 새로 추가: 검색 결과 선택자 import
 } from '../../store/slices/stockSlice'; // 수정된 임포트
 import { stockService } from '../../services/stockService'; // 상단에 추가
 import { selectUser } from '../../store/slices/authSlice';
@@ -58,6 +59,7 @@ export default function Filter({ onToggle }) {
 
   const dispatch = useDispatch();
   const searchCount = useSelector(selectSearchCount);
+  const filteredStocks = useSelector(selectFilteredStocks); // 검색 결과 가져오기
   const [isOpen, setIsOpen] = useState(true);
   const [manualClose, setManualClose] = useState(false); // 수동으로 접었는지 여부
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +71,7 @@ export default function Filter({ onToggle }) {
   const [opinion, setOpinion] = useState(''); // 추가
   const [showOpinionDetail, setShowOpinionDetail] = useState(false); // 기본값을 false로 설정
   const [autoCollapse, setAutoCollapse] = useState(true); // 자동접힘 옵션 상태 추가
+  const [noResultsMessage, setNoResultsMessage] = useState(''); // 결과 없음 메시지 상태 추가
 
   // 준회원 알림 메시지 컴포넌트 정의
   const BasicMemberAlert = () => {
@@ -292,6 +295,8 @@ export default function Filter({ onToggle }) {
 
   const handleSearch = async () => {
     try {
+      setNoResultsMessage(''); // 검색 시작 시 메시지 초기화
+
       // 검색 필터 객체 생성
       const searchFilters = {};
 
@@ -334,9 +339,19 @@ export default function Filter({ onToggle }) {
       // console.log('검색 요청 URL:', fullUrl);
       // console.log('검색 파라미터:', searchFilters);
 
-      await dispatch(fetchFilteredStocks(searchFilters));
+      const result = await dispatch(
+        fetchFilteredStocks(searchFilters)
+      ).unwrap();
+
+      // 검색 결과가 없는 경우 메시지 설정
+      if (result && Array.isArray(result) && result.length === 0) {
+        setNoResultsMessage(
+          '검색 결과가 없습니다. 영문이 포함되었다면 대소문자구분을 확인하세요'
+        );
+      }
     } catch (error) {
       console.error('Search error:', error);
+      setNoResultsMessage('검색 중 오류가 발생했습니다');
     }
   };
 
@@ -344,6 +359,7 @@ export default function Filter({ onToggle }) {
   const handleTestFavorites = async () => {
     try {
       setIsLoading(true);
+      setNoResultsMessage(''); // 검색 시작 시 메시지 초기화
 
       const favoritesFilter = {
         favorites: 'true',
@@ -375,16 +391,23 @@ export default function Filter({ onToggle }) {
         });
       }
 
+      // 검색 결과가 없는 경우 메시지 설정
+      if (result && Array.isArray(result) && result.length === 0) {
+        setNoResultsMessage('즐겨찾기한 종목이 없습니다');
+      }
+
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
       console.error('[Filter] 즐겨찾기 요청 실패:', error);
+      setNoResultsMessage('즐겨찾기 목록을 불러오는 중 오류가 발생했습니다');
     }
   };
 
   // Today AI 버튼 클릭 핸들러 단순화
   const handleTodayAiClick = async (days = 4) => {
     try {
+      setNoResultsMessage(''); // 검색 시작 시 메시지 초기화
       const params = { today_ai: days };
       const queryString = new URLSearchParams(params).toString();
 
@@ -394,10 +417,17 @@ export default function Filter({ onToggle }) {
       // console.log(`오늘AI(${days}일) 요청 URL:`, fullUrl);
       // console.log('AI 요청 파라미터:', params);
 
-      // 단순히 필터링된 주식 목록만 요청
-      await dispatch(fetchFilteredStocks(params));
+      const result = await dispatch(fetchFilteredStocks(params)).unwrap();
+
+      // 검색 결과가 없는 경우 메시지 설정
+      if (result && Array.isArray(result) && result.length === 0) {
+        setNoResultsMessage(
+          `AI 분석 종목이 ${days === 1 ? '오늘' : `최근 ${days}일간`} 없습니다`
+        );
+      }
     } catch (error) {
       console.error('Today AI 데이터 로드 실패:', error);
+      setNoResultsMessage('AI 분석 종목을 불러오는 중 오류가 발생했습니다');
     }
   };
 
@@ -436,6 +466,8 @@ export default function Filter({ onToggle }) {
 
     try {
       setIsLoading(true);
+      setNoResultsMessage(''); // 검색 시작 시 메시지 초기화
+
       const updatedFilters = {
         search: searchInput.trim(), // 검색 시에는 다른 필터 제외하고 search만 전송
       };
@@ -448,9 +480,17 @@ export default function Filter({ onToggle }) {
       // console.log('종목검색 요청 URL:', fullUrl);
       // console.log('종목검색 요청 파라미터:', updatedFilters);
 
-      await dispatch(fetchFilteredStocks(updatedFilters));
+      const result = await dispatch(
+        fetchFilteredStocks(updatedFilters)
+      ).unwrap();
+
+      // 검색 결과가 없는 경우 메시지 설정
+      if (result && Array.isArray(result) && result.length === 0) {
+        setNoResultsMessage(`'${searchInput.trim()}' 검색 결과가 없습니다`);
+      }
     } catch (error) {
       console.error('Search by text failed:', error);
+      setNoResultsMessage('검색 중 오류가 발생했습니다');
     } finally {
       setIsLoading(false);
     }
@@ -472,6 +512,31 @@ export default function Filter({ onToggle }) {
 
     fetchOpinion();
   }, []); // 컴포넌트 마운트 시에만 실행
+
+  // Redux 저장소의 검색 결과 변경 감지
+  useEffect(() => {
+    // 검색 결과가 없고, 이전에 검색을 수행했으며, 에러 메시지가 설정되지 않은 경우
+    if (
+      filteredStocks &&
+      filteredStocks.length === 0 &&
+      searchCount === 0 &&
+      !noResultsMessage
+    ) {
+      setNoResultsMessage('검색 결과가 없습니다');
+    } else if (filteredStocks && filteredStocks.length > 0) {
+      // 검색 결과가 있으면 메시지 초기화
+      setNoResultsMessage('');
+    }
+  }, [filteredStocks, searchCount, noResultsMessage]);
+
+  // 메시지 전달을 위한 이벤트 발생 - 부모 컴포넌트에 상태 전달
+  useEffect(() => {
+    // noResultsMessage가 변경될 때마다 이벤트 발생
+    const event = new CustomEvent('searchResultsMessage', {
+      detail: { message: noResultsMessage },
+    });
+    document.dispatchEvent(event);
+  }, [noResultsMessage]);
 
   // 버튼 렌더링 함수 수정
   const renderButton = (btn, index) => {

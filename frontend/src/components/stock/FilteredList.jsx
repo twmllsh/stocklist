@@ -159,7 +159,13 @@ const FilteredList = () => {
   };
 
   if (loading) return <div>로딩 중...</div>;
-  if (error) return <div>에러: {error}</div>;
+  // if (error) return <div>에러: {error}</div>;
+  if (error)
+    return (
+      <div>
+        검색 데이터가 없습니다. 영문이 포함되어 있다면 대소문자를 확인하세요.
+      </div>
+    );
 
   const sortedStocks = getSortedStocks();
 

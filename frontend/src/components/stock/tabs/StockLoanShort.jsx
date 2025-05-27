@@ -162,7 +162,7 @@ const StockLoanShort = ({ stockCode, ohlcvData }) => {
         setError(null);
 
         // console.log('===== 대차정보/공매도 데이터 요청 시작 =====');
-        console.log('종목코드:', stockCode);
+        // console.log('종목코드:', stockCode);
 
         // 대차정보 요청
         // console.log(
