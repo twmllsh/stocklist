@@ -337,6 +337,9 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
       loanData.map((item) => standardizeDate(item.Date)).filter(Boolean)
     );
 
+    // 모바일 감지
+    const isMobile = window.innerWidth < 768;
+
     // 메인 차트 데이터셋 - 비교를 위해 모두 포함
     const mainChartDatasets = [
       {
@@ -349,7 +352,10 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         yAxisID: 'y',
         tension: 0.1,
-        pointRadius: 3,
+        pointRadius: isMobile ? 1.5 : 3, // 모바일에서는 더 작은 포인트
+        borderWidth: isMobile ? 1.5 : 2, // 모바일에서는 더 얇은 선
+        fill: false, // 영역 채우기 비활성화
+        spanGaps: true, // 데이터 갭 연결
       },
       {
         label: '공매도',
@@ -361,7 +367,10 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
         backgroundColor: 'rgba(54, 162, 235, 0.2)',
         yAxisID: 'y',
         tension: 0.1,
-        pointRadius: 3,
+        pointRadius: isMobile ? 1.5 : 3,
+        borderWidth: isMobile ? 1.5 : 2,
+        fill: false,
+        spanGaps: true,
       },
       {
         label: '매수',
@@ -373,7 +382,10 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         yAxisID: 'y',
         tension: 0.1,
-        pointRadius: 3,
+        pointRadius: isMobile ? 1.5 : 3,
+        borderWidth: isMobile ? 1.5 : 2,
+        fill: false,
+        spanGaps: true,
       },
       {
         label: '거래량 20일 이동평균',
@@ -389,13 +401,28 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
         backgroundColor: 'rgba(153, 102, 255, 0.2)',
         yAxisID: 'y', // 동일한 Y축 사용으로 변경 (y1에서 y로)
         tension: 0.1,
-        pointRadius: 3,
+        pointRadius: isMobile ? 0 : 2, // 모바일에서는 포인트 숨김
+        borderWidth: isMobile ? 1 : 1.5,
         borderDash: [5, 5], // 점선으로 표시
+        fill: false,
+        spanGaps: true,
       },
     ];
 
-    // 개별 차트용 데이터셋 준비
+    // 개별 차트용 데이터셋 준비 함수 수정
     const prepareIndividualChartData = (label, data, color) => {
+      // 유효한 데이터 포인트만 필터링하여 최소/최대값 계산
+      const validData = data.filter(
+        (value) => value !== null && value !== undefined
+      );
+      const minValue = validData.length ? Math.min(...validData) : 0;
+      const maxValue = validData.length ? Math.max(...validData) : 100;
+
+      // 버퍼 추가 (데이터 범위의 10%)
+      const buffer = (maxValue - minValue) * 0.1;
+      const yMin = Math.max(0, minValue - buffer); // 0보다 작아지지 않도록
+      const yMax = maxValue + buffer;
+
       return {
         labels: validDates,
         datasets: [
@@ -405,10 +432,18 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
             borderColor: color,
             backgroundColor: color.replace('1)', '0.2)'),
             tension: 0.1,
-            pointRadius: 2,
+            pointRadius: window.innerWidth < 768 ? 0 : 2, // 모바일에서는 점 숨김
             fill: true,
+            spanGaps: true, // 데이터 간격 연결
           },
         ],
+        // 차트별 권장 Y축 범위 추가
+        yRange: {
+          min: yMin,
+          max: yMax,
+          suggestedMin: yMin,
+          suggestedMax: yMax,
+        },
       };
     };
 
@@ -493,6 +528,7 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
   // 메인 차트 옵션
   const mainChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     interaction: {
       mode: 'index',
       intersect: false,
@@ -503,9 +539,10 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
         display: true,
         text: '대차/공매도 추이(전체)',
         font: {
-          size: 16,
+          size: window.innerWidth < 768 ? 13 : 16,
           weight: 'bold',
         },
+        padding: { top: 5, bottom: 5 }, // 타이틀 패딩 축소
       },
       tooltip: {
         callbacks: {
@@ -524,16 +561,48 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
             return label;
           },
         },
+        titleFont: {
+          size: window.innerWidth < 768 ? 10 : 12,
+        },
+        bodyFont: {
+          size: window.innerWidth < 768 ? 10 : 12,
+        },
+        boxPadding: window.innerWidth < 768 ? 3 : 6,
       },
       legend: {
-        position: 'top',
+        position: window.innerWidth < 768 ? 'bottom' : 'top',
+        align: 'start',
+        labels: {
+          boxWidth: window.innerWidth < 768 ? 8 : 10,
+          padding: window.innerWidth < 768 ? 5 : 10,
+          font: {
+            size: window.innerWidth < 768 ? 9 : 11,
+          },
+          usePointStyle: true,
+        },
       },
     },
     scales: {
       x: {
         title: {
-          display: true,
+          display: window.innerWidth >= 768, // 모바일에서는 X축 제목 숨김
           text: '날짜',
+        },
+        ticks: {
+          maxRotation: 90, // 모바일에서 레이블이 겹치지 않도록 회전
+          minRotation: 45,
+          autoSkip: true,
+          maxTicksLimit: window.innerWidth < 768 ? 6 : 10,
+          font: {
+            size: window.innerWidth < 768 ? 7 : 10,
+          },
+        },
+        grid: {
+          display: false,
+          drawBorder: false,
+        },
+        border: {
+          display: false,
         },
       },
       y: {
@@ -541,21 +610,46 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
         display: true,
         position: 'left',
         title: {
-          display: true,
+          display: window.innerWidth >= 768,
           text: '주식수',
+          font: {
+            size: window.innerWidth < 768 ? 10 : 12,
+          },
         },
         min: 0,
         ticks: {
           callback: function (value) {
-            return Math.round(value).toLocaleString(); // 정수로 반올림하여 표시
+            // 모바일에서는 더 간단한 형식으로 표시
+            if (window.innerWidth < 768) {
+              if (value >= 1000000) {
+                return (value / 1000000).toFixed(1) + 'M';
+              } else if (value >= 1000) {
+                return (value / 1000).toFixed(1) + 'K';
+              }
+              return value;
+            }
+            return Math.round(value).toLocaleString();
           },
+          font: {
+            size: window.innerWidth < 768 ? 9 : 11,
+          },
+          maxTicksLimit: window.innerWidth < 768 ? 5 : 8, // 모바일에서 더 적은 Y축 틱
+          padding: 0, // 패딩 제거
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.03)', // 그리드 선 색상 연하게
+        },
+        border: {
+          display: false,
         },
       },
-      // y1 축 제거 - 모든 데이터는 y축에 표시
+    },
+    layout: {
+      padding: 0, // 전체 패딩 제거
     },
   };
 
-  // 개별 차트 공통 옵션
+  // 개별 차트 공통 옵션 - 모바일 최적화 개선
   const individualChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -593,44 +687,79 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
             }
           },
         },
+        titleFont: {
+          size: window.innerWidth < 768 ? 10 : 12,
+        },
+        bodyFont: {
+          size: window.innerWidth < 768 ? 10 : 12,
+        },
       },
+    },
+    layout: {
+      padding: 0, // 패딩 완전 제거
     },
     scales: {
       x: {
         display: true,
         ticks: {
-          display: true, // 날짜 표시 활성화
+          display: true,
           autoSkip: true,
-          maxTicksLimit: 6, // 표시할 틱 수 제한
-          maxRotation: 45, // 날짜 레이블 회전
-          minRotation: 45,
+          maxTicksLimit: window.innerWidth < 768 ? 3 : 6, // 모바일에서 더 적은 틱
+          maxRotation: 0, // 레이블 회전 없애기
+          minRotation: 0,
+          font: {
+            size: window.innerWidth < 768 ? 8 : 10, // 폰트 크기 더 작게
+          },
           callback: function (value, index, ticks) {
-            // 날짜 포맷팅
+            if (window.innerWidth < 768 && index % 2 !== 0) return ''; // 모바일에서는 레이블 간격 2배로
+
+            // 날짜 포맷팅 (더 간결하게)
             const label = this.getLabelForValue(value);
             if (!label) return '';
 
             try {
               const date = new Date(label);
-              return date
-                .toLocaleDateString('ko-KR', {
-                  month: '2-digit',
-                  day: '2-digit',
-                })
-                .replace(/\./g, '/'); // MM/DD 형식으로 표시
+              // 모바일에서는 DD 형식, 데스크톱에서는 MM/DD 형식
+              return window.innerWidth < 768
+                ? date.getDate().toString()
+                : `${date.getMonth() + 1}/${date.getDate()}`;
             } catch (e) {
-              return label;
+              return '';
             }
           },
         },
         grid: {
           display: false,
+          drawBorder: false,
+        },
+        border: {
+          display: false,
         },
       },
       y: {
         display: true,
+        position: 'right', // Y축을 오른쪽에 배치하여 공간 확보
+        grid: {
+          display: false, // 그리드 제거
+          drawBorder: false,
+        },
+        border: {
+          display: false,
+        },
         ticks: {
+          display: window.innerWidth >= 768, // 모바일에서는 Y축 틱 숨김 (공간 확보)
+          maxTicksLimit: 4, // 틱 수 최소화
+          padding: 0, // 패딩 제거
+          font: {
+            size: 9, // 작은 폰트 사이즈
+          },
           callback: function (value) {
-            return Math.round(value).toLocaleString(); // 정수로 변환하여 표시
+            if (value >= 1000000) {
+              return (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+              return (value / 1000).toFixed(0) + 'K';
+            }
+            return value;
           },
         },
       },
@@ -661,14 +790,19 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
   //   console.log('최종 차트 데이터:', chartData);
 
   return (
-    <div>
-      <Card className="border-0 shadow-sm mb-3">
-        <Card.Body>
+    <div className="px-0 mt-0">
+      <Card className="border-0 shadow-sm mb-2">
+        <Card.Body className="p-0 pb-2">
           {/* 메인 차트 */}
-          <Row>
-            <Col md={12} className="mb-4">
+          <Row className="m-0">
+            <Col md={12} className="p-0 mb-2">
               {chartData ? (
-                <div style={{ height: '400px' }}>
+                <div
+                  style={{
+                    height: window.innerWidth < 768 ? '300px' : '380px',
+                    padding: '0 2px', // 좌우 패딩을 최소화
+                  }}
+                >
                   <Line data={chartData.main} options={mainChartOptions} />
                 </div>
               ) : (
@@ -694,85 +828,276 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
             </Col>
           </Row>
 
-          {/* 개별 차트 섹션 - 하나씩 크게 표시하도록 변경 */}
+          {/* 개별 차트 섹션 - 완전히 새롭게 구성 */}
           {chartData && (
             <>
-              <h5 className="mb-3">개별 지표 추이</h5>
-
-              {/* 공매도 비중 차트 */}
-              <Card className="mb-4">
-                <Card.Header className="py-2 bg-light">
-                  <strong>공매도 비중(%) 추이</strong>
-                </Card.Header>
-                <Card.Body>
-                  <div style={{ height: '300px' }}>
+              <h5
+                className="mb-2 px-2"
+                style={{
+                  fontSize: window.innerWidth < 768 ? '0.85rem' : '1rem',
+                  fontWeight: 'bold',
+                }}
+              >
+                개별 지표 추이
+              </h5>
+              <div className="px-1">
+                {/* 공매도 비중 차트 */}
+                <div className="mb-3">
+                  <div
+                    className="bg-light py-1 px-2 d-flex align-items-center"
+                    style={{
+                      height: '28px',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      borderRadius: '4px 4px 0 0',
+                    }}
+                  >
+                    공매도 비중(%)
+                  </div>
+                  <div
+                    style={{
+                      height: window.innerWidth < 768 ? '180px' : '220px',
+                      background: '#fcfcfc',
+                      padding: '4px 0',
+                    }}
+                  >
                     <Line
                       data={chartData.shortRatio}
-                      options={shortRatioChartOptions}
+                      options={{
+                        ...individualChartOptions,
+                        scales: {
+                          ...individualChartOptions.scales,
+                          y: {
+                            ...individualChartOptions.scales.y,
+                            min: 0,
+                            suggestedMax:
+                              Math.max(
+                                ...chartData.shortRatio.datasets[0].data.filter(
+                                  (d) => d !== null
+                                )
+                              ) * 1.1,
+                            ticks: {
+                              display: true, // Y축 항상 표시
+                              maxTicksLimit: window.innerWidth < 768 ? 5 : 8,
+                              font: {
+                                size: window.innerWidth < 768 ? 8 : 10,
+                              },
+                            },
+                          },
+                        },
+                      }}
                     />
                   </div>
-                </Card.Body>
-              </Card>
+                </div>
 
-              {/* 대차잔여주식수 차트 */}
-              <Card className="mb-4">
-                <Card.Header className="py-2 bg-light">
-                  <strong>대차잔여주식수 추이</strong>
-                </Card.Header>
-                <Card.Body>
-                  <div style={{ height: '300px' }}>
+                {/* 대차잔여주식수 차트 */}
+                <div className="mb-3">
+                  <div
+                    className="bg-light py-1 px-2 d-flex align-items-center"
+                    style={{
+                      height: '28px',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      borderRadius: '4px 4px 0 0',
+                    }}
+                  >
+                    대차잔여주식수
+                  </div>
+                  <div
+                    style={{
+                      height: window.innerWidth < 768 ? '180px' : '220px',
+                      background: '#fcfcfc',
+                      padding: '4px 0',
+                    }}
+                  >
                     <Line
                       data={chartData.loanBalance}
-                      options={individualChartOptions}
+                      options={{
+                        ...individualChartOptions,
+                        scales: {
+                          ...individualChartOptions.scales,
+                          y: {
+                            ...individualChartOptions.scales.y,
+                            min: chartData.loanBalance.yRange?.min || 0,
+                            suggestedMax: chartData.loanBalance.yRange?.max,
+                            ticks: {
+                              display: true, // Y축 항상 표시
+                              maxTicksLimit: window.innerWidth < 768 ? 5 : 8,
+                              font: {
+                                size: window.innerWidth < 768 ? 8 : 10,
+                              },
+                            },
+                          },
+                        },
+                      }}
                     />
                   </div>
-                </Card.Body>
-              </Card>
+                </div>
 
-              {/* 공매도 차트 */}
-              <Card className="mb-4">
-                <Card.Header className="py-2 bg-light">
-                  <strong>공매도 추이</strong>
-                </Card.Header>
-                <Card.Body>
-                  <div style={{ height: '300px' }}>
+                {/* 공매도 차트 */}
+                <div className="mb-3">
+                  <div
+                    className="bg-light py-1 px-2 d-flex align-items-center"
+                    style={{
+                      height: '28px',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      borderRadius: '4px 4px 0 0',
+                    }}
+                  >
+                    공매도
+                  </div>
+                  <div
+                    style={{
+                      height: window.innerWidth < 768 ? '180px' : '220px',
+                      background: '#fcfcfc',
+                      padding: '4px 0',
+                    }}
+                  >
                     <Line
                       data={chartData.shortVolume}
-                      options={individualChartOptions}
+                      options={{
+                        ...individualChartOptions,
+                        scales: {
+                          ...individualChartOptions.scales,
+                          y: {
+                            ...individualChartOptions.scales.y,
+                            min: chartData.shortVolume.yRange?.min || 0,
+                            suggestedMax: chartData.shortVolume.yRange?.max,
+                            ticks: {
+                              display: true, // Y축 항상 표시
+                              maxTicksLimit: window.innerWidth < 768 ? 5 : 8,
+                              font: {
+                                size: window.innerWidth < 768 ? 8 : 10,
+                              },
+                            },
+                          },
+                        },
+                      }}
                     />
                   </div>
-                </Card.Body>
-              </Card>
+                </div>
 
-              {/* 매수 차트 */}
-              <Card className="mb-4">
-                <Card.Header className="py-2 bg-light">
-                  <strong>매수 추이</strong>
-                </Card.Header>
-                <Card.Body>
-                  <div style={{ height: '300px' }}>
+                {/* 매수 차트 */}
+                <div className="mb-3">
+                  <div
+                    className="bg-light py-1 px-2 d-flex align-items-center"
+                    style={{
+                      height: '28px',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      borderRadius: '4px 4px 0 0',
+                    }}
+                  >
+                    매수
+                  </div>
+                  <div
+                    style={{
+                      height: window.innerWidth < 768 ? '180px' : '220px',
+                      background: '#fcfcfc',
+                      padding: '4px 0',
+                    }}
+                  >
                     <Line
                       data={chartData.buyVolume}
-                      options={individualChartOptions}
+                      options={{
+                        ...individualChartOptions,
+                        scales: {
+                          ...individualChartOptions.scales,
+                          y: {
+                            ...individualChartOptions.scales.y,
+                            min: chartData.buyVolume.yRange?.min || 0,
+                            suggestedMax: chartData.buyVolume.yRange?.max,
+                            ticks: {
+                              display: true, // Y축 항상 표시
+                              maxTicksLimit: window.innerWidth < 768 ? 5 : 8,
+                              font: {
+                                size: window.innerWidth < 768 ? 8 : 10,
+                              },
+                            },
+                          },
+                        },
+                      }}
                     />
                   </div>
-                </Card.Body>
-              </Card>
+                </div>
+              </div>
             </>
           )}
 
-          {/* 테이블 섹션 - 단위를 헤더에 표시하고 데이터에서 제거 */}
-          <Row className="mt-4">
-            <Col md={12}>
-              <h5 className="mb-3">대차 정보</h5>
-              <Table striped bordered hover responsive className="mb-4">
-                <thead>
+          {/* 테이블 섹션 */}
+          <div className="px-1 mt-2">
+            {window.innerWidth < 768 && (
+              <div
+                className="text-center text-muted mb-1"
+                style={{ fontSize: '0.7rem' }}
+              >
+                <span>← 테이블 좌우 스크롤 →</span>
+              </div>
+            )}
+
+            <h5
+              className="mb-1 px-1"
+              style={{
+                fontSize: window.innerWidth < 768 ? '0.85rem' : '1rem',
+                fontWeight: 'bold',
+              }}
+            >
+              대차 정보
+            </h5>
+            <div className="table-responsive px-0">
+              <Table
+                striped
+                bordered
+                hover
+                responsive
+                className="mb-1"
+                style={{
+                  fontSize: window.innerWidth < 768 ? '0.7rem' : '0.85rem',
+                }}
+              >
+                <thead className={window.innerWidth < 768 ? 'table-light' : ''}>
                   <tr>
-                    <th>일자</th>
-                    <th>대차잔여주식수 (주)</th>
-                    <th>대차잔액 (원)</th>
-                    <th>대차체결주식수 (주)</th>
-                    <th>상환주식수 (주)</th>
+                    <th
+                      style={{
+                        width: '20%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      일자
+                    </th>
+                    <th
+                      style={{
+                        width: '20%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      대차잔여주식수
+                    </th>
+                    <th
+                      style={{
+                        width: '20%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      대차잔액
+                    </th>
+                    <th
+                      style={{
+                        width: '20%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      대차체결주식수
+                    </th>
+                    <th
+                      style={{
+                        width: '20%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      상환주식수
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -780,30 +1105,108 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
                     Array.isArray(loanData) &&
                     [...loanData]
                       .sort((a, b) => new Date(b.Date) - new Date(a.Date))
+                      .slice(0, window.innerWidth < 768 ? 10 : 20) // 모바일에서는 데이터 수 제한
                       .map((item, index) => (
                         <tr key={`loan-${index}`}>
-                          <td>{item.Date}</td>
-                          <td>{formatNumber(item.대차잔여주식수)}</td>
-                          <td>{formatNumber(item.대차잔액)}</td>
-                          <td>{formatNumber(item.대차체결주식수)}</td>
-                          <td>{formatNumber(item.상환주식수)}</td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {item.Date}
+                          </td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {formatNumber(item.대차잔여주식수)}
+                          </td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {formatNumber(item.대차잔액)}
+                          </td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {formatNumber(item.대차체결주식수)}
+                          </td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {formatNumber(item.상환주식수)}
+                          </td>
                         </tr>
                       ))}
                 </tbody>
               </Table>
-            </Col>
-          </Row>
+            </div>
 
-          <Row>
-            <Col md={12}>
-              <h5 className="mb-3">공매도 정보</h5>
-              <Table striped bordered hover responsive>
-                <thead>
+            <h5
+              className="mb-1 mt-2 px-1"
+              style={{
+                fontSize: window.innerWidth < 768 ? '0.85rem' : '1rem',
+                fontWeight: 'bold',
+              }}
+            >
+              공매도 정보
+            </h5>
+            <div className="table-responsive px-0">
+              <Table
+                striped
+                bordered
+                hover
+                responsive
+                style={{
+                  fontSize: window.innerWidth < 768 ? '0.7rem' : '0.85rem',
+                }}
+              >
+                <thead className={window.innerWidth < 768 ? 'table-light' : ''}>
                   <tr>
-                    <th>일자</th>
-                    <th>공매도 (주)</th>
-                    <th>매수 (주)</th>
-                    <th>비중 (%)</th>
+                    <th
+                      style={{
+                        width: '25%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      일자
+                    </th>
+                    <th
+                      style={{
+                        width: '25%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      공매도
+                    </th>
+                    <th
+                      style={{
+                        width: '25%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      매수
+                    </th>
+                    <th
+                      style={{
+                        width: '25%',
+                        padding: window.innerWidth < 768 ? '0.25rem' : '0.5rem',
+                      }}
+                    >
+                      비중(%)
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -811,18 +1214,47 @@ const StockLoanShort = ({ stockCode, ohlcvData, activeTab = 'loanShort' }) => {
                     Array.isArray(shortData) &&
                     [...shortData]
                       .sort((a, b) => new Date(b.Date) - new Date(a.Date))
+                      .slice(0, window.innerWidth < 768 ? 10 : 20) // 모바일에서는 데이터 수 제한
                       .map((item, index) => (
                         <tr key={`short-${index}`}>
-                          <td>{item.Date}</td>
-                          <td>{formatNumber(item.공매도)}</td>
-                          <td>{formatNumber(item.매수)}</td>
-                          <td>{item.비중.toFixed(2)}</td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {item.Date}
+                          </td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {formatNumber(item.공매도)}
+                          </td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {formatNumber(item.매수)}
+                          </td>
+                          <td
+                            style={{
+                              padding:
+                                window.innerWidth < 768 ? '0.2rem' : '0.5rem',
+                            }}
+                          >
+                            {item.비중.toFixed(2)}
+                          </td>
                         </tr>
                       ))}
                 </tbody>
               </Table>
-            </Col>
-          </Row>
+            </div>
+          </div>
         </Card.Body>
       </Card>
     </div>
